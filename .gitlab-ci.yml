@@ -1,0 +1,18 @@
+stages:
+  - test
+  - build
+
+check:
+  stage: test
+  image: hshnwinps/dev
+  script:
+  - pipenv install --dev
+  - pipenv run ./scripts/check.sh
+
+build:
+  stage: build
+  image: hshnwinps/dev
+  only:
+  - deploy
+  script:
+  - ./scripts/run_dev.sh build runner "" ""

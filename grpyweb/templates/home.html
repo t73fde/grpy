@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{#
+ # Copyright (c) 2018 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ # 
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ # 
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% block title %}Home{% endblock %}
+{% block heading %}{% endblock %}
+{% block content %}
+{% if g.user %}
+{% if g.user.is_host %}
+<div class="w3-panel">
+  <h1>Active Groupings</h1>
+  <table class="w3-table w3-bordered">
+    <tr><th>Name</th><th>Final date</th></tr>
+    {% for grouping in groupings %}
+    <tr>
+      <td><a href="{{ url_for('grouping_detail', key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td>{{ grouping.final_date }}</td>
+    </tr>
+    {% else %}
+    <tr><td>(None)</td></tr>
+    {% endfor %}
+  </table>
+  {#
+  <div class="w3-panel">
+    <a href="{% url 'grouping_create' %}" class="w3-button w3-indigo">Create</a>
+  </div>
+  #}
+</div>
+{% endif %}
+{% else %}
+<div class="w3-panel">
+  <h1>Welcome!</h1>
+  <p>Please <a href="{{ url_for('login') }}">login</a> to use this software.<p>
+</div>
+{% endif %}
+{% endblock %}
+

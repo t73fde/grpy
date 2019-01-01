@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{#
+ # Copyright (c) 2018 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ # 
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ # 
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% block title %}Login{% endblock %}
+{% block heading %}{% endblock %}
+{% block content %}
+<div class="w3-panel">
+<div class="w3-card">
+<div class="w3-container w3-light-gray">
+  <h1>Login</h1>
+</div>
+<form method="post"> {# TODO: CSRF-Token? #}
+<div class="w3-panel">
+<label for="username">Username</label>
+<input name="username" id="username" required>
+</div>
+<div class="w3-panel">
+<input type="submit" name="login" value="Login" class="w3-btn w3-indigo" />
+</div>
+</form>
+<div class="w3-container"></div>
+</div>
+</div>
+{% endblock %}
+
