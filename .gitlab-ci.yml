@@ -8,6 +8,7 @@ check:
   script:
   - pipenv install --dev
   - pipenv run ./scripts/check.sh
+  - pipenv run ./scripts/coverage.sh
 
 build:
   stage: build
