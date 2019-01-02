@@ -43,6 +43,7 @@ class GrpyApp(Flask):
         if config_mapping:
             self.config.from_mapping(
                 SECRET_KEY="dev",
+                REPOSITORY="ram",
             )
             self.config.from_mapping(config_mapping)
         else:
@@ -52,7 +53,7 @@ class GrpyApp(Flask):
     def setup_repository(self):
         """Add a repository to the application."""
         self._repository_factory = create_factory(self.config['REPOSITORY'])
-        if self.config['REPOSITORY'] == "ram" and not self.config['TESTING']:
+        if self.config['REPOSITORY'] == "ram" and not self.testing:
             populate_testdata(self._repository_factory)
 
         def close_repository(_exc: BaseException = None):
