@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ##
 #    Copyright (c) 2018 Detlef Stern
 #
@@ -14,29 +16,11 @@
 #    more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with grpy. If not, see <http://www.gnu.org/licenses/>.
+#    along with grpy. If not, see <https://www.gnu.org/licenses/>.
 ##
 
-[dev-packages]
-autopep8 = "*"
-bandit = "*"
-coverage = "*"
-flake8 = "*"
-flake8-bugbear = "*"
-flake8-import-order = "*"
-mccabe = "*"
-PyLint = "*"
-pydocstyle = "*"
-dodgy = "*"
-pytest = "*"
-pytest-flask = "*"
+set -e
 
-[packages]
-flask = "*"
-Flask-WTF = "*"
-WTForms = "*"
-pytz = "*"
-gunicorn = "*"
-
-[requires]
-python_version = "3.6"
+coverage run -m pytest
+coverage html
+coverage report
