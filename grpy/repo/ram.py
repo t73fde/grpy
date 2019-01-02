@@ -95,7 +95,7 @@ class RamRepository(Repository):
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         if grouping.key:
-            if grouping.key in self._groupings:
+            if grouping.key not in self._groupings:
                 raise ValueError(
                     "Grouping with key {} not in repository".format(grouping.key))
         else:
@@ -158,14 +158,14 @@ class WherePredicate:
         """Return True if data[self.name] >= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
-            return True
+            return False
         return data_value >= self.value
 
     def gt_pred(self, data: Model) -> bool:
         """Return True if data[self.name] > self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
-            return True
+            return False
         return data_value > self.value
 
 
