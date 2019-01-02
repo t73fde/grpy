@@ -18,7 +18,7 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Web root for grpy."""
+"""Web application for grpy."""
 
 from typing import Any, Dict
 

@@ -20,7 +20,7 @@
 
 """Entry point of web access layer for grpy."""
 
-from grpy.web.webroot import create_app  # noqa: F401
+from grpy.web.app import create_app  # noqa: F401
 
 
-app = create_app()
+app = create_app()  # pylint: disable=invalid-name
