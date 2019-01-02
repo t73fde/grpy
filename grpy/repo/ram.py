@@ -52,6 +52,13 @@ class RamRepository(Repository):
         self._users = {}
         self._users_username = {}
         self._groupings = {}
+        self._next_key = 0x10000
+
+    def _uuid(self) -> uuid.UUID:
+        """Return a new UUID."""
+        result = uuid.UUID(int=self._next_key)
+        self._next_key += 1
+        return result
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
@@ -59,8 +66,7 @@ class RamRepository(Repository):
             if user.key not in self._users:
                 raise ValueError("User with key {} not in repository".format(user.key))
         else:
-            new_key = uuid.uuid4()
-            user = user._replace(key=new_key)
+            user = user._replace(key=self._uuid())
 
         other_user = self._users_username.get(user.username)
         if other_user and user.key != other_user.key:
@@ -93,8 +99,7 @@ class RamRepository(Repository):
                 raise ValueError(
                     "Grouping with key {} not in repository".format(grouping.key))
         else:
-            new_key = uuid.uuid4()
-            grouping = grouping._replace(key=new_key)
+            grouping = grouping._replace(key=self._uuid())
 
         self._groupings[grouping.key] = grouping
         return grouping
