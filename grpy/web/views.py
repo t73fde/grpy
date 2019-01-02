@@ -22,7 +22,8 @@
 
 import datetime
 
-from flask import current_app, flash, g, redirect, render_template, request, url_for
+from flask import (
+    abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from grpy.repo.base import Repository
 
@@ -67,5 +68,13 @@ def logout():
     return redirect(url_for("home"))
 
 
-def grouping_detail(_key):
+def grouping_detail(key):
     """Show details of a grouping."""
+    if not g.user:
+        abort(401)
+    grouping = get_repository().get_grouping(key)
+    if not grouping:
+        abort(404)
+    if g.user.key != grouping.host:
+        abort(403)
+    return render_template("grouping_detail.html", grouping=grouping)
