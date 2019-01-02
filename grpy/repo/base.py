@@ -22,7 +22,7 @@
 
 from typing import Any, Dict, Iterator, Optional, Sequence
 
-from grpy import Grouping, KeyType, User
+from grpy.models import Grouping, KeyType, User
 
 
 Where = Dict[str, Any]

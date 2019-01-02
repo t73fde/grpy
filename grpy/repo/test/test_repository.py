@@ -24,10 +24,9 @@ import uuid
 
 import pytest
 
-import grpy  # noqa: I100
-
 from .. import create_factory
 from ..base import DuplicateKey, Repository
+from ... import models
 
 # pylint: disable=redefined-outer-name
 
@@ -43,7 +42,7 @@ def repository(request):
 
 def test_insert_user(repository: Repository):
     """Check that inserting a new user works."""
-    user = grpy.User(None, "user", True)
+    user = models.User(None, "user", True)
     new_user = repository.set_user(user)
     assert not user.key
     assert new_user.key
@@ -56,17 +55,17 @@ def test_insert_user(repository: Repository):
 
 def test_update_user(repository: Repository):
     """Check that updating an existing user works."""
-    user = grpy.User(uuid.uuid4(), "user", True)
+    user = models.User(uuid.uuid4(), "user", True)
     with pytest.raises(ValueError):
         repository.set_user(user)
 
-    user = repository.set_user(grpy.User(None, "user", True))
+    user = repository.set_user(models.User(None, "user", True))
     new_user = user._replace(is_host=False)
     assert user.key == new_user.key
     newer_user = repository.set_user(new_user)
     assert new_user == newer_user
 
-    user_2 = repository.set_user(grpy.User(None, "user_2", False))
+    user_2 = repository.set_user(models.User(None, "user_2", False))
     renamed_user = user_2._replace(username=user.username)
     with pytest.raises(DuplicateKey):
         repository.set_user(renamed_user)
@@ -74,7 +73,7 @@ def test_update_user(repository: Repository):
 
 def test_get_user(repository: Repository):
     """An inserted or updated user can be retrieved."""
-    user = repository.set_user(grpy.User(None, "user", True))
+    user = repository.set_user(models.User(None, "user", True))
     new_user = repository.get_user(user.key)
     assert new_user == user
 
@@ -90,7 +89,7 @@ def test_get_user(repository: Repository):
 
 def test_get_user_by_username(repository: Repository):
     """Retrieve an user by its username."""
-    user = repository.set_user(grpy.User(None, "user", True))
+    user = repository.set_user(models.User(None, "user", True))
     new_user = repository.get_user_by_username(user.username)
     assert new_user == user
 

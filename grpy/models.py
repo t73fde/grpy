@@ -1,4 +1,3 @@
-#!/bin/bash
 
 ##
 #    Copyright (c) 2018 Detlef Stern
@@ -16,27 +15,37 @@
 #    more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with grpy. If not, see <https://www.gnu.org/licenses/>.
+#    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-set -e
+"""Data models."""
 
-PY_FILES="grpy scripts wsgi.py"
+import datetime
+import uuid
+from typing import NamedTuple, Optional
 
-echo "-- autopep8"
-OUTPUT=$(autopep8 --diff --recursive $PY_FILES)
-if [[ $OUTPUT ]]; then
-  echo "$OUTPUT"
-  echo "-- please format source code with 'make fmt'"
-  exit 1
-fi
-echo "-- pydocstyle"
-pydocstyle -v -e $PY_FILES
-echo "-- Flake8"
-flake8 $PY_FILES
-echo "-- Dodgy"
-dodgy
-echo "-- PyLint"
-pylint grpy
-echo "-- Bandit"
-bandit -r -x test .
+
+KeyType = uuid.UUID
+
+
+class User(NamedTuple):
+    """User data."""
+
+    key: Optional[KeyType]
+    username: str
+    is_host: bool
+
+
+class Grouping(NamedTuple):
+    """Grouping data."""
+
+    key: Optional[KeyType]
+    name: str
+    host: KeyType  # -> User
+    begin_date: datetime.datetime
+    final_date: datetime.datetime
+    close_date: Optional[datetime.datetime]
+    strategy: str
+    max_group_size: int
+    member_reserve: int
+    note: str

@@ -24,9 +24,8 @@ from typing import Any, Dict
 
 from flask import Flask, g, session
 
-from grpy import User
-
-from grpydb import create_factory
+from grpy.models import User
+from grpy.repo import create_factory
 
 from . import views
 
@@ -130,7 +129,7 @@ def populate_testdata(repository_factory):
             repository.set_user(User(None, "s%02d" % number, False))
 
         from datetime import datetime, timedelta
-        from grpy import Grouping
+        from grpy.models import Grouping
         now = datetime.now()
         for user in (kreuz, stern):
             repository.set_grouping(Grouping(

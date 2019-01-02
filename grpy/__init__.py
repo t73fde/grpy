@@ -18,34 +18,4 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Business layer for grpy."""
-
-import datetime
-import uuid
-from typing import NamedTuple, Optional
-
-
-KeyType = uuid.UUID
-
-
-class User(NamedTuple):
-    """User data."""
-
-    key: Optional[KeyType]
-    username: str
-    is_host: bool
-
-
-class Grouping(NamedTuple):
-    """Grouping data."""
-
-    key: Optional[KeyType]
-    name: str
-    host: KeyType  # -> User
-    begin_date: datetime.datetime
-    final_date: datetime.datetime
-    close_date: Optional[datetime.datetime]
-    strategy: str
-    max_group_size: int
-    member_reserve: int
-    note: str
+"""Main package for grpy."""

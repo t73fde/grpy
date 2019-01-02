@@ -24,7 +24,7 @@ import datetime
 
 from flask import current_app, flash, g, redirect, render_template, request, url_for
 
-from grpydb.base import Repository
+from grpy.repo.base import Repository
 
 
 def get_repository() -> Repository:
