@@ -20,4 +20,7 @@
 
 """Entry point of web access layer for grpy."""
 
-from grpyweb.webroot import create_app  # noqa: F401
+from grpy.web.webroot import create_app  # noqa: F401
+
+
+app = create_app()

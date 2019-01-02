@@ -105,7 +105,7 @@ class GrpyApp(Flask):
 
 def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     """Create a new web application."""
-    app = GrpyApp("grpyweb")
+    app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
     app.setup_repository()
     app.setup_user_handling()
