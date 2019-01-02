@@ -40,7 +40,7 @@ def home():
             groupings = get_repository().list_groupings(
                 where={
                     "host__eq": g.user.key,
-                    "close_date__leq": datetime.datetime.now()},
+                    "close_date__le": datetime.datetime.now()},
                 order=["final_date"])
     return render_template("home.html", groupings=groupings)
 

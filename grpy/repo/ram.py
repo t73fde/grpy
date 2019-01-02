@@ -21,11 +21,10 @@
 """In-memory repository, stored in RAM."""
 
 import uuid
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
-from .base import (
-    DuplicateKey, Grouping, KeyType, Order, Repository, RepositoryFactory,
-    User, Where)
+from .base import DuplicateKey, Order, Repository, RepositoryFactory, Where
+from ..models import Grouping, KeyType, Model, User
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -94,81 +93,97 @@ class RamRepository(Repository):
         """Return grouping with given key."""
         return self._groupings.get(key, None)
 
-    @staticmethod
-    def compare_leq(element, field_name, value):
-        """Return True if field is less than value."""
-        element_value = getattr(element, field_name)
-        if element_value is None:
-            return True
-        return element_value <= value
-
-    @staticmethod
-    def process_where(result, where):
-        """Filter result according to specification."""
-        if not where:
-            return result
-        for where_spec, where_val in where.items():
-            where_spec_split = where_spec.split("__")
-            if len(where_spec_split) == 1:
-                where_field = where_spec
-                where_relop = "eq"
-            else:
-                where_field = where_spec_split[0]
-                where_relop = where_spec_split[1]
-
-            if where_relop == "eq":
-                result = [
-                    elem for elem in result if getattr(elem, where_field) == where_val]
-            elif where_relop == "leq":
-                result = [
-                    elem for elem in result
-                    if RamRepository.compare_leq(elem, where_field, where_val)]
-
-        return result
-
-    @staticmethod
-    def process_order(result, order_spec):
-        """Sort result with respect to order specifications."""
-        if not order_spec:
-            return result
-        result = list(result)
-        for order in order_spec:
-            if order.startswith("-"):
-                reverse = True
-                order = order[1:]
-            else:
-                reverse = False
-                if order.startswith("+"):
-                    order = order[1:]
-
-            result.sort(
-                key=lambda obj: getattr(
-                    obj, order),  # pylint: disable=cell-var-from-loop
-                reverse=reverse)
-        return result
-
     def list_groupings(
             self,
             where: Optional[Where] = None,
             order: Optional[Order] = None) -> Iterator[Grouping]:
-        """
-        Return an iterator of all or some groupings.
-
-        If `where` is not None, only the groupings according to a filter
-        specification are returned. Valid keys are:
-
-        * "host__eq": return only grouping of a given host user key.
-        * "close_date__eq": return only grouping with the given close date.
-
-        If `order` is given, the groupings are sorted with respect to
-        a sequence of order specifications. If the first character of an order
-        specification is a `-`-sign, the order is descending; if it is the
-        `+`-sign (or the `+`-sign is missing), the order is ascending. Valid
-        order specifications are:
-
-        * "final_date": order by final date of the groupings.
-        """
+        """Return an iterator of all or some groupings."""
         result = self._groupings.values()
-        result = self.process_where(result, where)
-        result = self.process_order(result, order)
+        result = process_where(result, where)
+        result = process_order(result, order)
         return result
+
+
+class WherePredicate:
+    """Filter attributes."""
+
+    def __init__(self, field_name: str, where_op: str, filter_value: Any):
+        """Initialize the filter."""
+        self.name = field_name
+        self.relop = where_op
+        self.value = filter_value
+
+    def pred(self):
+        """Return the appropriate filter predicate."""
+        return getattr(self, self.relop + "_pred")
+
+    def eq_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] == self.value."""
+        return getattr(data, self.name) == self.value
+
+    def ne_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] != self.value."""
+        return getattr(data, self.name) != self.value
+
+    def lt_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] < self.value."""
+        data_value = getattr(data, self.name)
+        if data_value is None:
+            return True
+        return data_value < self.value
+
+    def le_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] <= self.value."""
+        data_value = getattr(data, self.name)
+        if data_value is None:
+            return True
+        return data_value <= self.value
+
+    def ge_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] >= self.value."""
+        data_value = getattr(data, self.name)
+        if data_value is None:
+            return True
+        return data_value >= self.value
+
+    def gt_pred(self, data: Model) -> bool:
+        """Return True if data[self.name] > self.value."""
+        data_value = getattr(data, self.name)
+        if data_value is None:
+            return True
+        return data_value > self.value
+
+
+def process_where(result: Iterator[Model], where: Optional[Where]) -> Iterator[Model]:
+    """Filter result according to specification."""
+    if not where:
+        return result
+    for where_spec, where_val in where.items():
+        where_spec_split = where_spec.split("__")
+        where_field = where_spec_split[0]
+        where_relop = where_spec_split[1]
+        pred = WherePredicate(where_field, where_relop, where_val).pred()
+        result = [elem for elem in result if pred(elem)]
+    return result
+
+
+def process_order(
+        result: Iterator[Model], order_spec: Optional[Order]) -> Iterator[Model]:
+    """Sort result with respect to order specifications."""
+    if not order_spec:
+        return result
+    result = list(result)
+    for order in reversed(order_spec):
+        if order.startswith("-"):
+            reverse = True
+            order = order[1:]
+        else:
+            reverse = False
+            if order.startswith("+"):
+                order = order[1:]
+
+        result.sort(
+            key=lambda obj: getattr(
+                obj, order),  # pylint: disable=cell-var-from-loop
+            reverse=reverse)
+    return result

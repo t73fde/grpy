@@ -25,6 +25,7 @@ import uuid
 from typing import NamedTuple, Optional
 
 
+Model = NamedTuple
 KeyType = uuid.UUID
 
 
