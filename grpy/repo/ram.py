@@ -23,7 +23,7 @@
 import uuid
 from typing import Any, Iterator, Optional
 
-from .base import DuplicateKey, Order, Repository, RepositoryFactory, Where
+from .base import DuplicateKey, OrderSpec, Repository, RepositoryFactory, WhereSpec
 from ..models import Grouping, KeyType, Model, User
 
 
@@ -76,6 +76,16 @@ class RamRepository(Repository):
         """Return user with given username, or None."""
         return self._users_username.get(username, None)
 
+    def list_users(
+            self,
+            where_spec: Optional[WhereSpec] = None,
+            order_spec: Optional[OrderSpec] = None) -> Iterator[User]:
+        """Return an iterator of all or some users."""
+        result = self._users.values()
+        result = process_where(result, where_spec)
+        result = process_order(result, order_spec)
+        return result
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         if grouping.key:
@@ -95,12 +105,12 @@ class RamRepository(Repository):
 
     def list_groupings(
             self,
-            where: Optional[Where] = None,
-            order: Optional[Order] = None) -> Iterator[Grouping]:
+            where_spec: Optional[WhereSpec] = None,
+            order_spec: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all or some groupings."""
         result = self._groupings.values()
-        result = process_where(result, where)
-        result = process_order(result, order)
+        result = process_where(result, where_spec)
+        result = process_order(result, order_spec)
         return result
 
 
@@ -154,7 +164,8 @@ class WherePredicate:
         return data_value > self.value
 
 
-def process_where(result: Iterator[Model], where: Optional[Where]) -> Iterator[Model]:
+def process_where(
+        result: Iterator[Model], where: Optional[WhereSpec]) -> Iterator[Model]:
     """Filter result according to specification."""
     if not where:
         return result
@@ -168,7 +179,7 @@ def process_where(result: Iterator[Model], where: Optional[Where]) -> Iterator[M
 
 
 def process_order(
-        result: Iterator[Model], order_spec: Optional[Order]) -> Iterator[Model]:
+        result: Iterator[Model], order_spec: Optional[OrderSpec]) -> Iterator[Model]:
     """Sort result with respect to order specifications."""
     if not order_spec:
         return result
