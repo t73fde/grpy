@@ -106,6 +106,16 @@ def test_get_user_by_username(repository: Repository):
         assert not_found is None
 
 
+def test_get_user_by_username_after_change(repository: Repository):
+    """After a change to an username, the old name must not be accessible."""
+    username = "user"
+    repository.set_user(User(None, username, True))
+    user = repository.get_user_by_username(username)
+    user = user._replace(username="resu")
+    repository.set_user(user)
+    assert repository.get_user_by_username(username) is None
+
+
 def setup_users(repository: Repository, count: int) -> List[User]:
     """Insert some users into repository."""
     result = []

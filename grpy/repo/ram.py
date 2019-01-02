@@ -63,8 +63,12 @@ class RamRepository(Repository):
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
         if user.key:
-            if user.key not in self._users:
+            try:
+                previous_user = self._users[user.key]
+            except KeyError:
                 raise ValueError("User with key {} not in repository".format(user.key))
+            if previous_user.username != user.username:
+                del self._users_username[previous_user.username]
         else:
             user = user._replace(key=self._uuid())
 

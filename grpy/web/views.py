@@ -53,6 +53,11 @@ def about():
 
 def login():
     """Show login form and authenticate user."""
+    if g.user:
+        current_app.logout()
+        flash("User '{}' was logged out.".format(g.user.username), category="info")
+        g.user = None
+
     if request.method == "POST":
         username = request.form['username']
         user = get_repository().get_user_by_username(username)

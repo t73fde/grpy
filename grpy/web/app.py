@@ -80,8 +80,10 @@ class GrpyApp(Flask):
                 user = self.get_repository().get_user_by_username(username)
                 if user:
                     g.user = user
-                    return
+                    return None
+                session.clear()
             g.user = None
+            return None
 
         self.before_request(load_logged_in_user)
 
