@@ -131,9 +131,10 @@ def populate_testdata(repository_factory):
         for number in range(100):
             repository.set_user(User(None, "s%02d" % number, False))
 
-        from datetime import datetime, timedelta
-        from grpy.models import Grouping
-        now = datetime.now()
+        from datetime import timedelta
+        from .. import utils
+        from ..models import Grouping
+        now = utils.now()
         for user in (kreuz, stern):
             repository.set_grouping(Grouping(
                 None, "PM", user.key,

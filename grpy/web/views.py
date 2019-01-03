@@ -20,12 +20,11 @@
 
 """Web views for grpy."""
 
-import datetime
-
 from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
-from grpy.repo.base import Repository
+from .. import utils
+from ..repo.base import Repository
 
 
 def get_repository() -> Repository:
@@ -41,7 +40,7 @@ def home():
             groupings = get_repository().list_groupings(
                 where_spec={
                     "host__eq": g.user.key,
-                    "close_date__le": datetime.datetime.now()},
+                    "close_date__le": utils.now()},
                 order_spec=["final_date"])
     return render_template("home.html", groupings=groupings)
 

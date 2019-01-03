@@ -29,6 +29,7 @@ import pytest
 
 from .. import create_factory
 from ..base import DuplicateKey, Repository
+from ... import utils
 from ...models import Grouping, User
 
 # pylint: disable=redefined-outer-name
@@ -200,7 +201,7 @@ def create_grouping(repository: Repository) -> Grouping:
     else:
         user = list(users)[0]
 
-    now = datetime.datetime.now()
+    now = utils.now()
     return Grouping(
         None, "grouping", user.key,
         now, now + datetime.timedelta(days=7), None,
@@ -263,7 +264,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
         repository.set_user(User(None, "host-1", True)),
         repository.set_user(User(None, "host-2", True)),
     ]
-    now = datetime.datetime.now()
+    now = utils.now()
     timedelta = datetime.timedelta
     days = 0
     result = []

@@ -28,6 +28,7 @@ from flask import g, session, url_for
 import pytest
 
 from ..app import create_app
+from ... import utils
 from ...models import Grouping, User
 
 
@@ -68,7 +69,7 @@ def test_home_anonymous(client):
 
 def insert_simple_grouping(repository):
     """Insert a grouping into the repository."""
-    now = datetime.datetime.now()
+    now = utils.now()
     host = repository.get_user_by_username("host")
     return repository.set_grouping(Grouping(
         None, "Name-PM", host.key, now, now + datetime.timedelta(days=1), None,
