@@ -33,6 +33,10 @@ class DuplicateKey(Exception):
     """Signal that a key is not unique."""
 
 
+class NothingToUpdate(Exception):
+    """Signal a missing data element, so that an update is not possible."""
+
+
 class Repository:
     """Abstract repository."""
 

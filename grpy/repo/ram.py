@@ -23,7 +23,8 @@
 import uuid
 from typing import Any, Iterator, Optional
 
-from .base import DuplicateKey, OrderSpec, Repository, RepositoryFactory, WhereSpec
+from .base import (
+    DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from ..models import Grouping, KeyType, Model, User
 
 
@@ -66,7 +67,7 @@ class RamRepository(Repository):
             try:
                 previous_user = self._users[user.key]
             except KeyError:
-                raise ValueError("User with key {} not in repository".format(user.key))
+                raise NothingToUpdate("Missing user {}".format(user.key))
             if previous_user.username != user.username:
                 del self._users_username[previous_user.username]
         else:
@@ -100,8 +101,7 @@ class RamRepository(Repository):
         """Add / update the given grouping."""
         if grouping.key:
             if grouping.key not in self._groupings:
-                raise ValueError(
-                    "Grouping with key {} not in repository".format(grouping.key))
+                raise NothingToUpdate("Missing grouping {}".format(grouping.key))
         else:
             grouping = grouping._replace(key=self._uuid())
 

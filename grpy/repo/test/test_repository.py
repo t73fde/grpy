@@ -28,7 +28,7 @@ from typing import List
 import pytest
 
 from .. import create_factory
-from ..base import DuplicateKey, Repository
+from ..base import DuplicateKey, NothingToUpdate, Repository
 from ... import utils
 from ...models import Grouping, User
 
@@ -60,7 +60,7 @@ def test_insert_user(repository: Repository):
 def test_update_user(repository: Repository):
     """Check that updating an existing user works."""
     user = User(uuid.uuid4(), "user", True)
-    with pytest.raises(ValueError):
+    with pytest.raises(NothingToUpdate):
         repository.set_user(user)
 
     user = repository.set_user(User(None, "user", True))
@@ -232,7 +232,7 @@ def test_update_grouping(repository: Repository):
     """Check that updating an existing grouping works."""
     grouping = create_grouping(repository)
     grouping = grouping._replace(key=uuid.uuid4())
-    with pytest.raises(ValueError):
+    with pytest.raises(NothingToUpdate):
         repository.set_grouping(grouping)
 
     grouping = repository.set_grouping(create_grouping(repository))
