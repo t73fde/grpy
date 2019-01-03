@@ -176,14 +176,13 @@ class WherePredicate:
 def process_where(
         result: Iterator[Model], where: Optional[WhereSpec]) -> Iterator[Model]:
     """Filter result according to specification."""
-    if not where:
-        return result
-    for where_spec, where_val in where.items():
-        where_spec_split = where_spec.split("__")
-        where_field = where_spec_split[0]
-        where_relop = where_spec_split[1]
-        pred = WherePredicate(where_field, where_relop, where_val).pred()
-        result = [elem for elem in result if pred(elem)]
+    if where:
+        for where_spec, where_val in where.items():
+            where_spec_split = where_spec.split("__")
+            where_field = where_spec_split[0]
+            where_relop = where_spec_split[1]
+            pred = WherePredicate(where_field, where_relop, where_val).pred()
+            result = [elem for elem in result if pred(elem)]
     return result
 
 

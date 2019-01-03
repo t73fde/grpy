@@ -20,5 +20,5 @@
 ##
 
 echo "Download W3.CSS"
-curl -sSL https://www.w3schools.com/w3css/4/w3.css -o grpy/grouping/static/w3.css
+curl -sSL https://www.w3schools.com/w3css/4/w3.css -o grpy/web/static/w3.css
 echo "Done!"
