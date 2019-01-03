@@ -1,4 +1,3 @@
-
 ##
 #    Copyright (c) 2018 Detlef Stern
 #
@@ -41,7 +40,7 @@ def repository(request):
     factory = create_factory(request.param)
     repo = factory.create()
     yield repo
-    factory.close(repo)
+    repo.close()
 
 
 def test_insert_user(repository: Repository):

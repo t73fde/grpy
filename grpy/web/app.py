@@ -60,7 +60,7 @@ class GrpyApp(Flask):
             """Close the repository."""
             repository = g.pop('repository', None)
             if repository:
-                self._repository_factory.close(repository)
+                repository.close()
 
         self.teardown_request(close_repository)
 
@@ -149,4 +149,4 @@ def populate_testdata(repository_factory):
             now + timedelta(days=1), now + timedelta(days=8), None,
             "RD", 5, 3, "Nun wird es spannend"))
     finally:
-        repository_factory.close(repository)
+        repository.close()

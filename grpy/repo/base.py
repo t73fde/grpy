@@ -40,6 +40,10 @@ class NothingToUpdate(Exception):
 class Repository:
     """Abstract repository."""
 
+    def close(self) -> None:
+        """Close the repository, store all permanent data."""
+        raise NotImplementedError("Repository.close")
+
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
         raise NotImplementedError("Repository.set_user")
@@ -93,13 +97,9 @@ class Repository:
         raise NotImplementedError("Repository.list_groupings")
 
 
-class RepositoryFactory:
+class RepositoryFactory:  # pylint: disable=too-few-public-methods
     """An abstract factory for repositories."""
 
     def create(self):
         """Create and setup a repository."""
         raise NotImplementedError("RepositoryFactory.open")
-
-    def close(self, repository: Repository):
-        """Close the given repository."""
-        raise NotImplementedError("RepositoryFactory.close")

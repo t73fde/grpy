@@ -28,7 +28,7 @@ from .base import (
 from ..models import Grouping, KeyType, Model, User
 
 
-class RamRepositoryFactory(RepositoryFactory):
+class RamRepositoryFactory(RepositoryFactory):  # pylint: disable=too-few-public-methods
     """Maintain a singleton RAM-based repository."""
 
     def __init__(self):
@@ -39,10 +39,28 @@ class RamRepositoryFactory(RepositoryFactory):
         """Create and setup a repository."""
         if not self._repository:
             self._repository = RamRepository()
-        return self._repository
+        return RamRepositoryProxy(self._repository)
 
-    def close(self, repository: Repository):
-        """Close the given repository."""
+
+class RamRepositoryProxy:
+    """A proxy to a repository that checks create/open and close calls."""
+
+    def __init__(self, repository: Repository):
+        """Set the repository delegate."""
+        self.__delegate = repository
+
+    def close(self):
+        """Close the repository."""
+        self.__delegate.close()
+        self.__delegate = None
+
+    def __getattr__(self, name: str):
+        """Return value of attribute, if is_open."""
+        return getattr(self.__delegate, name)
+
+    def __eq__(self, other):
+        """Return True if both proxies have the same delegate."""
+        return self.__delegate == other.__delegate  # pylint: disable=protected-access
 
 
 class RamRepository(Repository):
@@ -54,6 +72,9 @@ class RamRepository(Repository):
         self._users_username = {}
         self._groupings = {}
         self._next_key = 0x10000
+
+    def close(self):
+        """Close the repository: nothing to do here."""
 
     def _uuid(self) -> uuid.UUID:
         """Return a new UUID."""
