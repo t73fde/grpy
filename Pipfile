@@ -37,6 +37,3 @@ Flask-WTF = "*"
 WTForms = "*"
 pytz = "*"
 gunicorn = "*"
-
-[requires]
-python_version = "3.6"
