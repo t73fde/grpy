@@ -21,6 +21,7 @@
 """Data models."""
 
 import datetime
+import enum
 import uuid
 from typing import NamedTuple, Optional
 
@@ -29,12 +30,23 @@ Model = NamedTuple
 KeyType = uuid.UUID
 
 
+class Permission(enum.Flag):
+    """User permissions."""
+
+    HOST = 2
+
+
 class User(NamedTuple):
     """User data."""
 
     key: Optional[KeyType]
     username: str
-    is_host: bool
+    permission: Permission = Permission(0)
+
+    @property
+    def is_host(self) -> bool:
+        """Return True if user is a host."""
+        return bool(self.permission & Permission.HOST)
 
 
 class Grouping(NamedTuple):

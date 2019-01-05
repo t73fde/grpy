@@ -29,7 +29,7 @@ import pytest
 from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
 from ... import utils
-from ...models import Grouping, User
+from ...models import Grouping, Permission, User
 
 # pylint: disable=redefined-outer-name
 
@@ -45,7 +45,7 @@ def repository(request):
 
 def test_insert_user(repository: Repository):
     """Check that inserting a new user works."""
-    user = User(None, "user", True)
+    user = User(None, "user", Permission.HOST)
     new_user = repository.set_user(user)
     assert not user.key
     assert new_user.key
@@ -62,13 +62,13 @@ def test_update_user(repository: Repository):
     with pytest.raises(NothingToUpdate):
         repository.set_user(user)
 
-    user = repository.set_user(User(None, "user", True))
-    new_user = user._replace(is_host=False)
+    user = repository.set_user(User(None, "user", Permission.HOST))
+    new_user = user._replace(permission=Permission(0))
     assert user.key == new_user.key
     newer_user = repository.set_user(new_user)
     assert new_user == newer_user
 
-    user_2 = repository.set_user(User(None, "user_2", False))
+    user_2 = repository.set_user(User(None, "user_2"))
     renamed_user = user_2._replace(username=user.username)
     with pytest.raises(DuplicateKey):
         repository.set_user(renamed_user)
@@ -76,11 +76,11 @@ def test_update_user(repository: Repository):
 
 def test_get_user(repository: Repository):
     """An inserted or updated user can be retrieved."""
-    user = repository.set_user(User(None, "user", True))
+    user = repository.set_user(User(None, "user", Permission.HOST))
     new_user = repository.get_user(user.key)
     assert new_user == user
 
-    newer_user = user._replace(is_host=not user.is_host)
+    newer_user = user._replace(permission=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user(user.key)
     assert last_user.is_host != user.is_host
@@ -92,11 +92,11 @@ def test_get_user(repository: Repository):
 
 def test_get_user_by_username(repository: Repository):
     """Retrieve an user by its username."""
-    user = repository.set_user(User(None, "user", True))
+    user = repository.set_user(User(None, "user", Permission.HOST))
     new_user = repository.get_user_by_username(user.username)
     assert new_user == user
 
-    newer_user = user._replace(is_host=not user.is_host)
+    newer_user = user._replace(permission=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user_by_username(user.username)
     assert last_user.is_host != user.is_host
@@ -138,8 +138,10 @@ def test_list_users(repository: Repository) -> None:
 def test_list_users_where(repository: Repository) -> None:
     """Select some user from list of all users."""
     all_users = setup_users(repository, 13)
-    users = list(repository.list_users(where_spec={'is_host__eq': True}))
-    non_users = list(repository.list_users(where_spec={'is_host__ne': True}))
+    users = list(
+        repository.list_users(where_spec={'permission__eq': Permission.HOST}))
+    non_users = list(
+        repository.list_users(where_spec={'permission__ne': Permission.HOST}))
     assert len(users) + len(non_users) == len(all_users)
     assert set(users + non_users) == set(all_users)
 

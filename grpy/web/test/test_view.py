@@ -29,7 +29,7 @@ import pytest
 
 from ..app import create_app
 from ... import utils
-from ...models import Grouping, User
+from ...models import Grouping, Permission, User
 
 
 @pytest.fixture
@@ -39,8 +39,8 @@ def app():
 
     with grpy_app.test_request_context():
         repository = grpy_app.get_repository()
-        repository.set_user(User(None, "host", True))
-        repository.set_user(User(None, "user", False))
+        repository.set_user(User(None, "host", Permission.HOST))
+        repository.set_user(User(None, "user"))
 
     return grpy_app
 

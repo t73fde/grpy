@@ -24,7 +24,7 @@ from typing import Any, Dict
 
 from flask import Flask, g, session
 
-from grpy.models import User
+from grpy.models import Permission, User
 from grpy.repo import create_factory
 
 from . import views
@@ -126,10 +126,10 @@ def populate_testdata(repository_factory):
     """Add some initial data for testing."""
     repository = repository_factory.create()
     try:
-        kreuz = repository.set_user(User(None, "kreuz", True))
-        stern = repository.set_user(User(None, "stern", True))
+        kreuz = repository.set_user(User(None, "kreuz", Permission.HOST))
+        stern = repository.set_user(User(None, "stern", Permission.HOST))
         for number in range(100):
-            repository.set_user(User(None, "s%02d" % number, False))
+            repository.set_user(User(None, "s%02d" % number))
 
         from datetime import timedelta
         from .. import utils
