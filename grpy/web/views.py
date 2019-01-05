@@ -24,6 +24,7 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from .. import utils
+from ..models import User
 from ..repo.base import Repository
 
 
@@ -58,9 +59,13 @@ def login():
         g.user = None
 
     if request.method == "POST":
-        username = request.form['username']
-        user = get_repository().get_user_by_username(username)
-        if current_app.login(user):
+        username = request.form['username'].strip()
+        if username and username[0] != "x":
+            repository = get_repository()
+            user = repository.get_user_by_username(username)
+            if not user:
+                user = repository.set_user(User(None, username))
+            current_app.login(user)
             return redirect(url_for("home"))
         flash("Cannot authenticate user", category="error")
     return render_template("login.html")

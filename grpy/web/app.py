@@ -88,13 +88,10 @@ class GrpyApp(Flask):
         self.before_request(load_logged_in_user)
 
     @staticmethod
-    def login(user: User) -> bool:
+    def login(user: User) -> None:
         """Log in the given user."""
         session.clear()
-        if user:
-            session['username'] = user.username
-            return True
-        return False
+        session['username'] = user.username
 
     @staticmethod
     def logout():
@@ -128,8 +125,8 @@ def populate_testdata(repository_factory):
     try:
         kreuz = repository.set_user(User(None, "kreuz", Permission.HOST))
         stern = repository.set_user(User(None, "stern", Permission.HOST))
-        for number in range(100):
-            repository.set_user(User(None, "s%02d" % number))
+        repository.set_user(User(None, "student"))
+        repository.set_user(User(None, "xnologin"))
 
         from datetime import timedelta
         from .. import utils

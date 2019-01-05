@@ -40,7 +40,6 @@ def app():
     with grpy_app.test_request_context():
         repository = grpy_app.get_repository()
         repository.set_user(User(None, "host", Permission.HOST))
-        repository.set_user(User(None, "user"))
 
     return grpy_app
 
@@ -119,10 +118,20 @@ def test_login(client):
     assert session['username'] == "host"
 
 
+def test_login_new_user(app, client):
+    """Test login view for new user."""
+    response = client.post(
+        url_for('login'), data={'username': "new_user", 'password': "1"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert session['username'] == "new_user"
+    assert app.get_repository().get_user_by_username("new_user")
+
+
 def test_invalid_login(client):
     """Test login view for invalid login."""
     url = url_for('login')
-    response = client.post(url, data={'username': "unknown", 'password': "1"})
+    response = client.post(url, data={'username': "xunknown", 'password': "1"})
     assert response.status_code == 200
     assert b"Cannot authenticate user" in response.data
     assert 'username' not in session
