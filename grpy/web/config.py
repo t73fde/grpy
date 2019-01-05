@@ -26,4 +26,4 @@ import platform
 SECRET_KEY = "".join(tuple(platform.uname()._asdict().values()) +
                      platform.python_build())
 
-REPOSITORY = "ram"
+REPOSITORY = "ram://"

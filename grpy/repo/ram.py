@@ -28,12 +28,22 @@ from .base import (
 from ..models import Grouping, KeyType, Model, User
 
 
-class RamRepositoryFactory(RepositoryFactory):  # pylint: disable=too-few-public-methods
+class RamRepositoryFactory(RepositoryFactory):
     """Maintain a singleton RAM-based repository."""
 
-    def __init__(self):
+    def __init__(self, repository_url: str):
         """Initialize the factory."""
         self._repository = None
+        self._url = repository_url
+
+    @property
+    def url(self) -> str:
+        """Return the configured URL to access the data store."""
+        return self._url
+
+    def can_connect(self) -> bool:
+        """Test the connection to the data source."""
+        return True
 
     def create(self) -> Repository:
         """Create and setup a repository."""

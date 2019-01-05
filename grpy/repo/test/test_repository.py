@@ -28,16 +28,33 @@ import pytest
 
 from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
+from ..ram import RamRepositoryFactory
 from ... import utils
 from ...models import Grouping, Permission, User
 
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(params=["ram"])
+def test_wrong_repository_url():
+    """If an illegal URL ist given, a dummy factory must be returned."""
+    factory = create_factory(None)
+    assert factory.url == "dummy:"
+
+
+def test_no_connection(monkeypatch):
+    """If unable to connect to data store, a dummy factory must be returned."""
+    def return_false(_):
+        return False
+    monkeypatch.setattr(RamRepositoryFactory, "can_connect", return_false)
+    factory = create_factory("ram:")
+    assert factory.url == "dummy:"
+
+
+@pytest.fixture(params=["dummy:", "ram:"])
 def repository(request):
     """Provide an open repository."""
     factory = create_factory(request.param)
+    assert factory.url == request.param
     repo = factory.create()
     yield repo
     repo.close()

@@ -97,8 +97,23 @@ class Repository:
         raise NotImplementedError("Repository.list_groupings")
 
 
-class RepositoryFactory:  # pylint: disable=too-few-public-methods
-    """An abstract factory for repositories."""
+class RepositoryFactory:
+    """
+    An abstract factory for repositories.
+
+    Every factory is initialized with a parsed URL that specifies the concrete
+    data source, e.g. a database or a database management system. The type of
+    this parsed URL is `str`.
+    """
+
+    @property
+    def url(self) -> str:
+        """Return the configured URL to access the data store."""
+        raise NotImplementedError("RepositoryFactory.url")
+
+    def can_connect(self) -> bool:
+        """Test the connection to the data source."""
+        raise NotImplementedError("RepositoryFactory.can_connect.")
 
     def create(self):
         """Create and setup a repository."""

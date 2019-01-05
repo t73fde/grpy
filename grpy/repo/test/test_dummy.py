@@ -18,29 +18,19 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test the specifics of RAM-based repositories."""
+"""Test the specifics of dummy repositories."""
 
-from ..ram import RamRepositoryFactory
+from ..dummy import DummyRepositoryFactory
 
 
 def test_url() -> None:
     """The URL of the Factory is that of the init argument."""
-    assert RamRepositoryFactory("ram:").url == "ram:"
+    assert DummyRepositoryFactory("dummy:").url == "dummy:"
 
 
-def test_always_same_repository() -> None:
-    """The factory will always return the same repository."""
-    factory = RamRepositoryFactory(None)
+def test_different_repository() -> None:
+    """The factory will always return different repositories."""
+    factory = DummyRepositoryFactory(None)
     repo_1 = factory.create()
     repo_2 = factory.create()
-    assert repo_1 == repo_2
-
-
-def test_different_factories_different_repositories() -> None:
-    """Different factories create different repositories."""
-    factory_1 = RamRepositoryFactory(None)
-    repo_1 = factory_1.create()
-    factory_2 = RamRepositoryFactory(None)
-    repo_2 = factory_2.create()
     assert repo_1 is not repo_2
-    assert repo_1 != repo_2

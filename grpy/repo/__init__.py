@@ -20,10 +20,27 @@
 
 """Database layer for grpy."""
 
+from urllib.parse import urlparse
+
 from .base import RepositoryFactory
+from .dummy import DummyRepositoryFactory
 from .ram import RamRepositoryFactory
 
 
-def create_factory(_repo_type: str) -> RepositoryFactory:
+FACTORY_DIRECTORY = {
+    "ram": RamRepositoryFactory,
+}
+
+
+def create_factory(repository_url: str) -> RepositoryFactory:
     """Create a new repository."""
-    return RamRepositoryFactory()
+    parsed_url = urlparse(repository_url)
+    try:
+        factory = FACTORY_DIRECTORY[parsed_url.scheme](parsed_url.geturl())
+    except KeyError:
+        factory = DummyRepositoryFactory(
+            "dummy:", "Unknown repository scheme '{}'".format(parsed_url.scheme))
+    while not factory.can_connect():
+        factory = DummyRepositoryFactory(
+            "dummy:", "Cannot connect to {}".format(factory.url))
+    return factory
