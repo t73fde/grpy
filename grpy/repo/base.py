@@ -58,18 +58,18 @@ class Repository:
 
     def list_users(
             self,
-            where_spec: Optional[WhereSpec] = None,
-            order_spec: Optional[OrderSpec] = None) -> Iterator[User]:
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[User]:
         """
         Return an iterator of all or some users.
 
-        If `where_spec` is not None, only the users according to
-        a specification are returned. The keys of `where_spec` are composed of
-        valid user attributes and a relation specification, separated by "__".
-        Relation specifications are one of: "eq", "ne", "ge", "gt", "lt", and
-        "le".  Examples are: "username__eq", "is_host__eq", "key__ne".
+        If `where` is not None, only the users according to a specification are
+        returned. The keys of `where` are composed of valid user attributes and
+        a relation specification, separated by "__".  Relation specifications
+        are one of: "eq", "ne", "ge", "gt", "lt", and "le".  Examples are:
+        "username__eq", "is_host__eq", "key__ne".
 
-        if `order_spec` is not None, the result is sorted with respect to given
+        If `order` is not None, the result is sorted with respect to given
         keys. Keys are valid user attributes, optionally prefixed by "-" or
         "+".  If the prefix "-" is given, sorting is descending, else it is
         ascending. Examples: "username", "-username".
@@ -86,13 +86,13 @@ class Repository:
 
     def list_groupings(
             self,
-            where_spec: Optional[WhereSpec] = None,
-            order_spec: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """
         Return an iterator of all or some groupings.
 
-        See method `list_users` for a detailed description of `where_spec`
-        and `order_spec`.
+        See method `list_users` for a detailed description of `where` and
+        `order`.
         """
         raise NotImplementedError("Repository.list_groupings")
 

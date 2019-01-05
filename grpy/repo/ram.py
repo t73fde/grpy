@@ -110,12 +110,12 @@ class RamRepository(Repository):
 
     def list_users(
             self,
-            where_spec: Optional[WhereSpec] = None,
-            order_spec: Optional[OrderSpec] = None) -> Iterator[User]:
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[User]:
         """Return an iterator of all or some users."""
         result = self._users.values()
-        result = process_where(result, where_spec)
-        result = process_order(result, order_spec)
+        result = process_where(result, where)
+        result = process_order(result, order)
         return result
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
@@ -135,12 +135,12 @@ class RamRepository(Repository):
 
     def list_groupings(
             self,
-            where_spec: Optional[WhereSpec] = None,
-            order_spec: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all or some groupings."""
         result = self._groupings.values()
-        result = process_where(result, where_spec)
-        result = process_order(result, order_spec)
+        result = process_where(result, where)
+        result = process_order(result, order)
         return result
 
 
@@ -208,22 +208,22 @@ def process_where(
 
 
 def process_order(
-        result: Iterator[Model], order_spec: Optional[OrderSpec]) -> Iterator[Model]:
+        result: Iterator[Model], order: Optional[OrderSpec]) -> Iterator[Model]:
     """Sort result with respect to order specifications."""
-    if not order_spec:
+    if not order:
         return result
     result = list(result)
-    for order in reversed(order_spec):
-        if order.startswith("-"):
+    for order_field in reversed(order):
+        if order_field.startswith("-"):
             reverse = True
-            order = order[1:]
+            order_field = order_field[1:]
         else:
             reverse = False
-            if order.startswith("+"):
-                order = order[1:]
+            if order_field.startswith("+"):
+                order_field = order_field[1:]
 
         result.sort(
             key=lambda obj: getattr(
-                obj, order),  # pylint: disable=cell-var-from-loop
+                obj, order_field),  # pylint: disable=cell-var-from-loop
             reverse=reverse)
     return result
