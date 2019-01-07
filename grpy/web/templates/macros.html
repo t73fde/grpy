@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{# vim_ ft=django #}
 {#
  # Copyright (c) 2018 Detlef Stern
  #
@@ -17,25 +17,23 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% from "macros.html" import render_field, render_button %}
-{% block title %}Login{% endblock %}
-{% block heading %}{% endblock %}
-{% block content %}
-<div class="w3-panel">
-<div class="w3-card">
-<div class="w3-container w3-light-gray">
-  <h1>Login</h1>
-</div>
-<form method="post">
-  {{- form.csrf_token }}
-  {{- render_field(form.username, autofocus=True) }}
-  {{- render_field(form.password) }}
-<div class="w3-panel">
-<input type="submit" name="login" value="Login" class="w3-btn w3-indigo" />
-</div>
-</form>
-<div class="w3-container"></div>
-</div>
-</div>
-{% endblock %}
 
+{% macro render_input(field, autofocus, class) %}
+{{- field(class=class,autofocus=autofocus)|safe }}
+{% endmacro %}
+
+{% macro render_field(field, autofocus=False) %}
+<div class="w3-panel">
+{{- field.label }}
+{%- if field.errors %}
+  {{- render_input(field, autofocus, class="w3-input w3-border w3-border-red") }}
+  {%- for error in field.errors %}
+    <div class="w3-text-red">
+      {{- error -}}
+    </div>
+  {%- endfor %}
+{%- else %}
+{{ render_input(field, autofocus, class="w3-input") }}
+{%- endif %}
+</div>
+{% endmacro %}

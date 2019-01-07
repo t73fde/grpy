@@ -21,8 +21,9 @@
 """Web views for grpy."""
 
 from flask import (
-    abort, current_app, flash, g, redirect, render_template, request, url_for)
+    abort, current_app, flash, g, redirect, render_template, url_for)
 
+from . import forms
 from .. import utils
 from ..models import User
 from ..repo.base import Repository
@@ -58,8 +59,9 @@ def login():
         flash("User '{}' was logged out.".format(g.user.username), category="info")
         g.user = None
 
-    if request.method == "POST":
-        username = request.form['username'].strip()
+    form = forms.LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
         if username and username[0] != "x":
             repository = get_repository()
             user = repository.get_user_by_username(username)
@@ -68,7 +70,9 @@ def login():
             current_app.login(user)
             return redirect(url_for("home"))
         flash("Cannot authenticate user", category="error")
-    return render_template("login.html")
+    else:
+        print("NOFO", form.data, form.errors)
+    return render_template("login.html", form=form)
 
 
 def logout():

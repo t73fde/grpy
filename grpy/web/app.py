@@ -44,6 +44,7 @@ class GrpyApp(Flask):
             self.config.from_mapping(
                 SECRET_KEY="dev",
                 REPOSITORY="ram://",
+                WTF_CSRF_ENABLED=False,
             )
             self.config.from_mapping(config_mapping)
         else:
