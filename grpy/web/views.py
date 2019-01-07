@@ -24,6 +24,7 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, url_for)
 
 from . import forms
+from .utils import value_or_404
 from .. import utils
 from ..models import User
 from ..repo.base import Repository
@@ -85,9 +86,7 @@ def grouping_detail(key):
     """Show details of a grouping."""
     if not g.user:
         abort(401)
-    grouping = get_repository().get_grouping(key)
-    if not grouping:
-        abort(404)
+    grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
     return render_template("grouping_detail.html", grouping=grouping)
