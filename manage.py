@@ -61,6 +61,17 @@ def lint_formatting(source_paths: List[str], verbose: bool):
         click.echo("-- please format source code")
 
 
+def lint_flake8(source_paths: List[str], verbose: bool):
+    """Run flake8."""
+    try:
+        from _multiprocessing import SemLock  # noqa: F401 pylint: disable=unused-import
+        flake8_params = []
+    except ImportError:
+        flake8_params = ["-j", "1"]
+
+    return run_subprocess(["flake8"] + flake8_params + source_paths, verbose)
+
+
 @click.group()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
@@ -79,7 +90,7 @@ def lint(ctx, verbose):
     source_paths = ["grpy", "scripts", "wsgi.py", "manage.py"]
     lint_formatting(source_paths, verbose)
     run_subprocess(["pydocstyle", "-v", "-e"] + source_paths, verbose)
-    run_subprocess(["flake8"] + source_paths, verbose)
+    lint_flake8(source_paths, verbose)
     run_subprocess(["dodgy"], verbose)
     run_subprocess(["pylint", "grpy"], verbose)
     run_subprocess(["bandit", "-r", "-x", "test", "."], verbose)
