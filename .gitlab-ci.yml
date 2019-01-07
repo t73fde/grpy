@@ -7,7 +7,7 @@ check:
   image: hshnwinps/dev
   script:
   - pipenv install --dev
-  - pipenv run ./scripts/check.sh
+  - pipenv run python manage.py -v lint
   - pipenv run ./scripts/coverage.sh
 
 build:
