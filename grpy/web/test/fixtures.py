@@ -54,6 +54,7 @@ class AuthenticationActions:
     """Actions for Authentication, to be used as a fixture."""
 
     def __init__(self, client):
+        """Initialize the object."""
         self._client = client
 
     def login(self, username='test', password='test'):
@@ -69,5 +70,5 @@ class AuthenticationActions:
 
 @pytest.fixture
 def auth(client):
-    """Authentication fixture."""
+    """Fixture for authentication."""
     return AuthenticationActions(client)
