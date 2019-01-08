@@ -30,6 +30,10 @@ Model = NamedTuple
 KeyType = uuid.UUID
 
 
+class ValidationFailed(Exception):
+    """Model validation failed."""
+
+
 class Permission(enum.Flag):
     """User permissions."""
 
@@ -48,6 +52,11 @@ class User(NamedTuple):
         """Return True if user is a host."""
         return bool(self.permission & Permission.HOST)
 
+    def validate(self) -> None:
+        """Check model for consistency."""
+        if not self.username:
+            raise ValidationFailed("Username is empty: {}".format(self))
+
 
 class Grouping(NamedTuple):
     """Grouping data."""
@@ -62,3 +71,23 @@ class Grouping(NamedTuple):
     max_group_size: int
     member_reserve: int
     note: str
+
+    def validate(self) -> None:
+        """Check model for consistency."""
+        if not self.name:
+            raise ValidationFailed("Name is empty: {}".format(self))
+        if self.begin_date >= self.final_date:
+            raise ValidationFailed(
+                "Begin date after final date: {} >= {}".format(
+                    self.begin_date, self.final_date))
+        if self.close_date and self.final_date >= self.close_date:
+            raise ValidationFailed(
+                "Final date after close date: {} >= {}".format(
+                    self.final_date, self.close_date))
+        if not self.strategy:
+            raise ValidationFailed("Strategy is empty: {}".format(self))
+        if self.max_group_size < 1:
+            raise ValidationFailed(
+                "Maximal group size < 1: {}".format(self.max_group_size))
+        if self.member_reserve < 0:
+            raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
