@@ -24,7 +24,7 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, url_for)
 
 from . import forms
-from .utils import value_or_404
+from .utils import login_required, value_or_404
 from .. import utils
 from ..models import User
 from ..repo.base import Repository
@@ -82,10 +82,9 @@ def logout():
     return redirect(url_for("home"))
 
 
+@login_required
 def grouping_detail(key):
     """Show details of a grouping."""
-    if not g.user:
-        abort(401)
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)

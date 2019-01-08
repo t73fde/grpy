@@ -25,36 +25,15 @@ import uuid
 
 from flask import g, session, url_for
 
-import pytest
-
-from ..app import create_app
+from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
 from ... import utils
-from ...models import Grouping, Permission, User
-
-
-@pytest.fixture
-def app():
-    """Create an app as fixture."""
-    grpy_app = create_app({'TESTING': True})
-
-    with grpy_app.test_request_context():
-        repository = grpy_app.get_repository()
-        repository.set_user(User(None, "host", Permission.HOST))
-
-    return grpy_app
+from ...models import Grouping
 
 
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture
-def client(app):
-    """Create a test client as fixture."""
-    with app.test_client() as test_client:
-        yield test_client
-
-
-def test_home_anonymous(client):
+def test_home_anonymous(client):  # noqa: F811
     """Test home view as an anonymous user."""
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -75,11 +54,11 @@ def insert_simple_grouping(repository):
         "RD", 17, 7, "Notizie"))
 
 
-def test_home_host(app, client):
+def test_home_host(app, client, auth):  # noqa: F811
     """Test home view as a host."""
     repository = app.get_repository()
     grouping = insert_simple_grouping(repository)
-    login(client, "host")
+    auth.login("host")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "host</span>" in data
@@ -88,16 +67,16 @@ def test_home_host(app, client):
     assert str(grouping.final_date.minute) in data
 
 
-def test_home_user(client):
+def test_home_user(client, auth):  # noqa: F811
     """Test home view as a participant."""
-    login(client, "user")
+    auth.login("user")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "user</span>" in data
     assert " valid grouping link " in data
 
 
-def test_about_anonymous(client):
+def test_about_anonymous(client):  # noqa: F811
     """Test about view as an anonymous user."""
     response = client.get(url_for('about'))
     data = response.data.decode('utf-8')
@@ -108,7 +87,7 @@ def test_about_anonymous(client):
     assert url_for('logout') not in data
 
 
-def test_login(client):
+def test_login(client):  # noqa: F811
     """Test login view."""
     url = url_for('login')
     assert client.get(url).status_code == 200
@@ -118,7 +97,7 @@ def test_login(client):
     assert session['username'] == "host"
 
 
-def test_login_new_user(app, client):
+def test_login_new_user(app, client):  # noqa: F811
     """Test login view for new user."""
     response = client.post(
         url_for('login'), data={'username': "new_user", 'password': "1"})
@@ -128,7 +107,7 @@ def test_login_new_user(app, client):
     assert app.get_repository().get_user_by_username("new_user")
 
 
-def test_invalid_login(client):
+def test_invalid_login(client):  # noqa: F811
     """Test login view for invalid login."""
     url = url_for('login')
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
@@ -137,25 +116,18 @@ def test_invalid_login(client):
     assert 'username' not in session
 
 
-def login(client, username: str, password: str = "1") -> None:
-    """Perform the login."""
-    response = client.post(
-        url_for('login'), data={'username': username, 'password': password})
-    assert response.status_code == 302
-
-
-def test_double_login(client):
+def test_double_login(client, auth):  # noqa: F811
     """A double login makes the last user to be logged in."""
-    login(client, "user")
+    auth.login("user")
     assert session['username'] == "user"
     assert b"User &#39;user&#39; was logged out." in client.get(url_for('login')).data
-    login(client, "host")
+    auth.login("host")
     assert session['username'] == "host"
 
 
-def test_name_change_after_login(app, client):
+def test_name_change_after_login(app, client, auth):  # noqa: F811
     """Username is changed after login."""
-    login(client, "host")
+    auth.login("host")
     repository = app.get_repository()
     user = repository.get_user_by_username("host")
     repository.set_user(user._replace(username="tsoh"))
@@ -163,9 +135,9 @@ def test_name_change_after_login(app, client):
     assert g.user is None
 
 
-def test_logout(client):
+def test_logout(client, auth):  # noqa: F811
     """Test login/logout sequence."""
-    login(client, "host")
+    auth.login("host")
     assert session['username'] == "host"
     response = client.get(url_for('logout'))
     assert response.status_code == 302
@@ -173,7 +145,7 @@ def test_logout(client):
     assert 'username' not in session
 
 
-def test_logout_without_login(client):
+def test_logout_without_login(client):  # noqa: F811
     """A logout without previous login is ignored."""
     assert 'username' not in session
     response = client.get(url_for('logout'))
@@ -182,7 +154,7 @@ def test_logout_without_login(client):
     assert 'username' not in session
 
 
-def test_grouping_detail(app, client):
+def test_grouping_detail(app, client, auth):  # noqa: F811
     """Test grouping detail view."""
     repository = app.get_repository()
     grouping = insert_simple_grouping(repository)
@@ -190,13 +162,13 @@ def test_grouping_detail(app, client):
     response = client.get(url)
     assert response.status_code == 401
 
-    login(client, "host")
+    auth.login("host")
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode('utf-8')
     assert grouping.note in data
 
-    login(client, "user")
+    auth.login("user")
     response = client.get(url)
     assert response.status_code == 403
 

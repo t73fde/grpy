@@ -24,7 +24,28 @@ import pytest
 
 from werkzeug.exceptions import NotFound
 
-from ..utils import value_or_404
+from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
+from ..utils import login_required, value_or_404
+
+
+# pylint: disable=redefined-outer-name
+
+
+def test_login_required(app, client, auth):  # noqa: F811
+    """If no user is logged in, raise 401."""
+    @login_required
+    def just_a_view():
+        """This view is for testing only."""
+        return b"Done"
+
+    app.add_url_rule('/test', "test", just_a_view)
+    response = client.get('/test')
+    assert response.status_code == 401
+
+    auth.login("user")
+    response = client.get('/test')
+    assert response.status_code == 200
+    assert response.data == b"Done"
 
 
 def test_value_or_404():

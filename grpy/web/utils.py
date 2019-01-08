@@ -21,9 +21,20 @@
 
 """Some utility functions."""
 
+from functools import wraps
 from typing import Any
 
-from flask import abort
+from flask import abort, g
+
+
+def login_required(view):
+    """Wrap a view to enforce an user who is logged in."""
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if g.user is None:
+            abort(401)
+        return view(*args, **kwargs)
+    return wrapped_view
 
 
 def value_or_404(value: Any) -> Any:
