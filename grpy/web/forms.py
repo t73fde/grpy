@@ -22,11 +22,42 @@
 
 from flask_wtf import FlaskForm
 
-from wtforms import PasswordField, StringField, validators
+from pytz import UTC
+
+from wtforms.fields import (
+    DateTimeField, IntegerField, PasswordField, SelectField, StringField)
+from wtforms.validators import DataRequired, InputRequired, NumberRange, Optional
+from wtforms.widgets import TextArea
 
 
 class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     """Login data."""
 
-    username = StringField("Username", [validators.DataRequired()])
-    password = PasswordField("Password", [validators.DataRequired()])
+    username = StringField("Username", [DataRequired()])
+    password = PasswordField("Password", [DataRequired()])
+
+
+class GroupingForm(FlaskForm):
+    """Grouping data."""
+
+    name = StringField(
+        "Name", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+    begin_date = DateTimeField(
+        "Begin date", [InputRequired()],
+        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
+        format="%Y-%m-%d %H:%M")
+    final_date = DateTimeField(
+        "Final date", [InputRequired()],
+        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
+        format="%Y-%m-%d %H:%M")
+    close_date = DateTimeField(
+        "Close date", [Optional()],
+        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
+        format="%Y-%m-%d %H:%M")
+    strategy = SelectField("Strategy", [DataRequired()])
+    max_group_size = IntegerField(
+        "Maximum group size", [InputRequired(), NumberRange(min=1)])
+    member_reserve = IntegerField(
+        "Member reserve", [InputRequired(), NumberRange(min=0)])
+    note = StringField(
+        "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else None])

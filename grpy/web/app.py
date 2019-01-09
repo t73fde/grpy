@@ -115,7 +115,11 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.add_url_rule("/about", "about", views.about)
     app.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
     app.add_url_rule("/logout", "logout", views.logout)
-    app.add_url_rule("/groupings/<uuid:key>/", "grouping_detail", views.grouping_detail)
+    app.add_url_rule(
+        "/groupings/", "grouping_create", views.grouping_create,
+        methods=('GET', 'POST'))
+    app.add_url_rule(
+        "/groupings/<uuid:key>/", "grouping_detail", views.grouping_detail)
     app.log_debug("Application created.")
     return app
 

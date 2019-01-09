@@ -42,3 +42,10 @@ def value_or_404(value: Any) -> Any:
     if value is None:
         abort(404)
     return value
+
+
+def make_model(model_class, form_data, additional_values):
+    """Create a new model based on form data."""
+    data = dict(form_data)
+    data.update(additional_values)
+    return model_class._make(map(lambda f: data.get(f, None), model_class._fields))

@@ -24,9 +24,9 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, url_for)
 
 from . import forms
-from .utils import login_required, value_or_404
+from .utils import login_required, make_model, value_or_404
 from .. import utils
-from ..models import User
+from ..models import Grouping, User
 from ..repo.base import Repository
 
 
@@ -71,8 +71,6 @@ def login():
             current_app.login(user)
             return redirect(url_for("home"))
         flash("Cannot authenticate user", category="error")
-    else:
-        print("NOFO", form.data, form.errors)
     return render_template("login.html", form=form)
 
 
@@ -80,6 +78,20 @@ def logout():
     """Logout current user."""
     current_app.logout()
     return redirect(url_for("home"))
+
+
+@login_required
+def grouping_create():
+    """Create a new grouping."""
+    if not g.user.is_host:
+        abort(403)
+    form = forms.GroupingForm()
+    form.strategy.choices = [('', ''), ('RD', "Random")]
+    if form.validate_on_submit():
+        grouping = make_model(Grouping, form.data, {"host": g.user.key})
+        get_repository().set_grouping(grouping)
+        return redirect(url_for("home"))
+    return render_template("grouping_create.html", form=form)
 
 
 @login_required

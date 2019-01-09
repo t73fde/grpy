@@ -17,39 +17,30 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% block title %}Home{% endblock %}
+{% from "macros.html" import render_field %}
+{% block title %}Create Grouping{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
-{% if g.user %}
-{% if g.user.is_host %}
 <div class="w3-panel">
-  <h1>Active Groupings</h1>
-  <table class="w3-table w3-bordered">
-    <tr><th>Name</th><th>Final date</th></tr>
-    {% for grouping in groupings %}
-    <tr>
-      <td><a href="{{ url_for('grouping_detail', key=grouping.key) }}">{{ grouping.name }}</a></td>
-      <td>{{ grouping.final_date }}</td>
-    </tr>
-    {% else %}
-    <tr><td>(None)</td></tr>
-    {% endfor %}
-  </table>
-  <div class="w3-panel">
-    <a href="{{ url_for('grouping_create') }}" class="w3-button w3-indigo">Create</a>
-  </div>
+<div class="w3-card">
+<div class="w3-container w3-light-gray">
+  <h1>Create Grouping</h1>
 </div>
-{% else %}
+<form method="post">
+  {{- form.csrf_token }}
+  {{- render_field(form.name, autofocus=True) }}
+  {{- render_field(form.begin_date) }}
+  {{- render_field(form.final_date) }}
+  {{- render_field(form.close_date) }}
+  {{- render_field(form.strategy) }}
+  {{- render_field(form.max_group_size) }}
+  {{- render_field(form.member_reserve) }}
+  {{- render_field(form.note) }}
 <div class="w3-panel">
-  <h1>Welcome!</h1>
-  <p>Please use a valid grouping link to participate in a grouping.</p>
+<input type="submit" name="create" value="Create" class="w3-btn w3-indigo" />
 </div>
-{% endif %}
-{% else %}
-<div class="w3-panel">
-  <h1>Welcome!</h1>
-  <p>Please <a href="{{ url_for('login') }}">login</a> to use this software.<p>
+</form>
+<div class="w3-container"></div>
 </div>
-{% endif %}
+</div>
 {% endblock %}
-
