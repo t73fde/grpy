@@ -25,7 +25,8 @@ import pytest
 from werkzeug.exceptions import NotFound
 
 from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
-from ..utils import login_required, value_or_404
+from ..utils import login_required, make_model, value_or_404
+from ...models import Permission, User
 
 
 # pylint: disable=redefined-outer-name
@@ -58,3 +59,9 @@ def test_value_or_404_none():
     """A none value will raise 404."""
     with pytest.raises(NotFound):
         value_or_404(None)
+
+
+def test_make_model():
+    """A User model can be created from dict."""
+    user = make_model(User, {"username": "name"}, {"permission": Permission(0)})
+    assert user == User(None, "name")
