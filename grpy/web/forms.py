@@ -26,7 +26,8 @@ from pytz import UTC
 
 from wtforms.fields import (
     DateTimeField, IntegerField, PasswordField, SelectField, StringField)
-from wtforms.validators import DataRequired, InputRequired, NumberRange, Optional
+from wtforms.validators import (
+    DataRequired, InputRequired, NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
 
 
@@ -61,3 +62,13 @@ class GroupingForm(FlaskForm):
         "Member reserve", [InputRequired(), NumberRange(min=0)])
     note = StringField(
         "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else None])
+
+    def validate_final_date(self, field):
+        """Check that final date is after begin date."""
+        if self.begin_date.data >= field.data:
+            raise ValidationError("Final date must be after begin date.")
+
+    def validate_close_date(self, field):
+        """Close date must be after final date."""
+        if self.final_date.data >= field.data:
+            raise ValidationError("Close date must be after final date.")
