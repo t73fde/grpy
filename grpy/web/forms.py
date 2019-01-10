@@ -65,7 +65,7 @@ class GroupingForm(FlaskForm):
 
     def validate_final_date(self, field):
         """Check that final date is after begin date."""
-        if self.begin_date.data >= field.data:
+        if self.begin_date.data and field.data and self.begin_date.data >= field.data:
             raise ValidationError("Final date must be after begin date.")
 
     def validate_close_date(self, field):
