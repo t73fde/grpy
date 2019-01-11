@@ -30,20 +30,14 @@ from typing import List, Sequence
 import click
 
 
-def start_subprocess(args: Sequence[str], verbose: bool):
-    """Start a subprocess with the given args and report error messages."""
+def exec_subprocess(args: Sequence[str], verbose: bool):
+    """Execute a subprocess with the given args and report error messages."""
     if verbose:
         click.echo("Executing '{}' ...".format(" ".join(args)), nl=False)
     process = subprocess.run(  # nosec
         args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if verbose:
         click.echo(" done.")
-    return process
-
-
-def run_subprocess(args: Sequence[str], verbose: bool):
-    """Run a subprocess with the given args and report error messages."""
-    process = start_subprocess(args, verbose)
     if process.returncode:
         click.echo("!!!\n!!! Error in: " + " ".join(args))
         click.echo("!!!")
@@ -52,16 +46,24 @@ def run_subprocess(args: Sequence[str], verbose: bool):
     return process
 
 
-def lint_formatting(source_paths: List[str], verbose: bool):
+def run_subprocess(args: Sequence[str], verbose: bool) -> bool:
+    """Run a subprocess with the given args and report error messages."""
+    process = exec_subprocess(args, verbose)
+    return process.returncode == 0
+
+
+def lint_formatting(source_paths: List[str], verbose: bool) -> bool:
     """Check for an appropriate format of source code."""
-    process = run_subprocess(
+    process = exec_subprocess(
         ["autopep8", "--diff", "--recursive"] + source_paths, verbose)
     if process.returncode == 0 and process.stdout:
         click.echo(process.stdout)
         click.echo("-- please format source code")
+        return False
+    return process.returncode == 0
 
 
-def lint_flake8(source_paths: List[str], verbose: bool):
+def lint_flake8(source_paths: List[str], verbose: bool) -> bool:
     """Run flake8."""
     try:
         from _multiprocessing import SemLock  # noqa: F401 pylint: disable=unused-import
@@ -88,12 +90,16 @@ def lint(ctx, verbose):
     """Perform a static code analysis."""
     verbose += ctx.obj['verbose']
     source_paths = ["grpy", "scripts", "wsgi.py", "manage.py"]
-    lint_formatting(source_paths, verbose)
-    run_subprocess(["pydocstyle", "-v", "-e"] + source_paths, verbose)
-    lint_flake8(source_paths, verbose)
-    run_subprocess(["dodgy"], verbose)
-    run_subprocess(["pylint", "grpy"], verbose)
-    run_subprocess(["bandit", "-r", "-x", "test", "."], verbose)
+    formatting_ok = lint_formatting(source_paths, verbose)
+    docstyle_ok = run_subprocess(["pydocstyle", "-v", "-e"] + source_paths, verbose)
+    flake8_ok = lint_flake8(source_paths, verbose)
+    dodgy_ok = run_subprocess(["dodgy"], verbose)
+    pylint_ok = run_subprocess(["pylint", "grpy"], verbose)
+    bandit_ok = run_subprocess(["bandit", "-r", "-x", "test", "."], verbose)
+
+    if not (formatting_ok and docstyle_ok and flake8_ok and dodgy_ok and
+            pylint_ok and bandit_ok):
+        ctx.exit(1)
 
 
 if __name__ == '__main__':
