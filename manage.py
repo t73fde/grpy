@@ -128,5 +128,14 @@ def coverage(ctx, verbose):
         ctx.exit(1)
 
 
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def check(ctx, verbose):
+    """Perform a full check: lint and coverage."""
+    ctx.invoke(lint, verbose=verbose)
+    ctx.invoke(coverage, verbose=verbose)
+
+
 if __name__ == '__main__':
     main(obj={})  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
