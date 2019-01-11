@@ -56,8 +56,7 @@ def insert_simple_grouping(repository):
 
 def test_home_host(app, client, auth):  # noqa: F811
     """Test home view as a host."""
-    repository = app.get_repository()
-    grouping = insert_simple_grouping(repository)
+    grouping = insert_simple_grouping(app.get_repository())
     auth.login("host")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -156,8 +155,7 @@ def test_logout_without_login(client):  # noqa: F811
 
 def test_grouping_detail(app, client, auth):  # noqa: F811
     """Test grouping detail view."""
-    repository = app.get_repository()
-    grouping = insert_simple_grouping(repository)
+    grouping = insert_simple_grouping(app.get_repository())
     url = url_for('grouping_detail', key=grouping.key)
     response = client.get(url)
     assert response.status_code == 401
@@ -173,3 +171,29 @@ def test_grouping_detail(app, client, auth):  # noqa: F811
     assert response.status_code == 403
 
     assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
+
+
+def test_grouping_create(app, client, auth):  # noqa: F811
+    """Test the creation of new groupings."""
+    url = url_for('grouping_create')
+    assert client.get(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+
+    auth.login('host')
+    assert client.get(url).status_code == 200
+
+    response = client.post(url, data={})
+    assert response.status_code == 200
+    assert response.data.count(b'This field is required') == 5
+
+    response = client.post(url, data={
+        'name': "name", 'begin_date': "1970-01-01 00:00",
+        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+
+    groupings = app.get_repository().list_groupings(where={"name__eq": "name"})
+    assert len(groupings) == 1
