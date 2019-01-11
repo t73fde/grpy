@@ -24,13 +24,14 @@ Management / development script.
 Provides commands for static and dynamic tests.
 """
 
+import re
 import subprocess  # nosec
 from typing import List, Sequence
 
 import click
 
 
-def exec_subprocess(args: Sequence[str], verbose: bool):
+def exec_subprocess(args: Sequence[str], verbose: int):
     """Execute a subprocess with the given args and report error messages."""
     if verbose:
         click.echo("Executing '{}' ...".format(" ".join(args)), nl=False)
@@ -46,13 +47,13 @@ def exec_subprocess(args: Sequence[str], verbose: bool):
     return process
 
 
-def run_subprocess(args: Sequence[str], verbose: bool) -> bool:
+def run_subprocess(args: Sequence[str], verbose: int) -> bool:
     """Run a subprocess with the given args and report error messages."""
     process = exec_subprocess(args, verbose)
     return process.returncode == 0
 
 
-def lint_formatting(source_paths: List[str], verbose: bool) -> bool:
+def lint_formatting(source_paths: List[str], verbose: int) -> bool:
     """Check for an appropriate format of source code."""
     process = exec_subprocess(
         ["autopep8", "--diff", "--recursive"] + source_paths, verbose)
@@ -63,7 +64,7 @@ def lint_formatting(source_paths: List[str], verbose: bool) -> bool:
     return process.returncode == 0
 
 
-def lint_flake8(source_paths: List[str], verbose: bool) -> bool:
+def lint_flake8(source_paths: List[str], verbose: int) -> bool:
     """Run flake8."""
     try:
         from _multiprocessing import SemLock  # noqa: F401 pylint: disable=unused-import
@@ -72,6 +73,17 @@ def lint_flake8(source_paths: List[str], verbose: bool) -> bool:
         flake8_params = ["-j", "1"]
 
     return run_subprocess(["flake8"] + flake8_params + source_paths, verbose)
+
+
+def coverage_report(verbose: int) -> bool:
+    """Create and display a coverage report."""
+    process = exec_subprocess(["coverage", "report"], verbose)
+    if process.returncode:
+        return False
+    match_obj = re.search(rb'\nTOTAL.+ (\d.+)%\n', process.stdout)
+    if verbose > 1 or (match_obj and match_obj[1] != b'100'):
+        click.echo(process.stdout)
+    return True
 
 
 @click.group()
@@ -99,6 +111,20 @@ def lint(ctx, verbose):
 
     if not (formatting_ok and docstyle_ok and flake8_ok and dodgy_ok and
             pylint_ok and bandit_ok):
+        ctx.exit(1)
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def coverage(ctx, verbose):
+    """Perform a full test with coverage measurement."""
+    verbose += ctx.obj['verbose']
+    coverage_ok = run_subprocess(["coverage", "run", "-m", "pytest"], verbose)
+    if coverage_ok:
+        run_subprocess(["coverage", "html"], verbose)
+        coverage_report(verbose)
+    if not coverage_ok:
         ctx.exit(1)
 
 

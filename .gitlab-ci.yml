@@ -8,12 +8,4 @@ check:
   script:
   - pipenv install --dev
   - pipenv run python manage.py -v lint
-  - pipenv run ./scripts/coverage.sh
-
-build:
-  stage: build
-  image: hshnwinps/dev
-  only:
-  - deploy
-  script:
-  - ./scripts/run_dev.sh build runner "" ""
+  - pipenv run python manage.py -vv coverage
