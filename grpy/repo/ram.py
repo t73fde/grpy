@@ -94,6 +94,7 @@ class RamRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
+        user.validate()
         if user.key:
             try:
                 previous_user = self._users[user.key]
@@ -130,6 +131,7 @@ class RamRepository(Repository):
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
+        grouping.validate()
         if grouping.key:
             if grouping.key not in self._groupings:
                 raise NothingToUpdate("Missing grouping {}".format(grouping.key))
