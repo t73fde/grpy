@@ -26,7 +26,7 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='w3.css') }}" />
 </head>
 <body>
-<nav class="w3-bar w3-indigo">
+  <nav class="w3-bar {{ color('navbar') }}">
   <a href="{{ url_for('home') }}" class="w3-bar-item w3-button w3-mobile">Home</a>
   <a href="{{ url_for('about') }}" class="w3-bar-item w3-button w3-mobile">About</a>
   {% if g.user %}
@@ -45,7 +45,7 @@
   {% block heading %}MISSING HEADING{% endblock %}
 </header>
 {% for message in get_flashed_messages() %}
-<div class="w3-panel w3-red">{{ message }}</div>
+<div class="w3-panel {{ color('danger') }}">{{ message }}</div>
 {% endfor %}
 <article>
 {% block content %}MISSING CONTENT{% endblock %}

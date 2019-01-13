@@ -106,6 +106,12 @@ class GrpyApp(Flask):
             datetimeformat=utils.datetimeformat,
         )
 
+    def setup_jinja(self):
+        """Add some filters / globals for Jinja2."""
+        self.jinja_env.globals.update(  # pylint: disable=no-member
+            color=utils.colormap,
+        )
+
     @staticmethod
     def login(user: User) -> None:
         """Log in the given user."""
@@ -129,6 +135,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.setup_repository()
     app.setup_user_handling()
     app.setup_babel()
+    app.setup_jinja()
 
     app.add_url_rule("/", "home", views.home)
     app.add_url_rule("/about", "about", views.about)

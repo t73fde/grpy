@@ -22,7 +22,7 @@
 """Some utility functions for the web application."""
 
 from functools import wraps
-from typing import Any
+from typing import Any, Optional
 
 from flask import abort, g
 
@@ -71,3 +71,16 @@ def datetimeformat(datetime=None, dt_format=None, rebase=True):
     if dt_format == "iso-short":
         return format_datetime(datetime, "YYYY-MM-DD HH:mm z", rebase)
     return format_datetime(datetime, dt_format, rebase)
+
+
+def colormap(color_description: str, prefix: Optional[str] = "w3-") -> str:
+    """Map a color description to a W3.CSS color."""
+    return prefix + {
+        'navbar': "indigo",
+        'primary': "indigo",
+        'secondary': "blue-gray",
+        'success': "teal",
+        'danger': "red",
+        'warning': "yellow",
+        'info': "cyan",
+    }.get(color_description, color_description)
