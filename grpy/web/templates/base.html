@@ -18,18 +18,23 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-<html>
+<html{% block html_attribs %}{% endblock html_attribs %}>
 <head>
+{%- block metas %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Grpy: {% block title %}TODO: TITLE{% endblock %}</title>
+{%- endblock metas %}
+{%- block styles %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='w3.css') }}" />
+{%- endblock styles %}
+<title>Grpy: {% block title %}TODO: TITLE{% endblock %}</title>
 </head>
-<body>
-  <nav class="w3-bar {{ color('navbar') }}">
+<body{% block body_attribs %}{% endblock body_attribs %}>
+{%- block navbar %}
+<nav class="w3-bar {{ color('navbar') }}">
   <a href="{{ url_for('home') }}" class="w3-bar-item w3-button w3-mobile">Home</a>
   <a href="{{ url_for('about') }}" class="w3-bar-item w3-button w3-mobile">About</a>
-  {% if g.user %}
+  {%- if g.user %}
   <div class="w3-dropdown-hover w3-mobile">
     <button class="w3-button">User</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
@@ -39,16 +44,18 @@
   </div>
   {% else %}
   <a href="{{ url_for('login') }}" class="w3-bar-item w3-button w3-mobile">Login</a>
-  {% endif %}
+  {%- endif %}
 </nav>
+{%- endblock navbar %}
 <header>
-  {% block heading %}MISSING HEADING{% endblock %}
+  {%- block heading %}MISSING HEADING{% endblock %}
 </header>
-{% for message in get_flashed_messages() %}
+{%- for message in get_flashed_messages() %}
 <div class="w3-panel {{ color('danger') }}">{{ message }}</div>
 {% endfor %}
 <article>
-{% block content %}MISSING CONTENT{% endblock %}
+{%- block content %}MISSING CONTENT{% endblock %}
 </article>
+{%- block scripts %}{%- endblock scripts %}
 </body>
 </html>
