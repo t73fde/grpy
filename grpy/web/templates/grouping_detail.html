@@ -28,11 +28,11 @@
 <dt>Name</dt>
 <dd>{{ grouping.name }}</dd>
 <dt>Begin Date</dt>
-<dd>{{ grouping.begin_date|datetimeformat("YYYY-MM-dd HH:mm z") }}</dd>
+<dd>{{ grouping.begin_date|datetimeformat("iso-short") }}</dd>
 <dt>Final Date</dt>
-<dd>{{ grouping.final_date|datetimeformat("YYYY-MM-dd HH:mm z") }}</dd>
+<dd>{{ grouping.final_date|datetimeformat("iso-short") }}</dd>
 <dt>Close Date</dt>
-<dd>{{ grouping.close_date|datetimeformat("YYYY-MM-dd HH:mm z")|default("(None)") }}</dd>
+<dd>{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</dd>
 <dt>Strategy</dt>
 <dd>{{ grouping.strategy }}</dd>
 <dt>Maximum Group Size</dt>

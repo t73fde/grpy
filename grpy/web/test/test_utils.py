@@ -20,13 +20,17 @@
 
 """Test the web utils."""
 
+import datetime
+
 import pytest
 
 from werkzeug.exceptions import NotFound
 
 from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
-from ..utils import login_required, make_model, update_model, value_or_404
+from ..utils import (
+    datetimeformat, login_required, make_model, update_model, value_or_404)
 from ...models import Permission, User
+from ...utils import now
 
 
 # pylint: disable=redefined-outer-name
@@ -71,3 +75,15 @@ def test_update_model():
     """An User model can be updated from dict."""
     user = update_model(User(1, "name"), {'username': "user", 'invalid': 1})
     assert user == User(1, "user")
+
+
+def test_datetime_format(app):  # noqa: F811 pylint: disable=unused-argument
+    """Return a datetime according to given format."""
+    assert datetimeformat(None, None, False) is None
+    assert datetimeformat("", None, False) == ""
+    assert datetimeformat(0, None, False) == 0
+    assert datetimeformat([], None, False) == []
+
+    dt_val = datetime.datetime(2019, 1, 13, 15, 49, 22, tzinfo=now().tzinfo)
+    assert datetimeformat(dt_val, "iso-short", False) == "2019-01-13 15:49 UTC"
+    assert datetimeformat(dt_val, "YYYY", False) == "2019"
