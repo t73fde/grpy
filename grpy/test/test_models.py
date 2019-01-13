@@ -25,7 +25,7 @@ import uuid
 
 import pytest
 
-from ..models import Grouping, Permission, User, ValidationFailed
+from ..models import Grouping, Permission, ShortCode, User, ValidationFailed
 from ..utils import now
 
 
@@ -90,3 +90,23 @@ def test_grouping_validation_failed():
         Grouping(
             None, "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, -1, ""),
         "Member reserve < 0:")
+
+
+def test_shortcode_validation():
+    """A valid model raises no exception."""
+    ShortCode(uuid.UUID(int=0), "ABCDE0").validate()
+
+
+def test_shortcode_validation_failed():
+    """An invalid model raises exception."""
+    def assert_exc(shortcode: ShortCode, message: str) -> None:
+        """Test for a specific exception message."""
+        with pytest.raises(ValidationFailed) as exc:
+            shortcode.validate()
+        assert message in str(exc)
+
+    assert_exc(ShortCode(None, None), "Grouping key is empty:")
+    assert_exc(ShortCode("123", None), "Grouping key is not a UUID:")
+    assert_exc(ShortCode(uuid.UUID(int=0), None), "Short code is empty:")
+    assert_exc(
+        ShortCode(uuid.UUID(int=0), "Ab0"), "Short code contains non-upper characters:")

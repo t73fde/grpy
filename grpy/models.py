@@ -91,3 +91,23 @@ class Grouping(NamedTuple):
                 "Maximal group size < 1: {}".format(self.max_group_size))
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
+
+
+class ShortCode(NamedTuple):
+    """Allows to identify a grouping with some simple data."""
+
+    grouping: KeyType
+    code: str
+
+    def validate(self) -> None:
+        """Check model for consistency."""
+        if not self.grouping:
+            raise ValidationFailed("Grouping key is empty: {}".format(self))
+        if not isinstance(self.grouping, uuid.UUID):
+            raise ValidationFailed(
+                "Grouping key is not a UUID: {}".format(self.grouping))
+        if not self.code:
+            raise ValidationFailed("Short code is empty: {}".format(self))
+        if self.code != self.code.upper():
+            raise ValidationFailed(
+                "Short code contains non-upper characters: {}".format(self.code))
