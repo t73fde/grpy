@@ -21,10 +21,10 @@
 """Web views for grpy."""
 
 from flask import (
-    abort, current_app, flash, g, redirect, render_template, url_for)
+    abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
-from .utils import login_required, make_model, value_or_404
+from .utils import login_required, make_model, update_model, value_or_404
 from .. import utils
 from ..models import Grouping, User
 from ..repo.base import Repository
@@ -40,7 +40,7 @@ def home():
     groupings = []
     if g.user:
         if g.user.is_host:
-            groupings = get_repository().list_groupings(
+            groupings = get_repository().iter_groupings(
                 where={
                     "host__eq": g.user.key,
                     "close_date__le": utils.now()},
@@ -101,3 +101,21 @@ def grouping_detail(key):
     if g.user.key != grouping.host:
         abort(403)
     return render_template("grouping_detail.html", grouping=grouping)
+
+
+@login_required
+def grouping_update(key):
+    """Update an existing grouping."""
+    grouping = value_or_404(get_repository().get_grouping(key))
+    if g.user.key != grouping.host:
+        abort(403)
+    if request.method == 'POST':
+        form = forms.GroupingForm()
+    else:
+        form = forms.GroupingForm(obj=grouping)
+    form.strategy.choices = [('', ''), ('RD', "Random")]
+    if form.validate_on_submit():
+        grouping = update_model(grouping, form.data)
+        get_repository().set_grouping(grouping)
+        return redirect(url_for("home"))
+    return render_template("grouping_update.html", form=form)

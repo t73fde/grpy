@@ -144,68 +144,68 @@ def setup_users(repository: Repository, count: int) -> List[User]:
     return result
 
 
-def test_list_users(repository: Repository) -> None:
+def test_iter_users(repository: Repository) -> None:
     """List all users."""
     all_users = setup_users(repository, 17)
-    list_users = list(repository.list_users())
-    assert len(list_users) == len(all_users)
-    assert set(list_users) == set(all_users)
+    iter_users = list(repository.iter_users())
+    assert len(iter_users) == len(all_users)
+    assert set(iter_users) == set(all_users)
 
 
-def test_list_users_where(repository: Repository) -> None:
+def test_iter_users_where(repository: Repository) -> None:
     """Select some user from list of all users."""
     all_users = setup_users(repository, 13)
-    users = list(repository.list_users(where={'permission__eq': Permission.HOST}))
-    non_users = list(repository.list_users(where={'permission__ne': Permission.HOST}))
+    users = list(repository.iter_users(where={'permission__eq': Permission.HOST}))
+    non_users = list(repository.iter_users(where={'permission__ne': Permission.HOST}))
     assert len(users) + len(non_users) == len(all_users)
     assert set(users + non_users) == set(all_users)
 
     for field_name in User._fields:
         where = {field_name + "__eq": None}
-        users = list(repository.list_users(where=where))
+        users = list(repository.iter_users(where=where))
         assert users == []
         where = {field_name + "__ne": None}
-        users = list(repository.list_users(where=where))
+        users = list(repository.iter_users(where=where))
         assert set(users) == set(all_users)
 
     for _ in range(len(all_users)):
         user = random.choice(all_users)
-        users = list(repository.list_users(where={'username__eq': user.username}))
+        users = list(repository.iter_users(where={'username__eq': user.username}))
         assert len(users) == 1
         assert users[0] == user
 
-        other_users = list(repository.list_users(where={'username__ne': user.username}))
+        other_users = list(repository.iter_users(where={'username__ne': user.username}))
         assert len(other_users) + 1 == len(all_users)
         assert set(other_users + users) == set(all_users)
 
-        users = list(repository.list_users(where={'username__lt': user.username}))
-        non_users = list(repository.list_users(where={'username__ge': user.username}))
+        users = list(repository.iter_users(where={'username__lt': user.username}))
+        non_users = list(repository.iter_users(where={'username__ge': user.username}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        users = list(repository.list_users(where={'username__gt': user.username}))
-        non_users = list(repository.list_users(where={'username__le': user.username}))
+        users = list(repository.iter_users(where={'username__gt': user.username}))
+        non_users = list(repository.iter_users(where={'username__le': user.username}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        no_users = list(repository.list_users(where={'key__eq': uuid.uuid4()}))
+        no_users = list(repository.iter_users(where={'key__eq': uuid.uuid4()}))
         assert no_users == []
 
 
-def test_list_users_order(repository: Repository) -> None:
+def test_iter_users_order(repository: Repository) -> None:
     """Order the list of users."""
     all_users = setup_users(repository, 7)  # Must be less than 10
-    users = list(repository.list_users(order=["username"]))
+    users = list(repository.iter_users(order=["username"]))
     assert users == all_users
-    users = list(repository.list_users(order=["+username"]))
+    users = list(repository.iter_users(order=["+username"]))
     assert users == all_users
-    users = list(repository.list_users(order=["-username"]))
+    users = list(repository.iter_users(order=["-username"]))
     assert users == list(reversed(all_users))
 
 
 def create_grouping(repository: Repository) -> Grouping:
     """Create a new grouping."""
-    users = repository.list_users(where={'username__eq': 'user'})
+    users = repository.iter_users(where={'username__eq': 'user'})
     if not users:
         user = repository.set_user(User(None, "user", Permission.HOST))
     else:
@@ -288,54 +288,54 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     return result
 
 
-def test_list_groupings(repository: Repository) -> None:
+def test_iter_groupings(repository: Repository) -> None:
     """List all groupings."""
     all_groupings = setup_groupings(repository, 17)
-    list_groupings = list(repository.list_groupings())
-    assert len(list_groupings) == len(all_groupings)
-    assert set(list_groupings) == set(all_groupings)
+    iter_groupings = list(repository.iter_groupings())
+    assert len(iter_groupings) == len(all_groupings)
+    assert set(iter_groupings) == set(all_groupings)
 
 
-def test_list_groupings_where(repository: Repository) -> None:
+def test_iter_groupings_where(repository: Repository) -> None:
     """Select some grouping from list of all groupings."""
     all_groupings = setup_groupings(repository, 13)
-    groupings = list(repository.list_groupings(where={'close_date__eq': None}))
-    non_groupings = list(repository.list_groupings(where={'close_date__ne': None}))
+    groupings = list(repository.iter_groupings(where={'close_date__eq': None}))
+    non_groupings = list(repository.iter_groupings(where={'close_date__ne': None}))
     assert len(groupings) + len(non_groupings) == len(all_groupings)
     assert set(groupings + non_groupings) == set(all_groupings)
 
     for _ in range(len(all_groupings)):
         grouping = random.choice(all_groupings)
-        groupings = list(repository.list_groupings(where={'name__eq': grouping.name}))
+        groupings = list(repository.iter_groupings(where={'name__eq': grouping.name}))
         assert len(groupings) == 1
         assert groupings[0] == grouping
 
         other_groupings = list(
-            repository.list_groupings(where={'name__ne': grouping.name}))
+            repository.iter_groupings(where={'name__ne': grouping.name}))
         assert len(other_groupings) + 1 == len(all_groupings)
         assert set(other_groupings + groupings) == set(all_groupings)
 
-        groupings = list(repository.list_groupings(where={'close_date__lt': None}))
-        non_groupings = list(repository.list_groupings(where={'close_date__ge': None}))
+        groupings = list(repository.iter_groupings(where={'close_date__lt': None}))
+        non_groupings = list(repository.iter_groupings(where={'close_date__ge': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
-        groupings = list(repository.list_groupings(where={'close_date__gt': None}))
-        non_groupings = list(repository.list_groupings(where={'close_date__le': None}))
+        groupings = list(repository.iter_groupings(where={'close_date__gt': None}))
+        non_groupings = list(repository.iter_groupings(where={'close_date__le': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
-        no_groupings = list(repository.list_groupings(
+        no_groupings = list(repository.iter_groupings(
             where={'key__eq': uuid.uuid4()}))
         assert no_groupings == []
 
 
-def test_list_groupings_order(repository: Repository) -> None:
+def test_iter_groupings_order(repository: Repository) -> None:
     """Order the list of groupings."""
     all_groupings = setup_groupings(repository, 7)  # Must be less than 10
-    groupings = list(repository.list_groupings(order=["name"]))
+    groupings = list(repository.iter_groupings(order=["name"]))
     assert groupings == all_groupings
-    groupings = list(repository.list_groupings(order=["+name"]))
+    groupings = list(repository.iter_groupings(order=["+name"]))
     assert groupings == all_groupings
-    groupings = list(repository.list_groupings(order=["-name"]))
+    groupings = list(repository.iter_groupings(order=["-name"]))
     assert groupings == list(reversed(all_groupings))

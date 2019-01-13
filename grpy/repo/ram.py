@@ -119,7 +119,7 @@ class RamRepository(Repository):
         """Return user with given username, or None."""
         return self._users_username.get(username, None)
 
-    def list_users(
+    def iter_users(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[User]:
@@ -145,7 +145,7 @@ class RamRepository(Repository):
         """Return grouping with given key."""
         return self._groupings.get(key, None)
 
-    def list_groupings(
+    def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:

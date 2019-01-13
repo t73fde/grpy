@@ -36,6 +36,7 @@ def app():
     with grpy_app.test_request_context():
         repository = grpy_app.get_repository()
         repository.set_user(User(None, "host", Permission.HOST))
+        repository.set_user(User(None, "host-0", Permission.HOST))
 
     return grpy_app
 

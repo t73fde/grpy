@@ -49,3 +49,9 @@ def make_model(model_class, form_data, additional_values):
     data = dict(form_data)
     data.update(additional_values)
     return model_class._make(map(lambda f: data.get(f, None), model_class._fields))
+
+
+def update_model(model, form_data):
+    """Update a given model with data from a form."""
+    fields = set(model._fields)
+    return model._replace(**{k: v for k, v in form_data.items() if k in fields})

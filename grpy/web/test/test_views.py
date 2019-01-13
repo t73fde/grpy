@@ -177,9 +177,11 @@ def test_grouping_create(app, client, auth):  # noqa: F811
     """Test the creation of new groupings."""
     url = url_for('grouping_create')
     assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
 
     auth.login('user')
     assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
 
     auth.login('host')
     assert client.get(url).status_code == 200
@@ -195,5 +197,39 @@ def test_grouping_create(app, client, auth):  # noqa: F811
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
-    groupings = app.get_repository().list_groupings(where={"name__eq": "name"})
+    groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
     assert len(groupings) == 1
+
+
+def test_grouping_update(app, client, auth):  # noqa: F811
+    """Test the update of an existing grouping."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_update', key=grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host')
+    assert client.get(url).status_code == 200
+
+    response = client.post(url, data={})
+    assert response.status_code == 200
+    assert response.data.count(b'This field is required') == 5
+
+    response = client.post(url, data={
+        'name': "very new name", 'begin_date': "1970-01-01 00:00",
+        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+
+    groupings = list(app.get_repository().iter_groupings())
+    assert len(groupings) == 1
+    assert groupings[0].key == grouping.key

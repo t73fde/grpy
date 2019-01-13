@@ -25,7 +25,7 @@ import pytest
 from werkzeug.exceptions import NotFound
 
 from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
-from ..utils import login_required, make_model, value_or_404
+from ..utils import login_required, make_model, update_model, value_or_404
 from ...models import Permission, User
 
 
@@ -65,3 +65,9 @@ def test_make_model():
     """A User model can be created from dict."""
     user = make_model(User, {"username": "name"}, {"permission": Permission(0)})
     assert user == User(None, "name")
+
+
+def test_update_model():
+    """An User model can be updated from dict."""
+    user = update_model(User(1, "name"), {'username': "user", 'invalid': 1})
+    assert user == User(1, "user")

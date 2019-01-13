@@ -17,34 +17,29 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% block title %}Grouping {{ grouping.name|truncate(20) }}{% endblock %}
+{% from "macros.html" import render_field %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
+<div class="w3-card">
 <div class="w3-container w3-light-gray">
-  <h1>Grouping Details</h1>
+  <h1>{% block title %}Update Grouping{% endblock %}</h1>
 </div>
-<dl>
-<dt>Name</dt>
-<dd>{{ grouping.name }}</dd>
-<dt>Begin Date</dt>
-<dd>{{ grouping.begin_date }}</dd>
-<dt>Final Date</dt>
-<dd>{{ grouping.final_date }}</dd>
-<dt>Close Date</dt>
-<dd>{{ grouping.close_date|default("(None)") }}</dd>
-<dt>Strategy</dt>
-<dd>{{ grouping.strategy }}</dd>
-<dt>Maximum Group Size</dt>
-<dd>{{ grouping.max_group_size }}</dd>
-<dt>Member Reserve</dt>
-<dd>{{ grouping.member_reserve }}</dd>
-<dt>Note</dt>
-<dd>{{ grouping.note }}</dd>
-</dl>
+<form method="post">
+  {{- form.csrf_token }}
+  {{- render_field(form.name, autofocus=True) }}
+  {{- render_field(form.begin_date) }}
+  {{- render_field(form.final_date) }}
+  {{- render_field(form.close_date) }}
+  {{- render_field(form.strategy) }}
+  {{- render_field(form.max_group_size) }}
+  {{- render_field(form.member_reserve) }}
+  {{- render_field(form.note) }}
+<div class="w3-panel">
+<input type="submit" name="update" value="Update" class="w3-btn w3-indigo" />
 </div>
-<div class="w3-container w3-bar">
-  <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button w3-ripple w3-teal">Update</button></a>
-  <a href="#"><button class="w3-button w3-ripple w3-red">Delete</button></a>
+</form>
+<div class="w3-container"></div>
+</div>
 </div>
 {% endblock %}

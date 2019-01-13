@@ -56,7 +56,7 @@ class Repository:
         """Return user for given username."""
         raise NotImplementedError("Repository.get_user_by_username")
 
-    def list_users(
+    def iter_users(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[User]:
@@ -74,7 +74,7 @@ class Repository:
         "+".  If the prefix "-" is given, sorting is descending, else it is
         ascending. Examples: "username", "-username".
         """
-        raise NotImplementedError("Repository.list_users")
+        raise NotImplementedError("Repository.iter_users")
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -84,17 +84,17 @@ class Repository:
         """Return grouping with given key."""
         raise NotImplementedError("Repository.get_grouping")
 
-    def list_groupings(
+    def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """
         Return an iterator of all or some groupings.
 
-        See method `list_users` for a detailed description of `where` and
+        See method `iter_users` for a detailed description of `where` and
         `order`.
         """
-        raise NotImplementedError("Repository.list_groupings")
+        raise NotImplementedError("Repository.iter_groupings")
 
 
 class RepositoryFactory:
