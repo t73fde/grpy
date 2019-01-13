@@ -19,12 +19,14 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Some utility functions."""
+"""Some utility functions for the web application."""
 
 from functools import wraps
 from typing import Any
 
 from flask import abort, g
+
+from flask_babel import format_datetime
 
 
 def login_required(view):
@@ -55,3 +57,15 @@ def update_model(model, form_data):
     """Update a given model with data from a form."""
     fields = set(model._fields)
     return model._replace(**{k: v for k, v in form_data.items() if k in fields})
+
+
+def datetimeformat(datetime=None, dt_format=None, rebase=True):
+    """
+    Return a datetime formatted according to format.
+
+    This function is needed, because `flask_babel.format_datetime` formats the
+    current datetime, if `datetime` is None.
+    """
+    if not datetime:
+        return datetime
+    return format_datetime(datetime, dt_format, rebase)

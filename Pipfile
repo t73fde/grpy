@@ -32,7 +32,8 @@ pytest = "*"
 pytest-flask = "*"
 
 [packages]
-flask = "*"
+Flask = "*"
+Flask-Babel = "*"
 Flask-WTF = "*"
 WTForms = "*"
 pytz = "*"

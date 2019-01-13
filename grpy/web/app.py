@@ -24,10 +24,12 @@ from typing import Any, Dict
 
 from flask import Flask, g, session
 
+from flask_babel import Babel
+
 from grpy.models import Permission, User
 from grpy.repo import create_factory
 
-from . import views
+from . import utils, views
 
 
 class GrpyApp(Flask):
@@ -37,6 +39,7 @@ class GrpyApp(Flask):
         """Initialize the application object."""
         super().__init__(import_name)
         self._repository_factory = None
+        self.babel = None
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
@@ -88,6 +91,13 @@ class GrpyApp(Flask):
 
         self.before_request(load_logged_in_user)
 
+    def setup_babel(self):
+        """Prepare application to work with Babel."""
+        self.babel = Babel(self, configure_jinja=True)
+        self.jinja_env.filters.update(  # pylint: disable=no-member
+            datetimeformat=utils.datetimeformat,
+        )
+
     @staticmethod
     def login(user: User) -> None:
         """Log in the given user."""
@@ -110,6 +120,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.setup_config(config_mapping)
     app.setup_repository()
     app.setup_user_handling()
+    app.setup_babel()
 
     app.add_url_rule("/", "home", views.home)
     app.add_url_rule("/about", "about", views.about)
@@ -137,9 +148,9 @@ def populate_testdata(repository_factory):
         repository.set_user(User(None, "xnologin"))
 
         from datetime import timedelta
-        from .. import utils
+        from ..utils import now as utils_now
         from ..models import Grouping
-        now = utils.now()
+        now = utils_now()
         for user in (kreuz, stern):
             repository.set_grouping(Grouping(
                 None, "PM", user.key,
