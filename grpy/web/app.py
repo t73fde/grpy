@@ -20,6 +20,7 @@
 
 """Web application for grpy."""
 
+import os
 from typing import Any, Dict
 
 from flask import Flask, g, session
@@ -53,6 +54,13 @@ class GrpyApp(Flask):
         else:
             self.config.from_pyfile("config.py")
             self.config.from_envvar("GRPY_CONFIG", silent=True)
+        for key, value in self.config.items():
+            new_value = os.environ.get(key, None)
+            if new_value is None:
+                continue
+            if not isinstance(value, str):
+                continue
+            self.config[key] = new_value
 
     def setup_repository(self):
         """Add a repository to the application."""

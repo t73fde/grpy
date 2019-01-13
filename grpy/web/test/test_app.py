@@ -20,6 +20,7 @@
 
 """Test the web application object itself."""
 
+import os
 
 from flask import g
 
@@ -40,3 +41,13 @@ def test_config():
         repository = app.get_repository()
         g_repo = g.pop('repository', None)
         assert g_repo == repository
+
+
+# pylint: disable=protected-access
+def test_env_config(monkeypatch):
+    """Test overwriting config by environments vars."""
+    assert "ram:" in create_app()._repository_factory.url
+    monkeypatch.setitem(os.environ, 'REPOSITORY', "invalid")
+    monkeypatch.setitem(os.environ, 'TESTING', "True")
+    assert "dummy:" in create_app()._repository_factory.url
+# pylint: enable=protected-access
