@@ -54,6 +54,8 @@ class User(NamedTuple):
 
     def validate(self) -> None:
         """Check model for consistency."""
+        if self.key and not isinstance(self.key, uuid.UUID):
+            raise ValidationFailed("Key is not a UUID: {}".format(self.key))
         if not self.username:
             raise ValidationFailed("Username is empty: {}".format(self))
 
@@ -74,8 +76,12 @@ class Grouping(NamedTuple):
 
     def validate(self) -> None:
         """Check model for consistency."""
+        if self.key and not isinstance(self.key, uuid.UUID):
+            raise ValidationFailed("Key is not a UUID: {}".format(self.key))
         if not self.name:
             raise ValidationFailed("Name is empty: {}".format(self))
+        if not isinstance(self.host, uuid.UUID):
+            raise ValidationFailed("Host is not a UUID: {}".format(self.host))
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
                 "Begin date after final date: {} >= {}".format(

@@ -280,7 +280,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     result = []
     for i in range(count):
         grouping = repository.set_grouping(Grouping(
-            None, "grouping-%d" % i, hosts[days % len(hosts)],
+            None, "grouping-%d" % i, hosts[days % len(hosts)].key,
             now + timedelta(days=days), now + timedelta(days=days + 7), None,
             "RD", days + 1, 5, "Note %d" % i))
         result.append(grouping)

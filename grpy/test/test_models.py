@@ -43,6 +43,9 @@ def test_user_validation():
 def test_user_validation_failed():
     """An invalid model raises exception."""
     with pytest.raises(ValidationFailed) as exc:
+        User("123", "name").validate()
+    assert "Key is not a UUID:" in str(exc)
+    with pytest.raises(ValidationFailed) as exc:
         User(None, "").validate()
     assert "Username is empty:" in str(exc)
 
@@ -66,6 +69,14 @@ def test_grouping_validation_failed():
 
     yet = now()
     delta = datetime.timedelta(seconds=1)
+    assert_exc(
+        Grouping(
+            "123", "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
+        "Key is not a UUID:")
+    assert_exc(
+        Grouping(
+            None, "name", None, yet, yet + delta, None, "RD", 2, 0, ""),
+        "Host is not a UUID:")
     assert_exc(
         Grouping(
             None, "", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
