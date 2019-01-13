@@ -32,10 +32,10 @@
 <body{% block body_attribs %}{% endblock body_attribs %}>
 {%- block navbar %}
 <nav class="w3-bar {{ color('navbar') }}">
-  <a href="{{ url_for('home') }}" class="w3-bar-item w3-button w3-mobile">Home</a>
-  <a href="{{ url_for('about') }}" class="w3-bar-item w3-button w3-mobile">About</a>
+  <a href="{{ url_for('home') }}" class="w3-bar-item w3-button">Home</a>
+  <a href="{{ url_for('about') }}" class="w3-bar-item w3-button">About</a>
   {%- if g.user %}
-  <div class="w3-dropdown-hover w3-mobile">
+  <div class="w3-dropdown-hover">
     <button class="w3-button">User</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
       <span class="w3-bar-item">{{ g.user.username }}</span>
@@ -43,7 +43,7 @@
     </div>
   </div>
   {% else %}
-  <a href="{{ url_for('login') }}" class="w3-bar-item w3-button w3-mobile">Login</a>
+  <a href="{{ url_for('login') }}" class="w3-bar-item w3-button">Login</a>
   {%- endif %}
 </nav>
 {%- endblock navbar %}

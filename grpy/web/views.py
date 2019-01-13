@@ -113,7 +113,7 @@ def grouping_update(key):
         form = forms.GroupingForm()
     else:
         form = forms.GroupingForm(obj=grouping)
-    form.strategy.choices = [('', ''), ('RD', "Random")]
+    form.strategy.choices = [('RD', "Random")]
     if form.validate_on_submit():
         grouping = update_model(grouping, form.data)
         get_repository().set_grouping(grouping)
