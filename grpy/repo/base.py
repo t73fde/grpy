@@ -67,7 +67,10 @@ class Repository:
         returned. The keys of `where` are composed of valid user attributes and
         a relation specification, separated by "__".  Relation specifications
         are one of: "eq", "ne", "ge", "gt", "lt", and "le".  Examples are:
-        "username__eq", "is_host__eq", "key__ne".
+        "username__eq", "is_host__eq", "key__ne".  Please not: order relations,
+        like "ge", "gt", "lt", "le" will always return True if compared with
+        None. If you want to remove None values, explicitly add another element
+        like `{"field__ne": None}`.
 
         If `order` is not None, the result is sorted with respect to given
         keys. Keys are valid user attributes, optionally prefixed by "-" or

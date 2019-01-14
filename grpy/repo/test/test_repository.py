@@ -329,13 +329,15 @@ def test_iter_groupings_where(repository: Repository) -> None:
         assert len(other_groupings) + 1 == len(all_groupings)
         assert set(other_groupings + groupings) == set(all_groupings)
 
-        groupings = list(repository.iter_groupings(where={'close_date__lt': None}))
+        groupings = list(repository.iter_groupings(where={
+            'close_date__lt': None, 'close_date__ne': None}))
         non_groupings = list(repository.iter_groupings(where={'close_date__ge': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
         groupings = list(repository.iter_groupings(where={'close_date__gt': None}))
-        non_groupings = list(repository.iter_groupings(where={'close_date__le': None}))
+        non_groupings = list(repository.iter_groupings(where={
+            'close_date__le': None, 'close_date__ne': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 

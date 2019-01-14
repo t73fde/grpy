@@ -208,14 +208,14 @@ class WherePredicate:
         """Return True if data[self.name] >= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
-            return False
+            return True
         return data_value >= self.value
 
     def gt_pred(self, data: Model) -> bool:
         """Return True if data[self.name] > self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
-            return False
+            return True
         return data_value > self.value
 
 
