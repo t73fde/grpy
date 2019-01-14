@@ -123,3 +123,12 @@ def grouping_update(key):
         get_repository().set_grouping(grouping)
         return redirect(url_for("home"))
     return render_template("grouping_update.html", form=form)
+
+
+@login_required
+def shortlink(code: str):
+    """Show information for short link."""
+    grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
+    if g.user.key == grouping.host:
+        return render_template("grouping_code.html", code=grouping.code)
+    return render_template("grouping_apply.html", grouping=grouping)

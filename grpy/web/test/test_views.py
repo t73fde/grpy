@@ -27,6 +27,7 @@ from flask import g, session, url_for
 
 from ... import utils
 from ...models import Grouping
+from ...repo.logic import set_grouping_new_code
 
 
 def test_home_anonymous(client):
@@ -45,8 +46,8 @@ def insert_simple_grouping(repository):
     """Insert a grouping into the repository."""
     now = utils.now()
     host = repository.get_user_by_username("host")
-    return repository.set_grouping(Grouping(
-        None, "code", "Name", host.key, now, now + datetime.timedelta(days=1),
+    return set_grouping_new_code(repository, Grouping(
+        None, ".", "Name", host.key, now, now + datetime.timedelta(days=1),
         None, "RD", 17, 7, "Notizie"))
 
 
@@ -239,3 +240,21 @@ def test_grouping_update(app, client, auth):
     groupings = list(app.get_repository().iter_groupings())
     assert len(groupings) == 1
     assert groupings[0].key == grouping.key
+
+
+def test_shortlink(app, client, auth):
+    """Test home view as a host."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('shortlink', code=grouping.code)
+    assert client.get(url).status_code == 401
+
+    auth.login("host")
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.data.count(url.encode('utf-8')) == 1
+
+    auth.login("student")
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b"Apply" in response.data
+    assert grouping.name.encode('utf-8') in response.data

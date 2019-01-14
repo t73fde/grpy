@@ -23,8 +23,6 @@
 <div class="w3-panel">
   <h1>Grouping Details</h1>
 <dl>
-<dt>Code</dt>
-<dd><a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a></dd>
 <dt>Name</dt>
 <dd>{{ grouping.name }}</dd>
 <dt>Begin Date</dt>
@@ -37,14 +35,11 @@
 <dd>{{ grouping.strategy }}</dd>
 <dt>Maximum Group Size</dt>
 <dd>{{ grouping.max_group_size }}</dd>
-<dt>Member Reserve</dt>
-<dd>{{ grouping.member_reserve }}</dd>
 <dt>Note</dt>
 <dd>{{ grouping.note }}</dd>
 </dl>
 </div>
 <div class="w3-container w3-bar">
-    <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button w3-ripple {{ color('primary') }}">Update</button></a>
-  <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
+  <a href="#"><button class="w3-button w3-ripple {{ color('primary') }}">Apply</button></a>
 </div>
 {% endblock %}
