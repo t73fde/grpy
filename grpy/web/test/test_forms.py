@@ -20,11 +20,7 @@
 
 """Test the web forms."""
 
-from .fixtures import app  # noqa: F401 pylint: disable=unused-import
 from ..forms import GroupingForm
-
-
-# pylint: disable=redefined-outer-name
 
 
 class FormData(dict):
@@ -38,7 +34,7 @@ class FormData(dict):
         return value
 
 
-def test_grouping_form(app):  # noqa: F811 pylint: disable=unused-argument
+def test_grouping_form(app):  # pylint: disable=unused-argument
     """Validate some forms."""
     form = GroupingForm()
     form.strategy.choices = [('RD', "Random")]

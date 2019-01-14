@@ -1,4 +1,3 @@
-
 ##
 #    Copyright (c) 2018 Detlef Stern
 #
@@ -18,14 +17,18 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test the web views."""
+"""Fixtures fpr testing."""
 
 from flask import url_for
 
 import pytest
 
-from ..app import create_app
-from ...models import Permission, User
+from .models import Permission, User
+from .repo import create_factory
+from .web.app import create_app
+
+
+# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture
@@ -39,9 +42,6 @@ def app():
         repository.set_user(User(None, "host-0", Permission.HOST))
 
     return grpy_app
-
-
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture
@@ -73,3 +73,13 @@ class AuthenticationActions:
 def auth(client):
     """Fixture for authentication."""
     return AuthenticationActions(client)
+
+
+@pytest.fixture(params=["dummy:", "ram:"])
+def repository(request):
+    """Provide an open repository."""
+    factory = create_factory(request.param)
+    assert factory.url == request.param
+    repo = factory.create()
+    yield repo
+    repo.close()

@@ -25,15 +25,11 @@ import uuid
 
 from flask import g, session, url_for
 
-from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
 from ... import utils
 from ...models import Grouping
 
 
-# pylint: disable=redefined-outer-name
-
-
-def test_home_anonymous(client):  # noqa: F811
+def test_home_anonymous(client):
     """Test home view as an anonymous user."""
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -50,11 +46,11 @@ def insert_simple_grouping(repository):
     now = utils.now()
     host = repository.get_user_by_username("host")
     return repository.set_grouping(Grouping(
-        None, "Name-PM", host.key, now, now + datetime.timedelta(days=1), None,
-        "RD", 17, 7, "Notizie"))
+        None, "code", "Name", host.key, now, now + datetime.timedelta(days=1),
+        None, "RD", 17, 7, "Notizie"))
 
 
-def test_home_host(app, client, auth):  # noqa: F811
+def test_home_host(app, client, auth):
     """Test home view as a host."""
     grouping = insert_simple_grouping(app.get_repository())
     auth.login("host")
@@ -66,7 +62,7 @@ def test_home_host(app, client, auth):  # noqa: F811
     assert str(grouping.final_date.minute) in data
 
 
-def test_home_user(client, auth):  # noqa: F811
+def test_home_user(client, auth):
     """Test home view as a participant."""
     auth.login("user")
     response = client.get(url_for('home'))
@@ -75,7 +71,7 @@ def test_home_user(client, auth):  # noqa: F811
     assert " valid grouping link " in data
 
 
-def test_about_anonymous(client):  # noqa: F811
+def test_about_anonymous(client):
     """Test about view as an anonymous user."""
     response = client.get(url_for('about'))
     data = response.data.decode('utf-8')
@@ -86,7 +82,7 @@ def test_about_anonymous(client):  # noqa: F811
     assert url_for('logout') not in data
 
 
-def test_login(client):  # noqa: F811
+def test_login(client):
     """Test login view."""
     url = url_for('login')
     assert client.get(url).status_code == 200
@@ -96,7 +92,7 @@ def test_login(client):  # noqa: F811
     assert session['username'] == "host"
 
 
-def test_login_new_user(app, client):  # noqa: F811
+def test_login_new_user(app, client):
     """Test login view for new user."""
     response = client.post(
         url_for('login'), data={'username': "new_user", 'password': "1"})
@@ -106,7 +102,7 @@ def test_login_new_user(app, client):  # noqa: F811
     assert app.get_repository().get_user_by_username("new_user")
 
 
-def test_invalid_login(client):  # noqa: F811
+def test_invalid_login(client):
     """Test login view for invalid login."""
     url = url_for('login')
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
@@ -115,7 +111,7 @@ def test_invalid_login(client):  # noqa: F811
     assert 'username' not in session
 
 
-def test_double_login(client, auth):  # noqa: F811
+def test_double_login(client, auth):
     """A double login makes the last user to be logged in."""
     auth.login("user")
     assert session['username'] == "user"
@@ -124,7 +120,7 @@ def test_double_login(client, auth):  # noqa: F811
     assert session['username'] == "host"
 
 
-def test_name_change_after_login(app, client, auth):  # noqa: F811
+def test_name_change_after_login(app, client, auth):
     """Username is changed after login."""
     auth.login("host")
     repository = app.get_repository()
@@ -134,7 +130,7 @@ def test_name_change_after_login(app, client, auth):  # noqa: F811
     assert g.user is None
 
 
-def test_logout(client, auth):  # noqa: F811
+def test_logout(client, auth):
     """Test login/logout sequence."""
     auth.login("host")
     assert session['username'] == "host"
@@ -144,7 +140,7 @@ def test_logout(client, auth):  # noqa: F811
     assert 'username' not in session
 
 
-def test_logout_without_login(client):  # noqa: F811
+def test_logout_without_login(client):
     """A logout without previous login is ignored."""
     assert 'username' not in session
     response = client.get(url_for('logout'))
@@ -153,7 +149,7 @@ def test_logout_without_login(client):  # noqa: F811
     assert 'username' not in session
 
 
-def test_grouping_detail(app, client, auth):  # noqa: F811
+def test_grouping_detail(app, client, auth):
     """Test grouping detail view."""
     grouping = insert_simple_grouping(app.get_repository())
     url = url_for('grouping_detail', key=grouping.key)
@@ -173,7 +169,7 @@ def test_grouping_detail(app, client, auth):  # noqa: F811
     assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
 
 
-def test_grouping_create(app, client, auth):  # noqa: F811
+def test_grouping_create(app, client, auth):
     """Test the creation of new groupings."""
     url = url_for('grouping_create')
     assert client.get(url).status_code == 401
@@ -200,8 +196,18 @@ def test_grouping_create(app, client, auth):  # noqa: F811
     groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
     assert len(groupings) == 1
 
+    response = client.post(url, data={
+        'name': "name", 'begin_date': "1970-01-01 00:00",
+        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
 
-def test_grouping_update(app, client, auth):  # noqa: F811
+    groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
+    assert len(groupings) == 2
+
+
+def test_grouping_update(app, client, auth):
     """Test the update of an existing grouping."""
     grouping = insert_simple_grouping(app.get_repository())
     url = url_for('grouping_update', key=grouping.key)

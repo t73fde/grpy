@@ -64,6 +64,7 @@ class Grouping(NamedTuple):
     """Grouping data."""
 
     key: Optional[KeyType]
+    code: str
     name: str
     host: KeyType  # -> User
     begin_date: datetime.datetime
@@ -78,6 +79,8 @@ class Grouping(NamedTuple):
         """Check model for consistency."""
         if self.key and not isinstance(self.key, uuid.UUID):
             raise ValidationFailed("Key is not a UUID: {}".format(self.key))
+        if not self.code:
+            raise ValidationFailed("Code is empty: {}".format(self))
         if not self.name:
             raise ValidationFailed("Name is empty: {}".format(self))
         if not isinstance(self.host, uuid.UUID):
@@ -97,23 +100,3 @@ class Grouping(NamedTuple):
                 "Maximal group size < 1: {}".format(self.max_group_size))
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
-
-
-class ShortCode(NamedTuple):
-    """Allows to identify a grouping with some simple data."""
-
-    grouping: KeyType
-    code: str
-
-    def validate(self) -> None:
-        """Check model for consistency."""
-        if not self.grouping:
-            raise ValidationFailed("Grouping key is empty: {}".format(self))
-        if not isinstance(self.grouping, uuid.UUID):
-            raise ValidationFailed(
-                "Grouping key is not a UUID: {}".format(self.grouping))
-        if not self.code:
-            raise ValidationFailed("Short code is empty: {}".format(self))
-        if self.code != self.code.upper():
-            raise ValidationFailed(
-                "Short code contains non-upper characters: {}".format(self.code))

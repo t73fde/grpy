@@ -50,16 +50,6 @@ def test_no_connection(monkeypatch):
     assert factory.url == "dummy:"
 
 
-@pytest.fixture(params=["dummy:", "ram:"])
-def repository(request):
-    """Provide an open repository."""
-    factory = create_factory(request.param)
-    assert factory.url == request.param
-    repo = factory.create()
-    yield repo
-    repo.close()
-
-
 def test_insert_user(repository: Repository):
     """Check that inserting a new user works."""
     user = User(None, "user", Permission.HOST)
@@ -213,7 +203,7 @@ def create_grouping(repository: Repository) -> Grouping:
 
     now = utils.now()
     return Grouping(
-        None, "grouping", user.key,
+        None, "code", "grouping", user.key,
         now, now + datetime.timedelta(days=7), None,
         "RD", 7, 7, "Note")
 
@@ -224,6 +214,7 @@ def test_insert_grouping(repository: Repository):
     new_grouping = repository.set_grouping(grouping)
     assert not grouping.key
     assert new_grouping.key
+    assert new_grouping.code == grouping.code
     assert new_grouping.name == grouping.name
     assert new_grouping.host == grouping.host
     assert new_grouping.begin_date == grouping.begin_date
@@ -234,7 +225,7 @@ def test_insert_grouping(repository: Repository):
     assert new_grouping.member_reserve == grouping.member_reserve
     assert new_grouping.note == grouping.note
 
-    for _ in range(7):
+    with pytest.raises(DuplicateKey):
         repository.set_grouping(grouping)
 
 
@@ -268,6 +259,29 @@ def test_get_grouping(repository: Repository):
         assert not_found is None
 
 
+def test_get_grouping_by_code(repository: Repository):
+    """An inserted or updated grouping can be retrieved by short code."""
+    grouping = repository.set_grouping(create_grouping(repository))
+    new_grouping = repository.get_grouping_by_code(grouping.code)
+    assert new_grouping == grouping
+
+    newer_grouping = grouping._replace(name="new name")
+    repository.set_grouping(newer_grouping)
+    last_grouping = repository.get_grouping(grouping.key)
+    assert last_grouping.name != grouping.name
+
+    for username in (None, "", "invalid"):
+        not_found = repository.get_user_by_username(username)
+        assert not_found is None
+
+
+def test_get_grouping_by_code_after_change(repository: Repository):
+    """After a change to a code, the old code must not be accessible."""
+    grouping = repository.set_grouping(create_grouping(repository))
+    repository.set_grouping(grouping._replace(code="0000"))
+    assert repository.get_grouping_by_code(grouping.code) is None
+
+
 def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     """Insert some groupings into repository."""
     hosts = [
@@ -280,7 +294,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     result = []
     for i in range(count):
         grouping = repository.set_grouping(Grouping(
-            None, "grouping-%d" % i, hosts[days % len(hosts)].key,
+            None, "cd%d" % i, "grouping-%d" % i, hosts[days % len(hosts)].key,
             now + timedelta(days=days), now + timedelta(days=days + 7), None,
             "RD", days + 1, 5, "Note %d" % i))
         result.append(grouping)

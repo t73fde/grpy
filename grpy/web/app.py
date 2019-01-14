@@ -29,6 +29,7 @@ from flask_babel import Babel
 
 from grpy.models import Permission, User
 from grpy.repo import create_factory
+from grpy.repo.logic import set_grouping_new_code
 
 from . import utils, views
 
@@ -167,16 +168,16 @@ def populate_testdata(repository_factory):
         from ..models import Grouping
         now = utils_now()
         for user in (kreuz, stern):
-            repository.set_grouping(Grouping(
-                None, "PM", user.key,
+            set_grouping_new_code(repository, Grouping(
+                None, ".", "PM", user.key,
                 now, now + timedelta(days=14), None,
                 "RD", 7, 7, "Note: not"))
-            repository.set_grouping(Grouping(
-                None, "SWE", user.key,
+            set_grouping_new_code(repository, Grouping(
+                None, ".", "SWE", user.key,
                 now, now + timedelta(days=7), now + timedelta(days=14),
                 "RD", 7, 7, "Was?"))
-        repository.set_grouping(Grouping(
-            None, "PSITS", kreuz.key,
+        set_grouping_new_code(repository, Grouping(
+            None, ".", "PSITS", kreuz.key,
             now + timedelta(days=1), now + timedelta(days=8), None,
             "RD", 5, 3, "Nun wird es spannend"))
     finally:

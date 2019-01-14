@@ -81,6 +81,7 @@ class RamRepository(Repository):
         self._users = {}
         self._users_username = {}
         self._groupings = {}
+        self._groupings_code = {}
         self._next_key = 0x10000
 
     def close(self):
@@ -99,7 +100,7 @@ class RamRepository(Repository):
             try:
                 previous_user = self._users[user.key]
             except KeyError:
-                raise NothingToUpdate("Missing user {}".format(user.key))
+                raise NothingToUpdate("Missing user", user.key)
             if previous_user.username != user.username:
                 del self._users_username[previous_user.username]
         else:
@@ -107,7 +108,7 @@ class RamRepository(Repository):
 
         other_user = self._users_username.get(user.username)
         if other_user and user.key != other_user.key:
-            raise DuplicateKey("User.username " + user.username)
+            raise DuplicateKey("User.username", user.username)
         self._users[user.key] = self._users_username[user.username] = user
         return user
 
@@ -133,17 +134,29 @@ class RamRepository(Repository):
         """Add / update the given grouping."""
         grouping.validate()
         if grouping.key:
-            if grouping.key not in self._groupings:
-                raise NothingToUpdate("Missing grouping {}".format(grouping.key))
+            try:
+                previous_grouping = self._groupings[grouping.key]
+            except KeyError:
+                raise NothingToUpdate("Missing grouping", grouping.key)
+            if previous_grouping.code != grouping.code:
+                del self._groupings_code[previous_grouping.code]
         else:
             grouping = grouping._replace(key=self._uuid())
 
-        self._groupings[grouping.key] = grouping
+        other_grouping = self._groupings_code.get(grouping.code)
+        if other_grouping and grouping.key != other_grouping.key:
+            raise DuplicateKey("Grouping.code", grouping.code)
+
+        self._groupings[grouping.key] = self._groupings_code[grouping.code] = grouping
         return grouping
 
     def get_grouping(self, key: KeyType) -> Grouping:
         """Return grouping with given key."""
         return self._groupings.get(key, None)
+
+    def get_grouping_by_code(self, code: str) -> Grouping:
+        """Return grouping with given short code."""
+        return self._groupings_code.get(code, None)
 
     def iter_groupings(
             self,

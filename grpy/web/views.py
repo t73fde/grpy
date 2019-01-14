@@ -26,8 +26,10 @@ from flask import (
 from . import forms
 from .utils import login_required, make_model, update_model, value_or_404
 from .. import utils
+from ..logic import make_code
 from ..models import Grouping, User
 from ..repo.base import Repository
+from ..repo.logic import set_grouping_new_code
 
 
 def get_repository() -> Repository:
@@ -88,8 +90,10 @@ def grouping_create():
     form = forms.GroupingForm()
     form.strategy.choices = [('', ''), ('RD', "Random")]
     if form.validate_on_submit():
-        grouping = make_model(Grouping, form.data, {"host": g.user.key})
-        get_repository().set_grouping(grouping)
+        grouping = make_model(
+            Grouping, form.data, {"code": ".", "host": g.user.key})
+        set_grouping_new_code(
+            get_repository(), grouping._replace(code=make_code(grouping)))
         return redirect(url_for("home"))
     return render_template("grouping_create.html", form=form)
 

@@ -26,17 +26,13 @@ import pytest
 
 from werkzeug.exceptions import NotFound
 
-from .fixtures import app, auth, client  # noqa: F401 pylint: disable=unused-import
 from ..utils import (
     datetimeformat, login_required, make_model, update_model, value_or_404)
 from ...models import Permission, User
 from ...utils import now
 
 
-# pylint: disable=redefined-outer-name
-
-
-def test_login_required(app, client, auth):  # noqa: F811
+def test_login_required(app, client, auth):
     """If no user is logged in, raise 401."""
     @login_required
     def just_a_view():
@@ -77,7 +73,7 @@ def test_update_model():
     assert user == User(1, "user")
 
 
-def test_datetime_format(app):  # noqa: F811 pylint: disable=unused-argument
+def test_datetime_format(app):  # pylint: disable=unused-argument
     """Return a datetime according to given format."""
     assert datetimeformat(None, None, False) is None
     assert datetimeformat("", None, False) == ""

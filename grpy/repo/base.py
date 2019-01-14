@@ -84,6 +84,10 @@ class Repository:
         """Return grouping with given key."""
         raise NotImplementedError("Repository.get_grouping")
 
+    def get_grouping_by_code(self, code: str) -> Grouping:
+        """Return grouping with given short code."""
+        raise NotImplementedError("Repository.get_grouping_by_code")
+
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,

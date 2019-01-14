@@ -25,7 +25,7 @@ import uuid
 
 import pytest
 
-from ..models import Grouping, Permission, ShortCode, User, ValidationFailed
+from ..models import Grouping, Permission, User, ValidationFailed
 from ..utils import now
 
 
@@ -55,8 +55,11 @@ def test_grouping_validation():
     yet = now()
     delta = datetime.timedelta(seconds=1)
     Grouping(
-        None, "name", uuid.UUID(int=0), yet, yet + delta, yet + delta + delta,
-        "RD", 2, 0, "").validate()
+        None, "code", "name", uuid.UUID(int=0),
+        yet, yet + delta, yet + delta + delta, "RD", 2, 0, "").validate()
+    Grouping(
+        uuid.UUID(int=0), "code", "name", uuid.UUID(int=0),
+        yet, yet + delta, yet + delta + delta, "RD", 2, 0, "").validate()
 
 
 def test_grouping_validation_failed():
@@ -69,55 +72,35 @@ def test_grouping_validation_failed():
 
     yet = now()
     delta = datetime.timedelta(seconds=1)
-    assert_exc(
-        Grouping(
-            "123", "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
+    assert_exc(Grouping(
+        "123", "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
+        "RD", 2, 0, ""),
         "Key is not a UUID:")
-    assert_exc(
-        Grouping(
-            None, "name", None, yet, yet + delta, None, "RD", 2, 0, ""),
+    assert_exc(Grouping(
+        None, "code", "name", None, yet, yet + delta, None, "RD", 2, 0, ""),
         "Host is not a UUID:")
-    assert_exc(
-        Grouping(
-            None, "", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
+    assert_exc(Grouping(
+        None, "", "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
+        "Code is empty:")
+    assert_exc(Grouping(
+        None, "code", "", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
         "Name is empty:")
-    assert_exc(
-        Grouping(None, "name", uuid.UUID(int=0), yet, yet, None, "RD", 2, 0, ""),
+    assert_exc(Grouping(
+        None, "code", "name", uuid.UUID(int=0), yet, yet, None, "RD", 2, 0, ""),
         "Begin date after final date:")
-    assert_exc(
-        Grouping(
-            None, "name", uuid.UUID(int=0), yet, yet + delta, yet + delta,
-            "RD", 2, 0, ""),
+    assert_exc(Grouping(
+        None, "code", "name", uuid.UUID(int=0), yet, yet + delta, yet + delta,
+        "RD", 2, 0, ""),
         "Final date after close date:")
-    assert_exc(
-        Grouping(
-            None, "name", uuid.UUID(int=0), yet, yet + delta, None, "", 2, 0, ""),
+    assert_exc(Grouping(
+        None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
+        "", 2, 0, ""),
         "Strategy is empty:")
-    assert_exc(
-        Grouping(
-            None, "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 0, 0, ""),
+    assert_exc(Grouping(
+        None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
+        "RD", 0, 0, ""),
         "Maximal group size < 1:")
-    assert_exc(
-        Grouping(
-            None, "name", uuid.UUID(int=0), yet, yet + delta, None, "RD", 2, -1, ""),
+    assert_exc(Grouping(
+        None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
+        "RD", 2, -1, ""),
         "Member reserve < 0:")
-
-
-def test_shortcode_validation():
-    """A valid model raises no exception."""
-    ShortCode(uuid.UUID(int=0), "ABCDE0").validate()
-
-
-def test_shortcode_validation_failed():
-    """An invalid model raises exception."""
-    def assert_exc(shortcode: ShortCode, message: str) -> None:
-        """Test for a specific exception message."""
-        with pytest.raises(ValidationFailed) as exc:
-            shortcode.validate()
-        assert message in str(exc)
-
-    assert_exc(ShortCode(None, None), "Grouping key is empty:")
-    assert_exc(ShortCode("123", None), "Grouping key is not a UUID:")
-    assert_exc(ShortCode(uuid.UUID(int=0), None), "Short code is empty:")
-    assert_exc(
-        ShortCode(uuid.UUID(int=0), "Ab0"), "Short code contains non-upper characters:")
