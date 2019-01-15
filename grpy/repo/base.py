@@ -22,7 +22,7 @@
 
 from typing import Any, Dict, Iterator, Optional, Sequence
 
-from grpy.models import Grouping, KeyType, User
+from grpy.models import Application, Grouping, KeyType, User
 
 
 WhereSpec = Dict[str, Any]
@@ -102,6 +102,14 @@ class Repository:
         `order`.
         """
         raise NotImplementedError("Repository.iter_groupings")
+
+    def set_application(self, application: Application) -> Application:
+        """Add / update a grouping application."""
+        raise NotImplementedError("Repository.add_application")
+
+    def get_application(self, grouping: KeyType, participant: KeyType) -> Application:
+        """Return application with given grouping and participant."""
+        raise NotImplementedError("Repository.get_application")
 
 
 class RepositoryFactory:

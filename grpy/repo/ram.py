@@ -25,7 +25,7 @@ from typing import Any, Iterator, Optional
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from ..models import Grouping, KeyType, Model, User
+from ..models import Application, Grouping, KeyType, Model, User
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -82,6 +82,7 @@ class RamRepository(Repository):
         self._users_username = {}
         self._groupings = {}
         self._groupings_code = {}
+        self._applications = {}
         self._next_key = 0x10000
 
     def close(self):
@@ -167,6 +168,17 @@ class RamRepository(Repository):
         result = process_where(result, where)
         result = process_order(result, order)
         return result
+
+    def set_application(self, application: Application) -> Application:
+        """Add / update a grouping application."""
+        application.validate()
+        self._applications[(application.grouping, application.participant)] = \
+            application
+        return application
+
+    def get_application(self, grouping: KeyType, participant: KeyType) -> Application:
+        """Return application with given grouping and participant."""
+        return self._applications.get((grouping, participant), None)
 
 
 class WherePredicate:

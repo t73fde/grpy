@@ -30,7 +30,7 @@ from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
-from ...models import Grouping, Permission, User
+from ...models import Application, Grouping, Permission, User
 
 # pylint: disable=redefined-outer-name
 
@@ -355,3 +355,24 @@ def test_iter_groupings_order(repository: Repository) -> None:
     assert groupings == all_groupings
     groupings = list(repository.iter_groupings(order=["-name"]))
     assert groupings == list(reversed(all_groupings))
+
+
+def test_set_application(repository: Repository):
+    """Test add / update of an application."""
+    application = Application(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    assert application == repository.set_application(application)
+
+
+def test_get_application(repository: Repository):
+    """An inserted / updated application can be retrieved."""
+    application = Application(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    repository.set_application(application)
+    assert application == repository.get_application(
+        application.grouping, application.participant)
+
+    new_application = application._replace(data="atad")
+    repository.set_application(new_application)
+    assert repository.get_application(
+        application.grouping, application.participant).data == "atad"
+
+    assert repository.get_application(uuid.UUID(int=0), uuid.UUID(int=2)) is None
