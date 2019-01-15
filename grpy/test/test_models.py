@@ -25,7 +25,7 @@ import uuid
 
 import pytest
 
-from ..models import Grouping, Permission, User, ValidationFailed
+from ..models import Application, Grouping, Permission, User, ValidationFailed
 from ..utils import now
 
 
@@ -104,3 +104,18 @@ def test_grouping_validation_failed():
         None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
         "RD", 2, -1, ""),
         "Member reserve < 0:")
+
+
+def test_application_validation():
+    """A valid model raises no exception."""
+    Application(uuid.UUID(int=0), uuid.UUID(int=0), "").validate()
+
+
+def test_application_validation_failed():
+    """An invalid model raises exception."""
+    with pytest.raises(ValidationFailed) as exc:
+        Application(None, uuid.UUID(int=0), "").validate()
+    assert "Grouping is not a UUID:" in str(exc)
+    with pytest.raises(ValidationFailed) as exc:
+        Application(uuid.UUID(int=0), None, "").validate()
+    assert "Participant is not a UUID:" in str(exc)

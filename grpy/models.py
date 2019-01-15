@@ -100,3 +100,20 @@ class Grouping(NamedTuple):
                 "Maximal group size < 1: {}".format(self.max_group_size))
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
+
+
+class Application(NamedTuple):
+    """Data for an application for a grouping by a participant."""
+
+    grouping: KeyType  # -> Grouping
+    participant: KeyType  # -> User
+    data: str
+
+    def validate(self) -> None:
+        """Check model for consistency."""
+        if not isinstance(self.grouping, uuid.UUID):
+            raise ValidationFailed(
+                "Grouping is not a UUID: {}".format(self.grouping))
+        if not isinstance(self.participant, uuid.UUID):
+            raise ValidationFailed(
+                "Participant is not a UUID: {}".format(self.participant))
