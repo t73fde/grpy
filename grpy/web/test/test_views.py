@@ -131,6 +131,22 @@ def test_name_change_after_login(app, client, auth):
     assert g.user is None
 
 
+def test_login_with_redirect(app, client):
+    """Test login view when redirect after successful login."""
+    url = url_for('login', next_url="/ABCDEF/")
+    response = client.get(url)
+    assert b'<input id="next_url" name="next_url" type="hidden" value="/ABCDEF/">' \
+        in response.data
+
+    response = client.post(
+        url_for('login'),
+        data={'username': "new_user", 'password': "1", 'next_url': "/ABCDEF/"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/ABCDEF/"
+    assert session['username'] == "new_user"
+    assert app.get_repository().get_user_by_username("new_user")
+
+
 def test_logout(client, auth):
     """Test login/logout sequence."""
     auth.login("host")
@@ -246,7 +262,10 @@ def test_shortlink(app, client, auth):
     """Test home view as a host."""
     grouping = insert_simple_grouping(app.get_repository())
     url = url_for('shortlink', code=grouping.code)
-    assert client.get(url).status_code == 401
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == \
+        "http://localhost/login?next_url=%2F{}%2F".format(grouping.code)
 
     auth.login("host")
     response = client.get(url)

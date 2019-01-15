@@ -24,7 +24,9 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
-from .utils import login_required, make_model, update_model, value_or_404
+from .utils import (
+    login_required, login_required_redirect, make_model, update_model,
+    value_or_404)
 from .. import utils
 from ..logic import make_code
 from ..models import Grouping, User
@@ -62,7 +64,11 @@ def login():
         flash("User '{}' was logged out.".format(g.user.username), category="info")
         g.user = None
 
-    form = forms.LoginForm()
+    if request.method == 'POST':
+        form = forms.LoginForm()
+    else:
+        form = forms.LoginForm(data={'next_url': request.args.get('next_url', '')})
+
     if form.validate_on_submit():
         username = form.username.data
         if username and username[0] != "x":
@@ -71,7 +77,10 @@ def login():
             if not user:
                 user = repository.set_user(User(None, username))
             current_app.login(user)
-            return redirect(url_for("home"))
+            next_url = form.next_url.data
+            if not next_url or not next_url.startswith("/"):
+                next_url = url_for('home')
+            return redirect(next_url)
         flash("Cannot authenticate user", category="error")
     return render_template("login.html", form=form)
 
@@ -125,7 +134,7 @@ def grouping_update(key):
     return render_template("grouping_update.html", form=form)
 
 
-@login_required
+@login_required_redirect
 def shortlink(code: str):
     """Show information for short link."""
     grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))

@@ -25,7 +25,7 @@ from flask_wtf import FlaskForm
 from pytz import UTC
 
 from wtforms.fields import (
-    DateTimeField, IntegerField, PasswordField, SelectField, StringField)
+    DateTimeField, HiddenField, IntegerField, PasswordField, SelectField, StringField)
 from wtforms.validators import (
     DataRequired, InputRequired, NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
@@ -36,6 +36,7 @@ class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
 
     username = StringField("Username", [DataRequired()])
     password = PasswordField("Password", [DataRequired()])
+    next_url = HiddenField()
 
 
 class GroupingForm(FlaskForm):

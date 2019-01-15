@@ -30,6 +30,7 @@
   {{- form.csrf_token }}
   {{- render_field(form.username, autofocus=True) }}
   {{- render_field(form.password) }}
+  {{- form.next_url }}
 <div class="w3-panel">
 <input type="submit" name="login" value="Login" class="w3-btn w3-indigo" />
 </div>

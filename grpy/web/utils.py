@@ -24,7 +24,7 @@
 from functools import wraps
 from typing import Any, Optional
 
-from flask import abort, g
+from flask import abort, g, redirect, request, url_for
 
 from flask_babel import format_datetime
 
@@ -35,6 +35,16 @@ def login_required(view):
     def wrapped_view(*args, **kwargs):
         if g.user is None:
             abort(401)
+        return view(*args, **kwargs)
+    return wrapped_view
+
+
+def login_required_redirect(view):
+    """Wrap a view to enforce a login of an user."""
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('login', next_url=request.path))
         return view(*args, **kwargs)
     return wrapped_view
 
