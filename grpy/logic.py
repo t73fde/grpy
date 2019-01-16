@@ -24,6 +24,7 @@ import hashlib
 import os
 
 from .models import Grouping
+from .utils import now
 
 
 def make_code(grouping: Grouping, unique: bool = False) -> str:
@@ -41,3 +42,8 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
         value, rem = divmod(value, len(encoding))
         result.append(encoding[rem])
     return ''.join(result)
+
+
+def is_application_open(grouping: Grouping) -> bool:
+    """Check that applications for given grouping are open."""
+    return grouping.begin_date < now() < grouping.final_date

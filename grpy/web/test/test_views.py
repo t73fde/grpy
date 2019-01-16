@@ -320,3 +320,33 @@ def test_grouping_apply(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
         [('info', "Your application for '{}' is updated.".format(grouping.name))]
+
+
+def test_grouping_apply_out_of_time(app, client, auth):
+    """Check the grouping application before start date and after final date."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_apply', key=grouping.key)
+    auth.login('student')
+
+    now = utils.now()
+    app.get_repository().set_grouping(
+        grouping._replace(begin_date=now + datetime.timedelta(seconds=3600)))
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "Not within the application period for '{}'.".format(
+            grouping.name))]
+
+    client.get(url_for('home'))  # Clean flash messages
+
+    app.get_repository().set_grouping(
+        grouping._replace(
+            begin_date=now - datetime.timedelta(seconds=3600),
+            final_date=now - datetime.timedelta(seconds=1800)))
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "Not within the application period for '{}'.".format(
+            grouping.name))]
