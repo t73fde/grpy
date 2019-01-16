@@ -41,8 +41,21 @@
 </div>
 {% else %}
 <div class="w3-panel">
+  {% if groupings %}
+  <h1>Grouping applications</h1>
+  <table class="w3-table w3-bordered">
+    <tr><th>Name</th><th>Final date</th></tr>
+    {% for grouping in groupings %}
+    <tr>
+      <td><a href="{{ url_for('grouping_apply', key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
   <h1>Welcome!</h1>
   <p>Please use a valid grouping link to participate in a grouping.</p>
+  {% endif %}
 </div>
 {% endif %}
 {% else %}

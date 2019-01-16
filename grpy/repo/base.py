@@ -111,6 +111,14 @@ class Repository:
         """Return application with given grouping and participant."""
         raise NotImplementedError("Repository.get_application")
 
+    def iter_groupings_by_participant(
+            self,
+            participant: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+        """Return an iterator of all groupings the participant applied to."""
+        raise NotImplementedError("Repository.list_groupings_by_participant")
+
 
 class RepositoryFactory:
     """

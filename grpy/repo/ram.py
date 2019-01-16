@@ -126,10 +126,7 @@ class RamRepository(Repository):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[User]:
         """Return an iterator of all or some users."""
-        result = self._users.values()
-        result = process_where(result, where)
-        result = process_order(result, order)
-        return result
+        return process_where_order(self._users.values(), where, order)
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -164,10 +161,7 @@ class RamRepository(Repository):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all or some groupings."""
-        result = self._groupings.values()
-        result = process_where(result, where)
-        result = process_order(result, order)
-        return result
+        return process_where_order(self._groupings.values(), where, order)
 
     def set_application(self, application: Application) -> Application:
         """Add / update a grouping application."""
@@ -179,6 +173,17 @@ class RamRepository(Repository):
     def get_application(self, grouping: KeyType, participant: KeyType) -> Application:
         """Return application with given grouping and participant."""
         return self._applications.get((grouping, participant), None)
+
+    def iter_groupings_by_participant(
+            self,
+            participant: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+        """Return an iterator of all groupings the participant applied to."""
+        return process_where_order(
+            (self.get_grouping(g) for g, p in self._applications if p == participant),
+            where,
+            order)
 
 
 class WherePredicate:
@@ -263,4 +268,14 @@ def process_order(
             key=lambda obj: getattr(
                 obj, order_field),  # pylint: disable=cell-var-from-loop
             reverse=reverse)
+    return result
+
+
+def process_where_order(
+        result: Iterator[Model],
+        where: Optional[WhereSpec],
+        order: Optional[OrderSpec]) -> Iterator[Grouping]:
+    """Process the where and order specification."""
+    result = process_where(result, where)
+    result = process_order(result, order)
     return result
