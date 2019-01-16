@@ -75,5 +75,5 @@ class GroupingForm(FlaskForm):
             raise ValidationError("Close date must be after final date.")
 
 
-class ApplicationForm(FlaskForm):
-    """Base form for all applications."""
+class RegistrationForm(FlaskForm):
+    """Base form for all registrations."""

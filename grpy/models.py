@@ -102,8 +102,8 @@ class Grouping(NamedTuple):
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
 
 
-class Application(NamedTuple):
-    """Data for an application for a grouping by a participant."""
+class Registration(NamedTuple):
+    """Data for an registration for a grouping by a participant."""
 
     grouping: KeyType  # -> Grouping
     participant: KeyType  # -> User

@@ -25,7 +25,7 @@ from typing import Any, Iterator, Optional
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from ..models import Application, Grouping, KeyType, Model, User
+from ..models import Grouping, KeyType, Model, Registration, User
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -82,7 +82,7 @@ class RamRepository(Repository):
         self._users_username = {}
         self._groupings = {}
         self._groupings_code = {}
-        self._applications = {}
+        self._registrations = {}
         self._next_key = 0x10000
 
     def close(self):
@@ -163,16 +163,16 @@ class RamRepository(Repository):
         """Return an iterator of all or some groupings."""
         return process_where_order(self._groupings.values(), where, order)
 
-    def set_application(self, application: Application) -> Application:
-        """Add / update a grouping application."""
-        application.validate()
-        self._applications[(application.grouping, application.participant)] = \
-            application
-        return application
+    def set_registration(self, registration: Registration) -> Registration:
+        """Add / update a grouping registration."""
+        registration.validate()
+        self._registrations[(registration.grouping, registration.participant)] = \
+            registration
+        return registration
 
-    def get_application(self, grouping: KeyType, participant: KeyType) -> Application:
-        """Return application with given grouping and participant."""
-        return self._applications.get((grouping, participant), None)
+    def get_registration(self, grouping: KeyType, participant: KeyType) -> Registration:
+        """Return registration with given grouping and participant."""
+        return self._registrations.get((grouping, participant), None)
 
     def iter_groupings_by_participant(
             self,
@@ -181,7 +181,7 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the participant applied to."""
         return process_where_order(
-            (self.get_grouping(g) for g, p in self._applications if p == participant),
+            (self.get_grouping(g) for g, p in self._registrations if p == participant),
             where,
             order)
 

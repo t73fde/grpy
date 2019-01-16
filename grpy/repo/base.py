@@ -22,7 +22,7 @@
 
 from typing import Any, Dict, Iterator, Optional, Sequence
 
-from grpy.models import Application, Grouping, KeyType, User
+from grpy.models import Grouping, KeyType, Registration, User
 
 
 WhereSpec = Dict[str, Any]
@@ -103,13 +103,13 @@ class Repository:
         """
         raise NotImplementedError("Repository.iter_groupings")
 
-    def set_application(self, application: Application) -> Application:
-        """Add / update a grouping application."""
-        raise NotImplementedError("Repository.add_application")
+    def set_registration(self, registration: Registration) -> Registration:
+        """Add / update a grouping registration."""
+        raise NotImplementedError("Repository.add_registration")
 
-    def get_application(self, grouping: KeyType, participant: KeyType) -> Application:
-        """Return application with given grouping and participant."""
-        raise NotImplementedError("Repository.get_application")
+    def get_registration(self, grouping: KeyType, participant: KeyType) -> Registration:
+        """Return registration with given grouping and participant."""
+        raise NotImplementedError("Repository.get_registration")
 
     def iter_groupings_by_participant(
             self,

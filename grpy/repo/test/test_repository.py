@@ -30,7 +30,7 @@ from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
-from ...models import Application, Grouping, Permission, User
+from ...models import Grouping, Permission, Registration, User
 
 # pylint: disable=redefined-outer-name
 
@@ -357,25 +357,25 @@ def test_iter_groupings_order(repository: Repository) -> None:
     assert groupings == list(reversed(all_groupings))
 
 
-def test_set_application(repository: Repository):
-    """Test add / update of an application."""
-    application = Application(uuid.UUID(int=0), uuid.UUID(int=1), "data")
-    assert application == repository.set_application(application)
+def test_set_registration(repository: Repository):
+    """Test add / update of an registration."""
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    assert registration == repository.set_registration(registration)
 
 
-def test_get_application(repository: Repository):
-    """An inserted / updated application can be retrieved."""
-    application = Application(uuid.UUID(int=0), uuid.UUID(int=1), "data")
-    repository.set_application(application)
-    assert application == repository.get_application(
-        application.grouping, application.participant)
+def test_get_registration(repository: Repository):
+    """An inserted / updated registration can be retrieved."""
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    repository.set_registration(registration)
+    assert registration == repository.get_registration(
+        registration.grouping, registration.participant)
 
-    new_application = application._replace(data="atad")
-    repository.set_application(new_application)
-    assert repository.get_application(
-        application.grouping, application.participant).data == "atad"
+    new_registration = registration._replace(data="atad")
+    repository.set_registration(new_registration)
+    assert repository.get_registration(
+        registration.grouping, registration.participant).data == "atad"
 
-    assert repository.get_application(uuid.UUID(int=0), uuid.UUID(int=2)) is None
+    assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
 
 def test_iter_groupings_by_participant(repository):
@@ -383,5 +383,5 @@ def test_iter_groupings_by_participant(repository):
     grouping = repository.set_grouping(create_grouping(repository))
     for uid in range(5):
         user_key = uuid.UUID(int=uid)
-        repository.set_application(Application(grouping.key, user_key, ""))
+        repository.set_registration(Registration(grouping.key, user_key, ""))
         assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]

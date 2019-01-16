@@ -28,8 +28,8 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import utils
-from ..logic import is_application_open, make_code
-from ..models import Application, Grouping, User
+from ..logic import is_registration_open, make_code
+from ..models import Grouping, Registration, User
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
 
@@ -155,19 +155,19 @@ def grouping_apply(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key == grouping.host:
         abort(403)
-    if not is_application_open(grouping):
-        flash("Not within the application period for '{}'.".format(grouping.name),
+    if not is_registration_open(grouping):
+        flash("Not within the registration period for '{}'.".format(grouping.name),
               category="warning")
         return redirect(url_for('home'))
-    application = get_repository().get_application(grouping.key, g.user.key)
-    form = forms.ApplicationForm()
+    registration = get_repository().get_registration(grouping.key, g.user.key)
+    form = forms.RegistrationForm()
     if form.validate_on_submit():
-        get_repository().set_application(Application(grouping.key, g.user.key, ''))
-        if application:
-            flash("Your application for '{}' is updated.".format(grouping.name),
+        get_repository().set_registration(Registration(grouping.key, g.user.key, ''))
+        if registration:
+            flash("Your registration for '{}' is updated.".format(grouping.name),
                   category="info")
         else:
-            flash("Your application for '{}' is stored.".format(grouping.name),
+            flash("Your registration for '{}' is stored.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
     return render_template("grouping_apply.html", grouping=grouping, form=form)

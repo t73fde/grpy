@@ -44,6 +44,6 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
     return ''.join(result)
 
 
-def is_application_open(grouping: Grouping) -> bool:
-    """Check that applications for given grouping are open."""
+def is_registration_open(grouping: Grouping) -> bool:
+    """Check that registrations for given grouping are open."""
     return grouping.begin_date < now() < grouping.final_date

@@ -293,7 +293,7 @@ def test_shortlink(app, client, auth):
 
 
 def test_grouping_apply(app, client, auth):
-    """Check the grouping application."""
+    """Check the grouping registration."""
     grouping = insert_simple_grouping(app.get_repository())
     url = url_for('grouping_apply', key=grouping.key)
     assert client.get(url).status_code == 401
@@ -311,7 +311,7 @@ def test_grouping_apply(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Your application for '{}' is stored.".format(grouping.name))]
+        [('info', "Your registration for '{}' is stored.".format(grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
 
@@ -319,11 +319,11 @@ def test_grouping_apply(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Your application for '{}' is updated.".format(grouping.name))]
+        [('info', "Your registration for '{}' is updated.".format(grouping.name))]
 
 
 def test_grouping_apply_out_of_time(app, client, auth):
-    """Check the grouping application before start date and after final date."""
+    """Check the grouping registration before start date and after final date."""
     grouping = insert_simple_grouping(app.get_repository())
     url = url_for('grouping_apply', key=grouping.key)
     auth.login('student')
@@ -335,7 +335,7 @@ def test_grouping_apply_out_of_time(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Not within the application period for '{}'.".format(
+        [('warning', "Not within the registration period for '{}'.".format(
             grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
@@ -348,5 +348,5 @@ def test_grouping_apply_out_of_time(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Not within the application period for '{}'.".format(
+        [('warning', "Not within the registration period for '{}'.".format(
             grouping.name))]
