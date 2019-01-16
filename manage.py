@@ -81,9 +81,10 @@ def coverage_report(verbose: int) -> bool:
     if process.returncode:
         return False
     match_obj = re.search(rb'\nTOTAL.+ (\d.+)%\n', process.stdout)
-    if verbose > 1 or (match_obj and match_obj[1] != b'100'):
+    covered = match_obj and match_obj[1] == b'100'
+    if verbose > 1 or not covered:
         click.echo(process.stdout)
-    return True
+    return covered
 
 
 @click.group()
@@ -126,6 +127,24 @@ def coverage(ctx, verbose):
         coverage_report(verbose)
     if not coverage_ok:
         ctx.exit(1)
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def full_coverage(ctx, verbose):
+    """Perform a full test with coverage measurement, for all packages."""
+    verbose += ctx.obj['verbose']
+    for directory in ("grpy/repo", "grpy/web"):
+        coverage_ok = run_subprocess(
+            ["coverage", "run", "--source=" + directory, "-m", "pytest", directory],
+            verbose)
+        if coverage_ok:
+            run_subprocess(["coverage", "html"], verbose)
+            coverage_ok = coverage_report(verbose)
+        if not coverage_ok:
+            ctx.exit(1)
+    ctx.invoke(coverage, verbose=verbose)
 
 
 @main.command()
