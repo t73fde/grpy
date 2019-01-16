@@ -91,6 +91,8 @@ def colormap(color_description: str, prefix: Optional[str] = "w3-") -> str:
         'secondary': "blue-gray",
         'success': "teal",
         'danger': "red",
+        'error': "red",
         'warning': "yellow",
         'info': "cyan",
+        'message': "cyan",
     }.get(color_description, color_description)

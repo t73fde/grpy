@@ -50,8 +50,8 @@
 <header>
   {%- block heading %}MISSING HEADING{% endblock %}
 </header>
-{%- for message in get_flashed_messages() %}
-<div class="w3-panel {{ color('danger') }}">{{ message }}</div>
+{%- for category, message in get_flashed_messages(with_categories=True) %}
+<div class="w3-panel w3-padding {{ color(category) }}">{{ message }}</div>
 {% endfor %}
 <article>
 {%- block content %}MISSING CONTENT{% endblock %}
