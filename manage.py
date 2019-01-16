@@ -84,7 +84,7 @@ def coverage_report(verbose: int) -> bool:
     covered = match_obj and match_obj[1] == b'100'
     if verbose > 1 or not covered:
         click.echo(process.stdout)
-    return covered
+    return verbose > 2 or covered
 
 
 @click.group()
