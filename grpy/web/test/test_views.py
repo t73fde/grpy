@@ -24,10 +24,23 @@ import datetime
 import uuid
 
 from flask import g, session, url_for
+from flask.sessions import SecureCookieSessionInterface
+
+from werkzeug.http import parse_cookie
 
 from ... import utils
 from ...models import Grouping
 from ...repo.logic import set_grouping_new_code
+
+
+def get_session_data(app, response):
+    """Retrieve the session data from a response."""
+    cookie = response.headers.get('Set-Cookie')
+    if not cookie:
+        return {}
+    session_str = parse_cookie(cookie)['session']
+    session_serializer = SecureCookieSessionInterface().get_signing_serializer(app)
+    return session_serializer.loads(session_str)
 
 
 def test_home_anonymous(client):
@@ -274,6 +287,36 @@ def test_shortlink(app, client, auth):
 
     auth.login("student")
     response = client.get(url)
-    assert response.status_code == 200
-    assert b"Apply" in response.data
-    assert grouping.name.encode('utf-8') in response.data
+    assert response.status_code == 302
+    assert response.headers['Location'] == \
+        "http://localhost" + url_for('grouping_apply', key=grouping.key)
+
+
+def test_grouping_apply(app, client, auth):
+    """Check the grouping application."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_apply', key=grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('host')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('student')
+    assert client.get(url).status_code == 200
+    response = client.get(url)
+
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Your application for '{}' is stored.".format(grouping.name))]
+
+    client.get(url_for('home'))  # Clean flash messages
+
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Your application for '{}' is updated.".format(grouping.name))]

@@ -29,7 +29,7 @@ from .utils import (
     value_or_404)
 from .. import utils
 from ..logic import make_code
-from ..models import Grouping, User
+from ..models import Application, Grouping, User
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
 
@@ -140,4 +140,25 @@ def shortlink(code: str):
     grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
     if g.user.key == grouping.host:
         return render_template("grouping_code.html", code=grouping.code)
-    return render_template("grouping_apply.html", grouping=grouping)
+
+    return redirect(url_for('grouping_apply', key=grouping.key))
+
+
+@login_required
+def grouping_apply(key):
+    """Apply for a grouping."""
+    grouping = value_or_404(get_repository().get_grouping(key))
+    if g.user.key == grouping.host:
+        abort(403)
+    application = get_repository().get_application(grouping.key, g.user.key)
+    form = forms.ApplicationForm()
+    if form.validate_on_submit():
+        get_repository().set_application(Application(grouping.key, g.user.key, ''))
+        if application:
+            flash("Your application for '{}' is updated.".format(grouping.name),
+                  category="info")
+        else:
+            flash("Your application for '{}' is stored.".format(grouping.name),
+                  category="info")
+        return redirect(url_for('home'))
+    return render_template("grouping_apply.html", grouping=grouping, form=form)

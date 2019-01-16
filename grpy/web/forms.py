@@ -73,3 +73,7 @@ class GroupingForm(FlaskForm):
         """Close date must be after final date."""
         if self.final_date.data >= field.data:
             raise ValidationError("Close date must be after final date.")
+
+
+class ApplicationForm(FlaskForm):
+    """Base form for all applications."""
