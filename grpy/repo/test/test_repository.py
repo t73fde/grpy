@@ -376,3 +376,12 @@ def test_get_application(repository: Repository):
         application.grouping, application.participant).data == "atad"
 
     assert repository.get_application(uuid.UUID(int=0), uuid.UUID(int=2)) is None
+
+
+def test_iter_groupings_by_participant(repository):
+    """List only applied groupings."""
+    grouping = repository.set_grouping(create_grouping(repository))
+    for uid in range(5):
+        user_key = uuid.UUID(int=uid)
+        repository.set_application(Application(grouping.key, user_key, ""))
+        assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
