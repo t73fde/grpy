@@ -152,7 +152,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
         methods=('GET', 'POST'))
     app.add_url_rule("/<string:code>/", "shortlink", views.shortlink)
     app.add_url_rule(
-        "/groupings/<uuid:key>/apply", "grouping_apply", views.grouping_apply,
+        "/groupings/<uuid:key>/register", "grouping_register", views.grouping_register,
         methods=('GET', 'POST'))
     app.log_debug("Application created.")
     return app

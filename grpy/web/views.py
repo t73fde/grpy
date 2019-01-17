@@ -146,12 +146,12 @@ def shortlink(code: str):
     if g.user.key == grouping.host:
         return render_template("grouping_code.html", code=grouping.code)
 
-    return redirect(url_for('grouping_apply', key=grouping.key))
+    return redirect(url_for('grouping_register', key=grouping.key))
 
 
 @login_required
-def grouping_apply(key):
-    """Apply for a grouping."""
+def grouping_register(key):
+    """Register for a grouping."""
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key == grouping.host:
         abort(403)
@@ -170,4 +170,4 @@ def grouping_apply(key):
             flash("Your registration for '{}' is stored.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
-    return render_template("grouping_apply.html", grouping=grouping, form=form)
+    return render_template("grouping_register.html", grouping=grouping, form=form)

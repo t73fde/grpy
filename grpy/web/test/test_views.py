@@ -289,13 +289,13 @@ def test_shortlink(app, client, auth):
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_apply', key=grouping.key)
+        "http://localhost" + url_for('grouping_register', key=grouping.key)
 
 
-def test_grouping_apply(app, client, auth):
+def test_grouping_register(app, client, auth):
     """Check the grouping registration."""
     grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_apply', key=grouping.key)
+    url = url_for('grouping_register', key=grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -322,10 +322,10 @@ def test_grouping_apply(app, client, auth):
         [('info', "Your registration for '{}' is updated.".format(grouping.name))]
 
 
-def test_grouping_apply_out_of_time(app, client, auth):
+def test_grouping_register_out_of_time(app, client, auth):
     """Check the grouping registration before start date and after final date."""
     grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_apply', key=grouping.key)
+    url = url_for('grouping_register', key=grouping.key)
     auth.login('student')
 
     now = utils.now()

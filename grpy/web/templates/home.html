@@ -47,7 +47,7 @@
     <tr><th>Name</th><th>Final date</th></tr>
     {% for grouping in groupings %}
     <tr>
-      <td><a href="{{ url_for('grouping_apply', key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td><a href="{{ url_for('grouping_register', key=grouping.key) }}">{{ grouping.name }}</a></td>
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
     </tr>
     {% endfor %}
