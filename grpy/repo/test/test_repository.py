@@ -385,3 +385,15 @@ def test_iter_groupings_by_participant(repository):
         user_key = uuid.UUID(int=uid)
         repository.set_registration(Registration(grouping.key, user_key, ""))
         assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
+
+
+def test_delete_registration(repository: Repository):
+    """A deleted registration cannot be retrieved."""
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    repository.set_registration(registration)
+    assert repository.delete_registration(registration) == registration
+    assert repository.get_registration(registration.grouping, registration.participant)\
+        is None
+    assert repository.delete_registration(registration) is None
+    assert repository.get_registration(registration.grouping, registration.participant)\
+        is None

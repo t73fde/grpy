@@ -160,14 +160,23 @@ def grouping_register(key):
               category="warning")
         return redirect(url_for('home'))
     registration = get_repository().get_registration(grouping.key, g.user.key)
+
     form = forms.RegistrationForm()
     if form.validate_on_submit():
-        get_repository().set_registration(Registration(grouping.key, g.user.key, ''))
-        if registration:
-            flash("Your registration for '{}' is updated.".format(grouping.name),
-                  category="info")
-        else:
-            flash("Your registration for '{}' is stored.".format(grouping.name),
+        if form.submit_register.data:
+            get_repository().set_registration(
+                Registration(grouping.key, g.user.key, ''))
+            if registration:
+                flash("Registration for '{}' is updated.".format(grouping.name),
+                      category="info")
+            else:
+                flash("Registration for '{}' is stored.".format(grouping.name),
+                      category="info")
+        elif registration and form.submit_deregister.data:
+            get_repository().delete_registration(registration)
+            flash("Registration for '{}' is removed.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
-    return render_template("grouping_register.html", grouping=grouping, form=form)
+    return render_template(
+        "grouping_register.html",
+        grouping=grouping, registration=registration, form=form)

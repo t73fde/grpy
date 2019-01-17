@@ -35,6 +35,9 @@
 <form method="post" action="{{ url_for('grouping_register', key=grouping.key) }}">
 {{- form.csrf_token }}
 {{- form.submit_register(class="w3-btn " + color("primary")) }}
+{% if registration %}
+{{- form.submit_deregister(class="w3-btn " + color("danger")) }}
+{% endif %}
 </form>
 </div>
 {% endblock %}

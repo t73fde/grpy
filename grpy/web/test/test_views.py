@@ -29,7 +29,7 @@ from flask.sessions import SecureCookieSessionInterface
 from werkzeug.http import parse_cookie
 
 from ... import utils
-from ...models import Grouping
+from ...models import Grouping, Registration
 from ...repo.logic import set_grouping_new_code
 
 
@@ -307,19 +307,19 @@ def test_grouping_register(app, client, auth):
     assert client.get(url).status_code == 200
     response = client.get(url)
 
-    response = client.post(url, data={})
+    response = client.post(url, data={'submit_register': "submit_register"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Your registration for '{}' is stored.".format(grouping.name))]
+        [('info', "Registration for '{}' is stored.".format(grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
 
-    response = client.post(url, data={})
+    response = client.post(url, data={'submit_register': "submit_register"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Your registration for '{}' is updated.".format(grouping.name))]
+        [('info', "Registration for '{}' is updated.".format(grouping.name))]
 
 
 def test_grouping_register_out_of_time(app, client, auth):
@@ -350,3 +350,25 @@ def test_grouping_register_out_of_time(app, client, auth):
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Not within the registration period for '{}'.".format(
             grouping.name))]
+
+
+def test_grouping_deregister(app, client, auth):
+    """Check de-registrations."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_register', key=grouping.key)
+    auth.login('student')
+
+    response = client.post(url, data={'submit_deregister': "submit_deregister"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert '_flashes' not in get_session_data(app, response)
+
+    app.get_repository().set_registration(Registration(
+        grouping.key,
+        app.get_repository().get_user_by_username('student').key,
+        ''))
+    response = client.post(url, data={'submit_deregister': "submit_deregister"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Registration for '{}' is removed.".format(grouping.name))]

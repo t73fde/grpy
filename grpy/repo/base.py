@@ -119,6 +119,10 @@ class Repository:
         """Return an iterator of all groupings the participant applied to."""
         raise NotImplementedError("Repository.list_groupings_by_participant")
 
+    def delete_registration(self, registration: Registration) -> Registration:
+        """Delete the given registration from the repository."""
+        raise NotImplementedError("Repository.delete_registration")
+
 
 class RepositoryFactory:
     """

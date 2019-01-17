@@ -185,6 +185,14 @@ class RamRepository(Repository):
             where,
             order)
 
+    def delete_registration(self, registration: Registration) -> Registration:
+        """Delete the given registration from the repository."""
+        try:
+            del self._registrations[(registration.grouping, registration.participant)]
+        except KeyError:
+            return None
+        return registration
+
 
 class WherePredicate:
     """Filter attributes."""
