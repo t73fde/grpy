@@ -25,7 +25,8 @@ from flask_wtf import FlaskForm
 from pytz import UTC
 
 from wtforms.fields import (
-    DateTimeField, HiddenField, IntegerField, PasswordField, SelectField, StringField)
+    DateTimeField, HiddenField, IntegerField, PasswordField, SelectField,
+    StringField, SubmitField)
 from wtforms.validators import (
     DataRequired, InputRequired, NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
@@ -37,6 +38,7 @@ class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     username = StringField("Username", [DataRequired()])
     password = PasswordField("Password", [DataRequired()])
     next_url = HiddenField()
+    submit_login = SubmitField("Login")
 
 
 class GroupingForm(FlaskForm):
@@ -63,6 +65,9 @@ class GroupingForm(FlaskForm):
         "Member reserve", [InputRequired(), NumberRange(min=0)])
     note = StringField(
         "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else None])
+    submit_create = SubmitField("Create")
+    submit_update = SubmitField("Update")
+    submit_delete = SubmitField("Delete")
 
     def validate_final_date(self, field):
         """Check that final date is after begin date."""
@@ -77,3 +82,6 @@ class GroupingForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     """Base form for all registrations."""
+
+    submit_register = SubmitField("Register")
+    submit_deregister = SubmitField("De-Register")

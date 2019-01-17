@@ -21,7 +21,7 @@
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-<h1>Apply for Grouping</h1>
+<h1>Register for Grouping</h1>
 <dl>
 <dt>Name</dt>
 <dd>{{ grouping.name }}</dd>
@@ -34,7 +34,7 @@
 <div class="w3-container">
 <form method="post" action="{{ url_for('grouping_apply', key=grouping.key) }}">
 {{- form.csrf_token }}
-<input type="submit" name="apply" value="Apply" class="w3-btn {{ color('primary') }}" />
+{{- form.submit_register(class="w3-btn " + color("primary")) }}
 </form>
 </div>
 {% endblock %}

@@ -36,7 +36,7 @@
   {{- render_field(form.member_reserve) }}
   {{- render_field(form.note) }}
 <div class="w3-panel">
-  <input type="submit" name="create" value="Create" class="w3-btn {{ color('primary') }}" />
+  {{- form.submit_create(class="w3-btn " + color("primary")) }}
 </div>
 </form>
 <div class="w3-container"></div>
