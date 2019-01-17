@@ -23,7 +23,7 @@
 import datetime
 import enum
 import uuid
-from typing import NamedTuple, Optional
+from typing import FrozenSet, NamedTuple, Optional
 
 
 Model = NamedTuple
@@ -117,3 +117,11 @@ class Registration(NamedTuple):
         if not isinstance(self.participant, uuid.UUID):
             raise ValidationFailed(
                 "Participant is not a UUID: {}".format(self.participant))
+
+
+class Group(NamedTuple):
+    """A group of participants for a single grouping."""
+
+    grouping: KeyType  # -> Grouping
+    number: int
+    members: FrozenSet[KeyType]  # -> User
