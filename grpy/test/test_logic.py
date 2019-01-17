@@ -56,6 +56,6 @@ def test_make_code():
     check_code(code, grouping._replace(begin_date=yet + timedelta(seconds=60)))
     check_code(code, grouping._replace(final_date=yet + timedelta(days=60)))
     check_code(code, grouping._replace(close_date=yet + timedelta(days=60)))
-    check_code(code, grouping._replace(strategy="LK"))
+    check_code(code, grouping._replace(policy="LK"))
 
     check_code(None, grouping, unique=True)

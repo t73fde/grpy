@@ -219,7 +219,7 @@ def test_grouping_create(app, client, auth):
     response = client.post(url, data={
         'name': "name", 'begin_date': "1970-01-01 00:00",
         'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
@@ -229,7 +229,7 @@ def test_grouping_create(app, client, auth):
     response = client.post(url, data={
         'name': "name", 'begin_date': "1970-01-01 00:00",
         'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
@@ -262,7 +262,7 @@ def test_grouping_update(app, client, auth):
     response = client.post(url, data={
         'name': "very new name", 'begin_date': "1970-01-01 00:00",
         'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'strategy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
+        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 

@@ -95,7 +95,7 @@ def test_grouping_validation_failed():
     assert_exc(Grouping(
         None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
         "", 2, 0, ""),
-        "Strategy is empty:")
+        "Policy is empty:")
     assert_exc(Grouping(
         None, "code", "name", uuid.UUID(int=0), yet, yet + delta, None,
         "RD", 0, 0, ""),

@@ -70,7 +70,7 @@ class Grouping(NamedTuple):
     begin_date: datetime.datetime
     final_date: datetime.datetime
     close_date: Optional[datetime.datetime]
-    strategy: str
+    policy: str
     max_group_size: int
     member_reserve: int
     note: str
@@ -93,8 +93,8 @@ class Grouping(NamedTuple):
             raise ValidationFailed(
                 "Final date after close date: {} >= {}".format(
                     self.final_date, self.close_date))
-        if not self.strategy:
-            raise ValidationFailed("Strategy is empty: {}".format(self))
+        if not self.policy:
+            raise ValidationFailed("Policy is empty: {}".format(self))
         if self.max_group_size < 1:
             raise ValidationFailed(
                 "Maximal group size < 1: {}".format(self.max_group_size))

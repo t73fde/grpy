@@ -37,32 +37,32 @@ class FormData(dict):
 def test_grouping_form(app):  # pylint: disable=unused-argument
     """Validate some forms."""
     form = GroupingForm()
-    form.strategy.choices = [('RD', "Random")]
+    form.policy.choices = [('RD', "Random")]
     assert not form.validate()
 
     form = GroupingForm(formdata=FormData(
-        name="n", begin_date="n", final_date="n", strategy="n",
+        name="n", begin_date="n", final_date="n", policy="n",
         max_group_size="n", member_reserve="n"))
-    form.strategy.choices = [('RD', "Random")]
+    form.policy.choices = [('RD', "Random")]
     assert not form.validate()
 
     form = GroupingForm(formdata=FormData(
         name="name", begin_date="1970-01-01 00:00",
-        final_date="1970-01-01 00:00", strategy="RD",
+        final_date="1970-01-01 00:00", policy="RD",
         max_group_size=2, member_reserve=1))
-    form.strategy.choices = [('RD', "Random")]
+    form.policy.choices = [('RD', "Random")]
     assert not form.validate()
 
     form = GroupingForm(formdata=FormData(
         name="name", begin_date="1970-01-01 00:00",
         final_date="1970-01-01 00:01", close_date="1970-01-01 00:01",
-        strategy="RD", max_group_size=2, member_reserve=1))
-    form.strategy.choices = [('RD', "Random")]
+        policy="RD", max_group_size=2, member_reserve=1))
+    form.policy.choices = [('RD', "Random")]
     assert not form.validate()
 
     form = GroupingForm(formdata=FormData(
         name="name", begin_date="1970-01-01 00:00",
         final_date="1970-01-01 00:01", close_date="1970-01-01 00:02",
-        strategy="RD", max_group_size=2, member_reserve=1))
-    form.strategy.choices = [('RD', "Random")]
+        policy="RD", max_group_size=2, member_reserve=1))
+    form.policy.choices = [('RD', "Random")]
     assert form.validate()

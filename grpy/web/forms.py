@@ -58,7 +58,7 @@ class GroupingForm(FlaskForm):
         "Close date", [Optional()],
         filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
         format="%Y-%m-%d %H:%M")
-    strategy = SelectField("Strategy", [DataRequired()])
+    policy = SelectField("Policy", [DataRequired()])
     max_group_size = IntegerField(
         "Maximum group size", [InputRequired(), NumberRange(min=1)])
     member_reserve = IntegerField(

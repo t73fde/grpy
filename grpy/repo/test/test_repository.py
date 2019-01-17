@@ -220,7 +220,7 @@ def test_insert_grouping(repository: Repository):
     assert new_grouping.begin_date == grouping.begin_date
     assert new_grouping.final_date == grouping.final_date
     assert new_grouping.close_date == grouping.close_date
-    assert new_grouping.strategy == grouping.strategy
+    assert new_grouping.policy == grouping.policy
     assert new_grouping.max_group_size == grouping.max_group_size
     assert new_grouping.member_reserve == grouping.member_reserve
     assert new_grouping.note == grouping.note

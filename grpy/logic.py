@@ -30,7 +30,7 @@ from .utils import now
 def make_code(grouping: Grouping, unique: bool = False) -> str:
     """Build a short code for accessing a grouping."""
     sha = hashlib.sha256()
-    for field in ('name', 'begin_date', 'final_date', 'close_date', 'strategy'):
+    for field in ('name', 'begin_date', 'final_date', 'close_date', 'policy'):
         sha.update(str(getattr(grouping, field)).encode('utf-8'))
     if unique:
         sha.update(os.urandom(8))

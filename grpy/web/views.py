@@ -30,6 +30,7 @@ from .utils import (
 from .. import utils
 from ..logic import is_registration_open, make_code
 from ..models import Grouping, Registration, User
+from ..policies import get_policies
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
 
@@ -102,7 +103,7 @@ def grouping_create():
     if not g.user.is_host:
         abort(403)
     form = forms.GroupingForm()
-    form.strategy.choices = [('', ''), ('RD', "Random")]
+    form.policy.choices = [('', '')] + get_policies()
     if form.validate_on_submit():
         grouping = make_model(
             Grouping, form.data, {"code": ".", "host": g.user.key})
@@ -131,7 +132,7 @@ def grouping_update(key):
         form = forms.GroupingForm()
     else:
         form = forms.GroupingForm(obj=grouping)
-    form.strategy.choices = [('RD', "Random")]
+    form.policy.choices = get_policies()
     if form.validate_on_submit():
         grouping = update_model(grouping, form.data)
         get_repository().set_grouping(grouping)
