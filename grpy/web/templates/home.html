@@ -21,8 +21,8 @@
 {% block heading %}{% endblock %}
 {% block content %}
 {% if g.user %}
-{% if g.user.is_host %}
 <div class="w3-panel">
+{% if g.user.is_host %}
   <h1>Active Groupings</h1>
   <table class="w3-table w3-bordered">
     <tr><th>Name</th><th>Final date</th></tr>
@@ -38,26 +38,23 @@
   <div class="w3-panel">
     <a href="{{ url_for('grouping_create') }}" class="w3-button {{ color('primary') }}">Create</a>
   </div>
-</div>
-{% else %}
-<div class="w3-panel">
-  {% if groupings %}
-  <h1>Grouping registrations</h1>
+{% endif %}
+{% if registrations %}
+  <h1>Registered Groupings</h1>
   <table class="w3-table w3-bordered">
     <tr><th>Name</th><th>Final date</th></tr>
-    {% for grouping in groupings %}
+    {% for grouping in registrations %}
     <tr>
       <td><a href="{{ url_for('grouping_register', key=grouping.key) }}">{{ grouping.name }}</a></td>
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
     </tr>
     {% endfor %}
   </table>
-  {% else %}
+{% elif not groupings %}
   <h1>Welcome!</h1>
   <p>Please use a valid grouping link to participate in a grouping.</p>
-  {% endif %}
-</div>
 {% endif %}
+</div>
 {% else %}
 <div class="w3-panel">
   <h1>Welcome!</h1>

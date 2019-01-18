@@ -42,7 +42,7 @@ def get_repository() -> Repository:
 
 def home():
     """Show home page."""
-    groupings = []
+    groupings = registrations = []
     if g.user:
         if g.user.is_host:
             groupings = get_repository().iter_groupings(
@@ -50,12 +50,13 @@ def home():
                     "host__eq": g.user.key,
                     "close_date__ge": utils.now()},
                 order=["final_date"])
-        else:
-            groupings = get_repository().iter_groupings_by_participant(
-                g.user.key,
-                where={"close_date__ge": utils.now()},
-                order=["final_date"])
-    return render_template("home.html", groupings=groupings)
+
+        registrations = get_repository().iter_groupings_by_participant(
+            g.user.key,
+            where={"close_date__ge": utils.now()},
+            order=["final_date"])
+    return render_template(
+        "home.html", groupings=groupings, registrations=registrations)
 
 
 def about():
