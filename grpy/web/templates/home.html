@@ -25,11 +25,12 @@
 {% if g.user.is_host %}
   <h1>Active Groupings</h1>
   <table class="w3-table w3-bordered">
-    <tr><th>Name</th><th>Final date</th></tr>
-    {% for grouping in groupings %}
+    <tr><th>Name</th><th>Final date</th><th>Registrations</th></tr>
+    {% for grouping, count in groupings %}
     <tr>
       <td><a href="{{ url_for('grouping_detail', key=grouping.key) }}">{{ grouping.name }}</a></td>
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+      <td>{{ count }}</td>
     </tr>
     {% else %}
     <tr><td>(None)</td></tr>

@@ -378,13 +378,12 @@ def test_get_registration(repository: Repository):
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
 
-def test_iter_groupings_by_participant(repository):
-    """List only applied groupings."""
-    grouping = repository.set_grouping(create_grouping(repository))
-    for uid in range(5):
-        user_key = uuid.UUID(int=uid)
-        repository.set_registration(Registration(grouping.key, user_key, ""))
-        assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
+def test_iter_registrations(repository: Repository):
+    """Iterate over all registrations."""
+    for i in range(7):
+        repository.set_registration(Registration(
+            uuid.UUID(int=i), uuid.UUID(int=100 + i), ''))
+    assert len(repository.iter_registrations()) == 7
 
 
 def test_delete_registration(repository: Repository):
@@ -397,3 +396,12 @@ def test_delete_registration(repository: Repository):
     assert repository.delete_registration(registration) is None
     assert repository.get_registration(registration.grouping, registration.participant)\
         is None
+
+
+def test_iter_groupings_by_participant(repository: Repository):
+    """List only applied groupings."""
+    grouping = repository.set_grouping(create_grouping(repository))
+    for uid in range(5):
+        user_key = uuid.UUID(int=uid)
+        repository.set_registration(Registration(grouping.key, user_key, ""))
+        assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]

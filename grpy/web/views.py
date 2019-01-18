@@ -32,7 +32,7 @@ from ..logic import is_registration_open, make_code
 from ..models import Grouping, Registration, User
 from ..policies import get_policies
 from ..repo.base import Repository
-from ..repo.logic import set_grouping_new_code
+from ..repo.logic import registration_count, set_grouping_new_code
 
 
 def get_repository() -> Repository:
@@ -45,11 +45,14 @@ def home():
     groupings = registrations = []
     if g.user:
         if g.user.is_host:
-            groupings = get_repository().iter_groupings(
+            repository = get_repository()
+            groupings = repository.iter_groupings(
                 where={
                     "host__eq": g.user.key,
                     "close_date__ge": utils.now()},
                 order=["final_date"])
+            counts = [registration_count(repository, g) for g in groupings]
+            groupings = zip(groupings, counts)
 
         registrations = get_repository().iter_groupings_by_participant(
             g.user.key,

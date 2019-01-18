@@ -27,8 +27,8 @@ from unittest.mock import patch
 import pytest
 
 from ..base import DuplicateKey, Repository
-from ..logic import set_grouping_new_code
-from ...models import Grouping
+from ..logic import registration_count, set_grouping_new_code
+from ...models import Grouping, Registration, User
 from ...utils import now
 
 
@@ -45,3 +45,23 @@ def test_set_grouping_new_code(repository: Repository):
         func.side_effect = DuplicateKey("unknown")
         with pytest.raises(DuplicateKey):
             set_grouping_new_code(repository, grouping)
+
+
+def test_registration_count(repository: Repository):
+    """Test the count calculation for a grouping."""
+
+    # An non-existing grouping has no registrations
+    assert registration_count(
+        repository,
+        Grouping(None, None, None, None, None, None, None, None, None, None, None)) == 0
+
+    host = repository.set_user(User(None, "host"))
+    yet = now()
+    grouping = repository.set_grouping(Grouping(
+        None, "code", "name", host.key, yet, yet + timedelta(days=1), None,
+        'RD', 7, 7, ""))
+    assert registration_count(repository, grouping) == 0
+
+    for i in range(10):
+        repository.set_registration(Registration(grouping.key, uuid.UUID(int=i), ''))
+        assert registration_count(repository, grouping) == i + 1

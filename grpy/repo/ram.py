@@ -174,6 +174,21 @@ class RamRepository(Repository):
         """Return registration with given grouping and participant."""
         return self._registrations.get((grouping, participant), None)
 
+    def iter_registrations(
+            self,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Registration]:
+        """Return an iterator of all or some registrations."""
+        return process_where_order(self._registrations.values(), where, order)
+
+    def delete_registration(self, registration: Registration) -> Registration:
+        """Delete the given registration from the repository."""
+        try:
+            del self._registrations[(registration.grouping, registration.participant)]
+        except KeyError:
+            return None
+        return registration
+
     def iter_groupings_by_participant(
             self,
             participant: KeyType,
@@ -184,14 +199,6 @@ class RamRepository(Repository):
             (self.get_grouping(g) for g, p in self._registrations if p == participant),
             where,
             order)
-
-    def delete_registration(self, registration: Registration) -> Registration:
-        """Delete the given registration from the repository."""
-        try:
-            del self._registrations[(registration.grouping, registration.participant)]
-        except KeyError:
-            return None
-        return registration
 
 
 class WherePredicate:

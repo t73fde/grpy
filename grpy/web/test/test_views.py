@@ -76,6 +76,13 @@ def test_home_host(app, client, auth):
     assert str(grouping.final_date.minute) in data
 
 
+def test_home_host_without_groupings(client, auth):
+    """Test home view as a host without groupings."""
+    auth.login("host-0")
+    response = client.get(url_for('home'))
+    assert b'(None)' in response.data
+
+
 def test_home_user(client, auth):
     """Test home view as a participant."""
     auth.login("user")

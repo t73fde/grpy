@@ -111,17 +111,24 @@ class Repository:
         """Return registration with given grouping and participant."""
         raise NotImplementedError("Repository.get_registration")
 
+    def iter_registrations(
+            self,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[Registration]:
+        """Return an iterator of all or some registrations."""
+        raise NotImplementedError("Repository.iter_registrations")
+
+    def delete_registration(self, registration: Registration) -> Registration:
+        """Delete the given registration from the repository."""
+        raise NotImplementedError("Repository.delete_registration")
+
     def iter_groupings_by_participant(
             self,
             participant: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the participant applied to."""
-        raise NotImplementedError("Repository.list_groupings_by_participant")
-
-    def delete_registration(self, registration: Registration) -> Registration:
-        """Delete the given registration from the repository."""
-        raise NotImplementedError("Repository.delete_registration")
+        raise NotImplementedError("Repository.iter_groupings_by_participant")
 
 
 class RepositoryFactory:

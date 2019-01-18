@@ -36,3 +36,8 @@ def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Groupin
             if exc.args[0] != "Grouping.code":
                 raise
         unique = True
+
+
+def registration_count(repository: Repository, grouping: Grouping) -> int:
+    """Return the number of registrations for a given grouping."""
+    return len(repository.iter_registrations(where={'grouping__eq': grouping.key}))
