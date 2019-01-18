@@ -405,3 +405,12 @@ def test_iter_groupings_by_participant(repository: Repository):
         user_key = uuid.UUID(int=uid)
         repository.set_registration(Registration(grouping.key, user_key, ""))
         assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
+
+
+def test_iter_participants(repository: Repository):
+    """Iterate over all user data of registrations."""
+    for i in range(7):
+        repository.set_registration(Registration(
+            uuid.UUID(int=100), uuid.UUID(int=i), ''))
+    assert len(list(repository.iter_users_by_grouping(uuid.UUID(int=100)))) == 7
+    assert list(repository.iter_users_by_grouping(uuid.UUID(int=111))) == []

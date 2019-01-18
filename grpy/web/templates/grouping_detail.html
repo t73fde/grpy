@@ -45,6 +45,18 @@
 </div>
 <div class="w3-container w3-bar">
   <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button w3-ripple {{ color('primary') }}">Update</button></a>
+  {% if not users %}
   <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
+  {% endif %}
 </div>
+{% if users %}
+<div class="w3-panel">
+  <h1>Registered users</h1>
+  <ol>
+  {% for user in users %}
+  <li>{{ user.username }}</li>
+  {% endfor %}
+  </ol>
+</div>
+{% endif %}
 {% endblock %}

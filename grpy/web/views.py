@@ -123,7 +123,9 @@ def grouping_detail(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    return render_template("grouping_detail.html", grouping=grouping)
+    users = get_repository().iter_users_by_grouping(
+        grouping.key, order=['username'])
+    return render_template("grouping_detail.html", grouping=grouping, users=users)
 
 
 @login_required

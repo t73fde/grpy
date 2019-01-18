@@ -200,6 +200,17 @@ class RamRepository(Repository):
             where,
             order)
 
+    def iter_users_by_grouping(
+            self,
+            grouping: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[User]:
+        """Return an iterator of user data of some participants."""
+        return process_where_order(
+            (self.get_user(p) for g, p in self._registrations if g == grouping),
+            where,
+            order)
+
 
 class WherePredicate:
     """Filter attributes."""

@@ -130,6 +130,14 @@ class Repository:
         """Return an iterator of all groupings the participant applied to."""
         raise NotImplementedError("Repository.iter_groupings_by_participant")
 
+    def iter_users_by_grouping(
+            self,
+            grouping: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[User]:
+        """Return an iterator of user data of some participants."""
+        raise NotImplementedError("Repository.iter_users_by_grouping")
+
 
 class RepositoryFactory:
     """
