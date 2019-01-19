@@ -21,27 +21,45 @@
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-  <h1>Grouping Details</h1>
-<dl>
-<dt>Code</dt>
-<dd><a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a></dd>
-<dt>Name</dt>
-<dd>{{ grouping.name }}</dd>
-<dt>Begin Date</dt>
-<dd>{{ grouping.begin_date|datetimeformat("iso-short") }}</dd>
-<dt>Final Date</dt>
-<dd>{{ grouping.final_date|datetimeformat("iso-short") }}</dd>
-<dt>Close Date</dt>
-<dd>{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</dd>
-<dt>Policy</dt>
-<dd>{{ policy_name(grouping.policy) }}</dd>
-<dt>Maximum Group Size</dt>
-<dd>{{ grouping.max_group_size }}</dd>
-<dt>Member Reserve</dt>
-<dd>{{ grouping.member_reserve }}</dd>
-<dt>Note</dt>
-<dd>{{ grouping.note }}</dd>
-</dl>
+<h1>Grouping Details</h1>
+
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Code:</strong></div>
+  <div class="w3-rest"><a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a></div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Name:</strong></div>
+  <div class="w3-rest">{{ grouping.name }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Begin Date:</strong></div>
+  <div class="w3-rest">{{ grouping.begin_date|datetimeformat("iso-short") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Final Date:</strong></div>
+  <div class="w3-rest">{{ grouping.final_date|datetimeformat("iso-short") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Close Date:</strong></div>
+  <div class="w3-rest">{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Policy:</strong></div>
+  <div class="w3-rest">{{ policy_name(grouping.policy) }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Max. Size:</strong></div>
+  <div class="w3-rest">{{ grouping.max_group_size }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Reserve:</strong></div>
+  <div class="w3-rest">{{ grouping.member_reserve }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Note:</strong></div>
+  <div class="w3-rest">{{ grouping.note }}</div>
+</div>
+
 </div>
 <div class="w3-container w3-bar">
   <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button w3-ripple {{ color('primary') }}">Update</button></a>
