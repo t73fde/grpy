@@ -24,6 +24,7 @@ Management / development script.
 Provides commands for static and dynamic tests.
 """
 
+import pathlib
 import re
 import subprocess  # nosec
 from typing import List, Sequence
@@ -115,6 +116,15 @@ def lint(ctx, verbose):
         ctx.exit(1)
 
 
+def post_process_coverage(ctx, coverage_ok: bool, verbose: int) -> None:
+    """Execute 'coverage html' and 'coverage report'."""
+    if coverage_ok:
+        run_subprocess(["coverage", "html"], verbose)
+        coverage_ok = coverage_report(verbose)
+    if not coverage_ok:
+        ctx.exit(1)
+
+
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
@@ -122,11 +132,7 @@ def coverage(ctx, verbose):
     """Perform a full test with coverage measurement."""
     verbose += ctx.obj['verbose']
     coverage_ok = run_subprocess(["coverage", "run", "-m", "pytest"], verbose)
-    if coverage_ok:
-        run_subprocess(["coverage", "html"], verbose)
-        coverage_report(verbose)
-    if not coverage_ok:
-        ctx.exit(1)
+    post_process_coverage(ctx, coverage_ok, verbose)
 
 
 @main.command()
@@ -135,15 +141,29 @@ def coverage(ctx, verbose):
 def full_coverage(ctx, verbose):
     """Perform a full test with coverage measurement, for all packages."""
     verbose += ctx.obj['verbose']
-    for directory in ("grpy/repo", "grpy/web"):
+    packages = []
+    files = []
+    for path in pathlib.Path("grpy").iterdir():
+        name = path.parts[-1]
+        if name.startswith("."):
+            continue
+        if path.is_dir():
+            if name != "test":
+                packages.append(str(path))
+        elif path.is_file():
+            if path.suffix == ".py":
+                files.append(str(path).replace("/", ".")[:-3])
+
+    coverage_ok = run_subprocess(
+        ["coverage", "run", "--source=" + ",".join(files), "-m", "pytest", "grpy/test"],
+        verbose)
+    post_process_coverage(ctx, coverage_ok, verbose)
+
+    for directory in packages:
         coverage_ok = run_subprocess(
             ["coverage", "run", "--source=" + directory, "-m", "pytest", directory],
             verbose)
-        if coverage_ok:
-            run_subprocess(["coverage", "html"], verbose)
-            coverage_ok = coverage_report(verbose)
-        if not coverage_ok:
-            ctx.exit(1)
+        post_process_coverage(ctx, coverage_ok, verbose)
     ctx.invoke(coverage, verbose=verbose)
 
 
