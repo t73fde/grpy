@@ -151,9 +151,18 @@ def full_coverage(ctx, verbose):
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def check(ctx, verbose):
-    """Perform a full check: lint and coverage."""
+    """Perform a check: lint and coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(coverage, verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def full_check(ctx, verbose):
+    """Perform a full check: lint and full-coverage."""
+    ctx.invoke(lint, verbose=verbose)
+    ctx.invoke(full_coverage, verbose=verbose)
 
 
 if __name__ == '__main__':
