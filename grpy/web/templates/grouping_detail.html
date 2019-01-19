@@ -69,8 +69,8 @@
 </div>
 {% if users %}
 <div class="w3-panel">
-  <h1>Registered users</h1>
-  <ol>
+  <h1>Registered users ({{ users|length }})</h1>
+  <ol class="w3-ul">
   {% for user in users %}
   <li>{{ user.username }}</li>
   {% endfor %}
