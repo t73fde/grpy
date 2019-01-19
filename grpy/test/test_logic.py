@@ -53,11 +53,9 @@ def test_make_code():
     code = make_code(grouping)
 
     check_code(code, grouping._replace(name="Xname"))
-    check_code(code, grouping._replace(begin_date=yet + timedelta(seconds=60)))
+    check_code(code, grouping._replace(begin_date=yet + timedelta(days=1)))
     check_code(code, grouping._replace(final_date=yet + timedelta(days=60)))
-    check_code(code, grouping._replace(close_date=yet + timedelta(days=60)))
     check_code(code, grouping._replace(policy="LK"))
-
     check_code(None, grouping, unique=True)
 
 
