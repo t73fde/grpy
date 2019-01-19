@@ -20,10 +20,17 @@
 
 """Tests for the grouping policies."""
 
-from ..policies import get_policies
+from ..policies import get_policies, get_policy_name
 
 
 def test_get_policies():
     """At least there must be the random policy."""
     policies = get_policies()
     assert policies[0][1].lower() == "random"
+
+
+def test_get_policy_name():
+    """Always get the right name for a policy code."""
+    for code, name in get_policies():
+        assert name == get_policy_name(code)
+    assert get_policy_name("") == ""

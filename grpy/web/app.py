@@ -27,11 +27,11 @@ from flask import Flask, g, session
 
 from flask_babel import Babel
 
-from grpy.models import Permission, User
-from grpy.repo import create_factory
-from grpy.repo.logic import set_grouping_new_code
-
 from . import utils, views
+from .. import policies
+from ..models import Permission, User
+from ..repo import create_factory
+from ..repo.logic import set_grouping_new_code
 
 
 class GrpyApp(Flask):
@@ -111,6 +111,7 @@ class GrpyApp(Flask):
         """Add some filters / globals for Jinja2."""
         self.jinja_env.globals.update(  # pylint: disable=no-member
             color=utils.colormap,
+            policy_name=policies.get_policy_name,
         )
 
     @staticmethod

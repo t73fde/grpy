@@ -34,7 +34,7 @@
 <dt>Close Date</dt>
 <dd>{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</dd>
 <dt>Policy</dt>
-<dd>{{ grouping.policy }}</dd>
+<dd>{{ policy_name(grouping.policy) }}</dd>
 <dt>Maximum Group Size</dt>
 <dd>{{ grouping.max_group_size }}</dd>
 <dt>Member Reserve</dt>

@@ -23,6 +23,17 @@
 from typing import List, Tuple
 
 
+POLICIES = [
+    ('RD', "Random"),
+]
+POLICY_DICT = dict(POLICIES)
+
+
 def get_policies() -> List[Tuple[str, str]]:
     """Return list of policies."""
-    return [('RD', "Random")]
+    return list(POLICIES)
+
+
+def get_policy_name(code: str) -> str:
+    """Return policy name for given code."""
+    return POLICY_DICT.get(code, "")
