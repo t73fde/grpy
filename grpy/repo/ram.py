@@ -181,13 +181,12 @@ class RamRepository(Repository):
         """Return an iterator of all or some registrations."""
         return process_where_order(self._registrations.values(), where, order)
 
-    def delete_registration(self, registration: Registration) -> Registration:
+    def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
         """Delete the given registration from the repository."""
         try:
-            del self._registrations[(registration.grouping, registration.participant)]
+            del self._registrations[(grouping, participant)]
         except KeyError:
-            return None
-        return registration
+            pass
 
     def iter_groupings_by_participant(
             self,

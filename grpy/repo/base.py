@@ -118,7 +118,7 @@ class Repository:
         """Return an iterator of all or some registrations."""
         raise NotImplementedError("Repository.iter_registrations")
 
-    def delete_registration(self, registration: Registration) -> Registration:
+    def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
         """Delete the given registration from the repository."""
         raise NotImplementedError("Repository.delete_registration")
 

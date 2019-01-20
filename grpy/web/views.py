@@ -180,7 +180,8 @@ def grouping_register(key):
                 flash("Registration for '{}' is stored.".format(grouping.name),
                       category="info")
         elif registration and form.submit_deregister.data:
-            get_repository().delete_registration(registration)
+            get_repository().delete_registration(
+                registration.grouping, registration.participant)
             flash("Registration for '{}' is removed.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
