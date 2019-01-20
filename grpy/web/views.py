@@ -20,6 +20,8 @@
 
 """Web views for grpy."""
 
+import uuid
+
 from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
@@ -125,6 +127,20 @@ def grouping_detail(key):
         abort(403)
     users = get_repository().iter_users_by_grouping(
         grouping.key, order=['username'])
+    if request.method == 'POST':
+        delete_users = request.form.getlist('u')
+        user_keys = {u.key for u in users}
+        count = 0
+        for user in delete_users:
+            try:
+                participant = uuid.UUID(user)
+            except ValueError:
+                continue
+            if participant in user_keys:
+                get_repository().delete_registration(grouping.key, participant)
+                count += 1
+        flash("{} registered users removed.".format(count), category='info')
+        return redirect(url_for('grouping_detail', key=grouping.key))
     return render_template("grouping_detail.html", grouping=grouping, users=users)
 
 

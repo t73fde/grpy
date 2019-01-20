@@ -70,11 +70,14 @@
 {% if users %}
 <div class="w3-panel">
   <h1>Registered users ({{ users|length }})</h1>
-  <ol class="w3-ul">
-  {% for user in users %}
-  <li>{{ user.username }}</li>
-  {% endfor %}
-  </ol>
+  <form method="POST">
+    <ol class="w3-ul">
+    {% for user in users %}
+    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.username }}</input></label></li>
+    {% endfor %}
+    </ol>
+    <input class="w3-btn {{ color('danger') }}" id="submit_remove" name="submit_remove" type="submit" value="Remove">
+  </form>
 </div>
 {% endif %}
 {% endblock %}

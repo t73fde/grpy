@@ -29,7 +29,7 @@ from flask.sessions import SecureCookieSessionInterface
 from werkzeug.http import parse_cookie
 
 from ... import utils
-from ...models import Grouping, Registration
+from ...models import Grouping, Registration, User
 from ...repo.logic import set_grouping_new_code
 
 
@@ -186,26 +186,6 @@ def test_logout_without_login(client):
     assert 'username' not in session
 
 
-def test_grouping_detail(app, client, auth):
-    """Test grouping detail view."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_detail', key=grouping.key)
-    response = client.get(url)
-    assert response.status_code == 401
-
-    auth.login("host")
-    response = client.get(url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
-    assert grouping.note in data
-
-    auth.login("user")
-    response = client.get(url)
-    assert response.status_code == 403
-
-    assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
-
-
 def test_grouping_create(app, client, auth):
     """Test the creation of new groupings."""
     url = url_for('grouping_create')
@@ -242,6 +222,72 @@ def test_grouping_create(app, client, auth):
 
     groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
     assert len(groupings) == 2
+
+
+def test_grouping_detail(app, client, auth):
+    """Test grouping detail view."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_detail', key=grouping.key)
+    response = client.get(url)
+    assert response.status_code == 401
+
+    auth.login("host")
+    response = client.get(url)
+    assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert grouping.note in data
+
+    auth.login("user")
+    response = client.get(url)
+    assert response.status_code == 403
+
+    assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
+
+
+def test_grouping_detail_remove(app, client, auth):
+    """Test removal of registrations."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_detail', key=grouping.key)
+    users = []
+    for i in range(12):
+        user = app.get_repository().set_user(User(None, "user%d" % i))
+        app.get_repository().set_registration(Registration(grouping.key, user.key, ''))
+        users.append(user)
+    auth.login("host")
+    response = client.get(url)
+    data = response.data.decode('utf-8')
+    for user in users:
+        assert user.username in data
+        assert str(user.key) in data
+
+    count = 0
+    while users:
+        to_delete = users[:count]
+        users = users[count:]
+        count += 1
+        print("KEYS", count, ",".join(str(u.key) for u in to_delete))
+        response = client.post(url, data={
+            'u': [str(u.key) for u in to_delete],
+        })
+        assert response.status_code == 302
+        assert response.headers['Location'] == "http://localhost" + url
+        assert get_session_data(app, response)['_flashes'] == \
+            [('info', "{} registered users removed.".format(len(to_delete)))]
+        client.get(url_for('home'))  # Clean flash message
+
+
+def test_grouping_detail_remove_illegal(app, client, auth):
+    """If illegal UUIDs are sent, nothing happens."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_detail', key=grouping.key)
+    auth.login("host")
+    for data in ("1,2,3", [str(grouping.key)]):
+        response = client.post(url, data={'u': data})
+        assert response.status_code == 302
+        assert response.headers['Location'] == "http://localhost" + url
+        assert get_session_data(app, response)['_flashes'] == \
+            [('info', "0 registered users removed.")]
+        client.get(url_for('home'))  # Clean flash message
 
 
 def test_grouping_update(app, client, auth):
