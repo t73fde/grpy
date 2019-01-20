@@ -7,4 +7,4 @@ check:
   image: hshnwinps/dev
   script:
   - pipenv install --dev
-  - pipenv run python manage.py -vv check
+  - pipenv run python manage.py -v full-check
