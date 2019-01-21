@@ -63,13 +63,13 @@ def test_value_or_404_none():
 
 def test_make_model():
     """A User model can be created from dict."""
-    user = make_model(User, {"username": "name"}, {"permission": Permission(0)})
-    assert user == User(None, "name")
+    user = make_model(User, {"ident": "uid"}, {"permission": Permission(0)})
+    assert user == User(None, "uid")
 
 
 def test_update_model():
     """An User model can be updated from dict."""
-    user = update_model(User(1, "name"), {'username': "user", 'invalid': 1})
+    user = update_model(User(1, "uid"), {'ident': "user", 'invalid': 1})
     assert user == User(1, "user")
 
 

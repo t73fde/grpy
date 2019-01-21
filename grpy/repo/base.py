@@ -52,9 +52,9 @@ class Repository:
         """Return user for given primary key."""
         raise NotImplementedError("Repository.get_user")
 
-    def get_user_by_username(self, username: str) -> Optional[User]:
-        """Return user for given username."""
-        raise NotImplementedError("Repository.get_user_by_username")
+    def get_user_by_ident(self, ident: str) -> Optional[User]:
+        """Return user for given ident."""
+        raise NotImplementedError("Repository.get_user_by_ident")
 
     def iter_users(
             self,
@@ -67,7 +67,7 @@ class Repository:
         returned. The keys of `where` are composed of valid user attributes and
         a relation specification, separated by "__".  Relation specifications
         are one of: "eq", "ne", "ge", "gt", "lt", and "le".  Examples are:
-        "username__eq", "is_host__eq", "key__ne".  Please not: order relations,
+        "ident__eq", "is_host__eq", "key__ne".  Please not: order relations,
         like "ge", "gt", "lt", "le" will always return True if compared with
         None. If you want to remove None values, explicitly add another element
         like `{"field__ne": None}`.
@@ -75,7 +75,7 @@ class Repository:
         If `order` is not None, the result is sorted with respect to given
         keys. Keys are valid user attributes, optionally prefixed by "-" or
         "+".  If the prefix "-" is given, sorting is descending, else it is
-        ascending. Examples: "username", "-username".
+        ascending. Examples: "ident", "-ident".
         """
         raise NotImplementedError("Repository.iter_users")
 

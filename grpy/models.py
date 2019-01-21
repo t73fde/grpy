@@ -44,7 +44,7 @@ class User(NamedTuple):
     """User data."""
 
     key: Optional[KeyType]
-    username: str
+    ident: str
     permission: Permission = Permission(0)
 
     @property
@@ -56,8 +56,8 @@ class User(NamedTuple):
         """Check model for consistency."""
         if self.key and not isinstance(self.key, uuid.UUID):
             raise ValidationFailed("Key is not a UUID: {}".format(self.key))
-        if not self.username:
-            raise ValidationFailed("Username is empty: {}".format(self))
+        if not self.ident:
+            raise ValidationFailed("Ident is empty: {}".format(self))
 
 
 class Grouping(NamedTuple):

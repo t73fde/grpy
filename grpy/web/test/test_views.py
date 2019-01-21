@@ -58,7 +58,7 @@ def test_home_anonymous(client):
 def insert_simple_grouping(repository):
     """Insert a grouping into the repository."""
     now = utils.now()
-    host = repository.get_user_by_username("host")
+    host = repository.get_user_by_ident("host")
     return set_grouping_new_code(repository, Grouping(
         None, ".", "Name", host.key, now, now + datetime.timedelta(days=1),
         None, "RD", 17, 7, "Notizie"))
@@ -110,7 +110,7 @@ def test_login(client):
     response = client.post(url, data={'username': "host", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert session['username'] == "host"
+    assert session['user_identifier'] == "host"
 
 
 def test_login_new_user(app, client):
@@ -119,8 +119,8 @@ def test_login_new_user(app, client):
         url_for('login'), data={'username': "new_user", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert session['username'] == "new_user"
-    assert app.get_repository().get_user_by_username("new_user")
+    assert session['user_identifier'] == "new_user"
+    assert app.get_repository().get_user_by_ident("new_user")
 
 
 def test_invalid_login(client):
@@ -129,24 +129,24 @@ def test_invalid_login(client):
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
     assert response.status_code == 200
     assert b"Cannot authenticate user" in response.data
-    assert 'username' not in session
+    assert 'user_identifier' not in session
 
 
 def test_double_login(client, auth):
     """A double login makes the last user to be logged in."""
     auth.login("user")
-    assert session['username'] == "user"
+    assert session['user_identifier'] == "user"
     assert b"User &#39;user&#39; was logged out." in client.get(url_for('login')).data
     auth.login("host")
-    assert session['username'] == "host"
+    assert session['user_identifier'] == "host"
 
 
 def test_name_change_after_login(app, client, auth):
     """Username is changed after login."""
     auth.login("host")
     repository = app.get_repository()
-    user = repository.get_user_by_username("host")
-    repository.set_user(user._replace(username="tsoh"))
+    user = repository.get_user_by_ident("host")
+    repository.set_user(user._replace(ident="tsoh"))
     client.get("/")
     assert g.user is None
 
@@ -163,27 +163,27 @@ def test_login_with_redirect(app, client):
         data={'username': "new_user", 'password': "1", 'next_url': "/ABCDEF/"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/ABCDEF/"
-    assert session['username'] == "new_user"
-    assert app.get_repository().get_user_by_username("new_user")
+    assert session['user_identifier'] == "new_user"
+    assert app.get_repository().get_user_by_ident("new_user")
 
 
 def test_logout(client, auth):
     """Test login/logout sequence."""
     auth.login("host")
-    assert session['username'] == "host"
+    assert session['user_identifier'] == "host"
     response = client.get(url_for('logout'))
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert 'username' not in session
+    assert 'user_identifier' not in session
 
 
 def test_logout_without_login(client):
     """A logout without previous login is ignored."""
-    assert 'username' not in session
+    assert 'user_identifier' not in session
     response = client.get(url_for('logout'))
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert 'username' not in session
+    assert 'user_identifier' not in session
 
 
 def test_grouping_create(app, client, auth):
@@ -257,7 +257,7 @@ def test_grouping_detail_remove(app, client, auth):
     response = client.get(url)
     data = response.data.decode('utf-8')
     for user in users:
-        assert user.username in data
+        assert user.ident in data
         assert str(user.key) in data
 
     count = 0
@@ -418,7 +418,7 @@ def test_grouping_deregister(app, client, auth):
 
     app.get_repository().set_registration(Registration(
         grouping.key,
-        app.get_repository().get_user_by_username('student').key,
+        app.get_repository().get_user_by_ident('student').key,
         ''))
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
     assert response.status_code == 302

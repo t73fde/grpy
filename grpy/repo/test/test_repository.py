@@ -56,7 +56,7 @@ def test_insert_user(repository: Repository):
     new_user = repository.set_user(user)
     assert not user.key
     assert new_user.key
-    assert new_user.username == user.username
+    assert new_user.ident == user.ident
     assert new_user.is_host == user.is_host
 
     with pytest.raises(DuplicateKey):
@@ -76,7 +76,7 @@ def test_update_user(repository: Repository):
     assert new_user == newer_user
 
     user_2 = repository.set_user(User(None, "user_2"))
-    renamed_user = user_2._replace(username=user.username)
+    renamed_user = user_2._replace(ident=user.ident)
     with pytest.raises(DuplicateKey):
         repository.set_user(renamed_user)
 
@@ -97,30 +97,30 @@ def test_get_user(repository: Repository):
         assert not_found is None
 
 
-def test_get_user_by_username(repository: Repository):
-    """Retrieve an user by its username."""
+def test_get_user_by_ident(repository: Repository):
+    """Retrieve an user by its ident."""
     user = repository.set_user(User(None, "user", Permission.HOST))
-    new_user = repository.get_user_by_username(user.username)
+    new_user = repository.get_user_by_ident(user.ident)
     assert new_user == user
 
     newer_user = user._replace(permission=Permission(0))
     repository.set_user(newer_user)
-    last_user = repository.get_user_by_username(user.username)
+    last_user = repository.get_user_by_ident(user.ident)
     assert last_user.is_host != user.is_host
 
-    for username in (None, "", "invalid"):
-        not_found = repository.get_user_by_username(username)
+    for ident in (None, "", "invalid"):
+        not_found = repository.get_user_by_ident(ident)
         assert not_found is None
 
 
-def test_get_user_by_username_after_change(repository: Repository):
-    """After a change to an username, the old name must not be accessible."""
-    username = "user"
-    repository.set_user(User(None, username, True))
-    user = repository.get_user_by_username(username)
-    user = user._replace(username="resu")
+def test_get_user_by_ident_change(repository: Repository):
+    """After a change to an ident, the old name must not be accessible."""
+    ident = "user"
+    repository.set_user(User(None, ident, True))
+    user = repository.get_user_by_ident(ident)
+    user = user._replace(ident="resu")
     repository.set_user(user)
-    assert repository.get_user_by_username(username) is None
+    assert repository.get_user_by_ident(ident) is None
 
 
 def setup_users(repository: Repository, count: int) -> List[User]:
@@ -160,21 +160,21 @@ def test_iter_users_where(repository: Repository) -> None:
 
     for _ in range(len(all_users)):
         user = random.choice(all_users)
-        users = list(repository.iter_users(where={'username__eq': user.username}))
+        users = list(repository.iter_users(where={'ident__eq': user.ident}))
         assert len(users) == 1
         assert users[0] == user
 
-        other_users = list(repository.iter_users(where={'username__ne': user.username}))
+        other_users = list(repository.iter_users(where={'ident__ne': user.ident}))
         assert len(other_users) + 1 == len(all_users)
         assert set(other_users + users) == set(all_users)
 
-        users = list(repository.iter_users(where={'username__lt': user.username}))
-        non_users = list(repository.iter_users(where={'username__ge': user.username}))
+        users = list(repository.iter_users(where={'ident__lt': user.ident}))
+        non_users = list(repository.iter_users(where={'ident__ge': user.ident}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        users = list(repository.iter_users(where={'username__gt': user.username}))
-        non_users = list(repository.iter_users(where={'username__le': user.username}))
+        users = list(repository.iter_users(where={'ident__gt': user.ident}))
+        non_users = list(repository.iter_users(where={'ident__le': user.ident}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
@@ -185,17 +185,17 @@ def test_iter_users_where(repository: Repository) -> None:
 def test_iter_users_order(repository: Repository) -> None:
     """Order the list of users."""
     all_users = setup_users(repository, 7)  # Must be less than 10
-    users = list(repository.iter_users(order=["username"]))
+    users = list(repository.iter_users(order=["ident"]))
     assert users == all_users
-    users = list(repository.iter_users(order=["+username"]))
+    users = list(repository.iter_users(order=["+ident"]))
     assert users == all_users
-    users = list(repository.iter_users(order=["-username"]))
+    users = list(repository.iter_users(order=["-ident"]))
     assert users == list(reversed(all_users))
 
 
 def create_grouping(repository: Repository) -> Grouping:
     """Create a new grouping."""
-    users = repository.iter_users(where={'username__eq': 'user'})
+    users = repository.iter_users(where={'ident__eq': 'user'})
     if not users:
         user = repository.set_user(User(None, "user", Permission.HOST))
     else:
@@ -270,8 +270,8 @@ def test_get_grouping_by_code(repository: Repository):
     last_grouping = repository.get_grouping(grouping.key)
     assert last_grouping.name != grouping.name
 
-    for username in (None, "", "invalid"):
-        not_found = repository.get_user_by_username(username)
+    for ident in (None, "", "invalid"):
+        not_found = repository.get_user_by_ident(ident)
         assert not_found is None
 
 

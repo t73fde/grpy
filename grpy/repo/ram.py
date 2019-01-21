@@ -79,7 +79,7 @@ class RamRepository(Repository):
     def __init__(self):
         """Initialize the repository."""
         self._users = {}
-        self._users_username = {}
+        self._users_ident = {}
         self._groupings = {}
         self._groupings_code = {}
         self._registrations = {}
@@ -102,24 +102,24 @@ class RamRepository(Repository):
                 previous_user = self._users[user.key]
             except KeyError:
                 raise NothingToUpdate("Missing user", user.key)
-            if previous_user.username != user.username:
-                del self._users_username[previous_user.username]
+            if previous_user.ident != user.ident:
+                del self._users_ident[previous_user.ident]
         else:
             user = user._replace(key=self._uuid())
 
-        other_user = self._users_username.get(user.username)
+        other_user = self._users_ident.get(user.ident)
         if other_user and user.key != other_user.key:
-            raise DuplicateKey("User.username", user.username)
-        self._users[user.key] = self._users_username[user.username] = user
+            raise DuplicateKey("User.ident", user.ident)
+        self._users[user.key] = self._users_ident[user.ident] = user
         return user
 
     def get_user(self, key: KeyType) -> Optional[User]:
         """Return user with given key or None."""
         return self._users.get(key, None)
 
-    def get_user_by_username(self, username: str) -> Optional[User]:
-        """Return user with given username, or None."""
-        return self._users_username.get(username, None)
+    def get_user_by_ident(self, ident: str) -> Optional[User]:
+        """Return user with given ident, or None."""
+        return self._users_ident.get(ident, None)
 
     def iter_users(
             self,

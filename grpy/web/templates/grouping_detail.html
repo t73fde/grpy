@@ -74,7 +74,7 @@
     {{- form.csrf_token }}
     <ol class="w3-ul">
     {%- for user in users %}
-    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.username }}</input></label></li>
+    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident }}</input></label></li>
     {%- endfor %}
     </ol>
     {{- form.submit_remove(class="w3-btn " + color("danger")) }}

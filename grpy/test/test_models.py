@@ -47,7 +47,7 @@ def test_user_validation_failed():
     assert "Key is not a UUID:" in str(exc)
     with pytest.raises(ValidationFailed) as exc:
         User(None, "").validate()
-    assert "Username is empty:" in str(exc)
+    assert "Ident is empty:" in str(exc)
 
 
 def test_grouping_validation():

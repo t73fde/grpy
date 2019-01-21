@@ -73,7 +73,7 @@ def login():
     """Show login form and authenticate user."""
     if g.user:
         current_app.logout()
-        flash("User '{}' was logged out.".format(g.user.username), category="info")
+        flash("User '{}' was logged out.".format(g.user.ident), category="info")
         g.user = None
 
     if request.method == 'POST':
@@ -85,7 +85,7 @@ def login():
         username = form.username.data
         if username and username[0] != "x":
             repository = get_repository()
-            user = repository.get_user_by_username(username)
+            user = repository.get_user_by_ident(username)
             if not user:
                 user = repository.set_user(User(None, username))
             current_app.login(user)
@@ -125,7 +125,7 @@ def grouping_detail(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    users = get_repository().iter_users_by_grouping(grouping.key, order=['username'])
+    users = get_repository().iter_users_by_grouping(grouping.key, order=['ident'])
     form = forms.RemoveRegistrationsForm()
     if request.method == 'POST':
         delete_users = request.form.getlist('u')

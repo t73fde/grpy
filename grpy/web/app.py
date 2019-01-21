@@ -88,9 +88,9 @@ class GrpyApp(Flask):
 
         def load_logged_in_user() -> None:
             """Set user attribute pased on session data."""
-            username = session.get('username', None)
-            if username:
-                user = self.get_repository().get_user_by_username(username)
+            ident = session.get('user_identifier', None)
+            if ident:
+                user = self.get_repository().get_user_by_ident(ident)
                 if user:
                     g.user = user
                     return None
@@ -118,7 +118,7 @@ class GrpyApp(Flask):
     def login(user: User) -> None:
         """Log in the given user."""
         session.clear()
-        session['username'] = user.username
+        session['user_identifier'] = user.ident
 
     @staticmethod
     def logout():
