@@ -85,3 +85,14 @@ class RegistrationForm(FlaskForm):
 
     submit_register = SubmitField("Register")
     submit_deregister = SubmitField("De-Register")
+
+
+class RemoveRegistrationsForm(FlaskForm):
+    """
+    Form to remove registrations.
+
+    Note: WTForms does not allow to user FieldList with BooleanField.  We do it
+    on our own. This form is needed to protet against CSRF-Attacks.
+    """
+
+    submit_remove = SubmitField("Remove")

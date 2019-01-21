@@ -125,8 +125,8 @@ def grouping_detail(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    users = get_repository().iter_users_by_grouping(
-        grouping.key, order=['username'])
+    users = get_repository().iter_users_by_grouping(grouping.key, order=['username'])
+    form = forms.RemoveRegistrationsForm()
     if request.method == 'POST':
         delete_users = request.form.getlist('u')
         user_keys = {u.key for u in users}
@@ -141,7 +141,8 @@ def grouping_detail(key):
                 count += 1
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', key=grouping.key))
-    return render_template("grouping_detail.html", grouping=grouping, users=users)
+    return render_template(
+        "grouping_detail.html", grouping=grouping, users=users, form=form)
 
 
 @login_required
