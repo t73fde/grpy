@@ -383,7 +383,7 @@ def test_iter_registrations(repository: Repository):
     for i in range(7):
         repository.set_registration(Registration(
             uuid.UUID(int=i), uuid.UUID(int=100 + i), ''))
-    assert len(repository.iter_registrations()) == 7
+        assert len(repository.iter_registrations()) == i + 1
 
 
 def test_delete_registration(repository: Repository):

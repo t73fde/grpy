@@ -29,8 +29,7 @@ from . import forms
 from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
-from .. import utils
-from ..logic import can_grouping_start, is_registration_open, make_code
+from .. import logic, utils
 from ..models import Grouping, Registration
 from ..policies import get_policies
 from ..repo.base import Repository
@@ -108,7 +107,7 @@ def grouping_create():
         grouping = make_model(
             Grouping, form.data, {"code": ".", "host": g.user.key})
         set_grouping_new_code(
-            get_repository(), grouping._replace(code=make_code(grouping)))
+            get_repository(), grouping._replace(code=logic.make_code(grouping)))
         return redirect(url_for("home"))
     return render_template("grouping_create.html", form=form)
 
@@ -173,7 +172,7 @@ def grouping_register(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key == grouping.host:
         abort(403)
-    if not is_registration_open(grouping):
+    if not logic.is_registration_open(grouping):
         flash("Not within the registration period for '{}'.".format(grouping.name),
               category="warning")
         return redirect(url_for('home'))
@@ -207,7 +206,7 @@ def grouping_start(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    if not can_grouping_start(grouping):
+    if not logic.can_grouping_start(grouping):
         flash(
             "Grouping for '{}' must be after the final date.".format(
                 grouping.name),
