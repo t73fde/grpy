@@ -23,7 +23,7 @@
 import uuid
 from datetime import timedelta
 
-from ..logic import is_registration_open, make_code
+from ..logic import can_grouping_start, is_registration_open, make_code
 from ..models import Grouping
 from ..utils import now
 
@@ -69,3 +69,13 @@ def test_is_registration_open():
     assert is_registration_open(grouping._replace(begin_date=yet))
     assert not is_registration_open(grouping._replace(
         begin_date=yet - timedelta(seconds=2), final_date=yet - timedelta(seconds=1)))
+
+
+def test_can_grouping_start():
+    """Grouping can start after the final date."""
+    yet = now()
+    grouping = Grouping(
+        None, ".", "name", uuid.UUID(int=0), yet - timedelta(days=6),
+        yet + timedelta(days=1), None, "RD", 7, 7, "Note")
+    assert not can_grouping_start(grouping)
+    assert can_grouping_start(grouping._replace(final_date=yet))

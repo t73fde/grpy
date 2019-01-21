@@ -30,7 +30,7 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import utils
-from ..logic import is_registration_open, make_code
+from ..logic import can_grouping_start, is_registration_open, make_code
 from ..models import Grouping, Registration
 from ..policies import get_policies
 from ..repo.base import Repository
@@ -199,3 +199,30 @@ def grouping_register(key):
     return render_template(
         "grouping_register.html",
         grouping=grouping, registration=registration, form=form)
+
+
+@login_required
+def grouping_start(key):
+    """Start the grouping process."""
+    grouping = value_or_404(get_repository().get_grouping(key))
+    if g.user.key != grouping.host:
+        abort(403)
+    if not can_grouping_start(grouping):
+        flash(
+            "Grouping for '{}' must be after the final date.".format(
+                grouping.name),
+            category="warning")
+        return redirect(url_for('home'))
+    registrations = get_repository().iter_registrations(
+        where={'grouping__eq': grouping.key})
+    if not registrations:
+        flash("No registrations for '{}' found.".format(grouping.name),
+              category="warning")
+        return redirect(url_for('grouping_detail', key=grouping.key))
+
+    form = forms.StartGroupingForm()
+    if form.validate_on_submit():
+        pass
+    return render_template(
+        "grouping_start.html",
+        grouping=grouping, registrations=registrations, form=form)

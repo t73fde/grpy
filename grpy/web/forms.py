@@ -80,6 +80,12 @@ class GroupingForm(FlaskForm):
             raise ValidationError("Close date must be after final date.")
 
 
+class StartGroupingForm(FlaskForm):
+    """Form to start the group building process."""
+
+    submit_start = SubmitField("Start")
+
+
 class RegistrationForm(FlaskForm):
     """Base form for all registrations."""
 

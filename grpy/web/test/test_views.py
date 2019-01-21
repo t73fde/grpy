@@ -425,3 +425,47 @@ def test_grouping_deregister(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
         [('info', "Registration for '{}' is removed.".format(grouping.name))]
+
+
+def test_grouping_start(app, client, auth):
+    """Test group building view."""
+    grouping = insert_simple_grouping(app.get_repository())
+    url = url_for('grouping_start', key=grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "Grouping for '{}' must be after the final date.".format(
+            grouping.name))]
+    client.get(url_for('home'))  # Clear flashes
+
+    grouping = app.get_repository().set_grouping(grouping._replace(
+        begin_date=utils.now() - datetime.timedelta(days=7),
+        final_date=utils.now() - datetime.timedelta(seconds=1)))
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == \
+        "http://localhost" + url_for('grouping_detail', key=grouping.key)
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "No registrations for '{}' found.".format(grouping.name))]
+    client.get(url_for('home'))  # Clear flashes
+
+    user = app.get_repository().get_user_by_ident("user")
+    app.get_repository().set_registration(Registration(grouping.key, user.key, ''))
+
+    response = client.get(url)
+    assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert "Start" in data

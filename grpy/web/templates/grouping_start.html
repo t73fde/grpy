@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{#
+ # Copyright (c) 2018 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ #
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
+{% block heading %}{% endblock %}
+{% block content %}
+<div class="w3-panel">
+<h1>Start Grouping Process</h1>
+
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Name:</strong></div>
+  <div class="w3-rest">{{ grouping.name }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Begin Date:</strong></div>
+  <div class="w3-rest">{{ grouping.begin_date|datetimeformat("iso-short") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Final Date:</strong></div>
+  <div class="w3-rest">{{ grouping.final_date|datetimeformat("iso-short") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Close Date:</strong></div>
+  <div class="w3-rest">{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Policy:</strong></div>
+  <div class="w3-rest">{{ policy_name(grouping.policy) }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Max. Size:</strong></div>
+  <div class="w3-rest">{{ grouping.max_group_size }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Reserve:</strong></div>
+  <div class="w3-rest">{{ grouping.member_reserve }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Note:</strong></div>
+  <div class="w3-rest">{{ grouping.note }}</div>
+</div>
+<div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Registrations:</strong></div>
+  <div class="w3-rest">{{ registrations|length }}</div>
+</div>
+
+</div>
+<div class="w3-container w3-bar">
+  <form method="POST">
+  {{- form.csrf_token }}
+  {{- form.submit_start(class="w3-btn " + color("primary")) }}
+  </form>
+</div>
+{% endblock %}

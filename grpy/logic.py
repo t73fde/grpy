@@ -53,3 +53,8 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
 def is_registration_open(grouping: Grouping) -> bool:
     """Check that registrations for given grouping are open."""
     return grouping.begin_date < now() < grouping.final_date
+
+
+def can_grouping_start(grouping: Grouping) -> bool:
+    """Check that grouping process can start now."""
+    return grouping.final_date < now()
