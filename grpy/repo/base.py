@@ -22,7 +22,7 @@
 
 from typing import Any, Dict, Iterator, Optional, Sequence
 
-from grpy.models import Grouping, KeyType, Registration, User
+from grpy.models import Grouping, KeyType, Registration, User, UserRegistration
 
 
 WhereSpec = Dict[str, Any]
@@ -130,13 +130,13 @@ class Repository:
         """Return an iterator of all groupings the participant applied to."""
         raise NotImplementedError("Repository.iter_groupings_by_participant")
 
-    def iter_users_by_grouping(
+    def iter_user_registrations_by_grouping(
             self,
             grouping: KeyType,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some participants."""
-        raise NotImplementedError("Repository.iter_users_by_grouping")
+        raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
 
 
 class RepositoryFactory:

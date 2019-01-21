@@ -118,7 +118,8 @@ def grouping_detail(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    users = get_repository().iter_users_by_grouping(grouping.key, order=['ident'])
+    users = get_repository().iter_user_registrations_by_grouping(
+        grouping.key, order=['ident'])
     form = forms.RemoveRegistrationsForm()
     if request.method == 'POST':
         delete_users = request.form.getlist('u')

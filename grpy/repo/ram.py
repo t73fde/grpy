@@ -25,7 +25,7 @@ from typing import Any, Iterator, Optional
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from ..models import Grouping, KeyType, Model, Registration, User
+from ..models import Grouping, KeyType, Model, Registration, User, UserRegistration
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -199,14 +199,15 @@ class RamRepository(Repository):
             where,
             order)
 
-    def iter_users_by_grouping(
+    def iter_user_registrations_by_grouping(
             self,
             grouping: KeyType,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some participants."""
         return process_where_order(
-            (self.get_user(p) for g, p in self._registrations if g == grouping),
+            (UserRegistration(p, self.get_user(p).ident, r.data)
+                for (g, p), r in self._registrations.items() if g == grouping),
             where,
             order)
 
