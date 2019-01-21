@@ -21,7 +21,7 @@
 """Web application for grpy."""
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from flask import Flask, g, session
 
@@ -124,6 +124,17 @@ class GrpyApp(Flask):
     def logout():
         """Log out the current user."""
         session.clear()
+
+    def authenticate(self, username: str, password: str) -> Optional[User]:
+        """Authenticate by user name and password, and return user found."""
+        if username and username[0] != "x" and password:
+            repository = self.get_repository()
+            user = repository.get_user_by_ident(username)
+            if not user:
+                user = repository.set_user(User(None, username))
+            self.login(user)
+            return user
+        return None
 
     def log_debug(self, message: str, *args, **kwargs) -> None:
         """Emit a debug message."""

@@ -31,7 +31,7 @@ from .utils import (
     value_or_404)
 from .. import utils
 from ..logic import is_registration_open, make_code
-from ..models import Grouping, Registration, User
+from ..models import Grouping, Registration
 from ..policies import get_policies
 from ..repo.base import Repository
 from ..repo.logic import registration_count, set_grouping_new_code
@@ -82,13 +82,7 @@ def login():
         form = forms.LoginForm(data={'next_url': request.args.get('next_url', '')})
 
     if form.validate_on_submit():
-        username = form.username.data
-        if username and username[0] != "x":
-            repository = get_repository()
-            user = repository.get_user_by_ident(username)
-            if not user:
-                user = repository.set_user(User(None, username))
-            current_app.login(user)
+        if current_app.authenticate(form.username.data, form.password.data):
             next_url = form.next_url.data
             if not next_url or not next_url.startswith("/"):
                 next_url = url_for('home')
