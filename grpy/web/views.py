@@ -213,9 +213,9 @@ def grouping_start(key):
                 grouping.name),
             category="warning")
         return redirect(url_for('home'))
-    registrations = get_repository().iter_registrations(
-        where={'grouping__eq': grouping.key})
-    if not registrations:
+    user_registrations = list(
+        get_repository().iter_user_registrations_by_grouping(grouping.key))
+    if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),
               category="warning")
         return redirect(url_for('grouping_detail', key=grouping.key))
@@ -225,4 +225,4 @@ def grouping_start(key):
         pass
     return render_template(
         "grouping_start.html",
-        grouping=grouping, registrations=registrations, form=form)
+        grouping=grouping, user_registrations=user_registrations, form=form)
