@@ -62,9 +62,12 @@
 
 </div>
 <div class="w3-container w3-bar">
-  <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button w3-ripple {{ color('primary') }}">Update</button></a>
-  {% if not user_registrations %}
+  <a href="{{ url_for('grouping_update', key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
+  {% if can_delete %}
   <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
+  {% endif %}
+  {% if can_start %}
+  <a href="{{ url_for('grouping_start', key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
   {% endif %}
 </div>
 {% if user_registrations %}
