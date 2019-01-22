@@ -80,6 +80,6 @@ def test_datetime_format(app):  # pylint: disable=unused-argument
     assert datetimeformat(0, None, False) == 0
     assert datetimeformat([], None, False) == []
 
-    dt_val = datetime.datetime(2019, 1, 13, 15, 49, 22, tzinfo=now().tzinfo)
-    assert datetimeformat(dt_val, "iso-short", False) == "2019-01-13 15:49 UTC"
+    dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=now().tzinfo)
+    assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55 UTC"
     assert datetimeformat(dt_val, "YYYY", False) == "2019"

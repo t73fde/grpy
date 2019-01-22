@@ -79,7 +79,7 @@ def datetimeformat(datetime=None, dt_format=None, rebase=True):
     if not datetime:
         return datetime
     if dt_format == "iso-short":
-        return format_datetime(datetime, "YYYY-MM-DD HH:mm z", rebase)
+        return format_datetime(datetime, "YYYY-MM-dd HH:mm z", rebase)
     return format_datetime(datetime, dt_format, rebase)
 
 
