@@ -28,14 +28,17 @@ from ..models import Grouping
 def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Grouping:
     """Set the short code of a grouping an store it in the repository."""
     unique = False
-    while True:
+    counter = 0
+    while counter < 100:
         try:
             return repository.set_grouping(
                 grouping._replace(code=make_code(grouping, unique)))
         except DuplicateKey as exc:
             if exc.args[0] != "Grouping.code":
                 raise
+        counter += 1
         unique = True
+    raise OverflowError("grpy.repo.logic.set_grouping_new_code")
 
 
 def registration_count(repository: Repository, grouping: Grouping) -> int:

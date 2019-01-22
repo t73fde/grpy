@@ -32,19 +32,39 @@ from ...models import Grouping, Registration, User
 from ...utils import now
 
 
-def test_set_grouping_new_code(repository: Repository):
-    """Test the creation of new short code."""
+def make_grouping() -> Grouping:
+    """Build a simple grouping object."""
     yet = now()
-    grouping = Grouping(
+    return Grouping(
         None, ".", "name", uuid.UUID(int=0), yet, yet + timedelta(days=7),
         None, "RD", 7, 7, "")
-    set_grouping_new_code(repository, grouping)
-    set_grouping_new_code(repository, grouping)
 
+
+def test_set_grouping_new_code(repository: Repository):
+    """Test the creation of new short code."""
+    grouping = make_grouping()
+    grouping_1 = set_grouping_new_code(repository, grouping)
+    grouping_2 = set_grouping_new_code(repository, grouping)
+    assert grouping_1.code != grouping_2.code
+
+
+def test_set_grouping_new_code_db_error(repository: Repository):
+    """Test the creation of new short codes, some repo error occurs."""
+    grouping = make_grouping()
     with patch.object(repository, "set_grouping") as func:
         func.side_effect = DuplicateKey("unknown")
         with pytest.raises(DuplicateKey):
             set_grouping_new_code(repository, grouping)
+
+
+def test_set_grouping_new_code_no_random(repository: Repository):
+    """Test the creation of new short codes, if always the same code is made."""
+    grouping = make_grouping()
+    with patch.object(repository, "set_grouping") as func:
+        func.side_effect = DuplicateKey("Grouping.code")
+        with pytest.raises(OverflowError) as exc:
+            set_grouping_new_code(repository, grouping)
+        assert exc.value.args == ("grpy.repo.logic.set_grouping_new_code",)
 
 
 def test_registration_count(repository: Repository):
