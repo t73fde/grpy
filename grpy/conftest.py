@@ -19,12 +19,16 @@
 
 """Fixtures fpr testing."""
 
+from datetime import timedelta
+
 from flask import url_for
 
 import pytest
 
-from .models import Permission, User
+from .models import Grouping, Permission, User
 from .repo import create_factory
+from .repo.logic import set_grouping_new_code
+from .utils import now
 from .web.app import create_app
 
 
@@ -83,3 +87,26 @@ def repository(request):
     repo = factory.create()
     yield repo
     repo.close()
+
+
+@pytest.fixture
+def grouping(repository) -> Grouping:
+    """Build a simple grouping object."""
+    host = repository.get_user_by_ident("host")
+    if not host:
+        host = repository.set_user(User(None, "host", Permission.HOST))
+
+    yet = now()
+    return Grouping(
+        None, ".code", "g-name", host.key, yet - timedelta(days=1),
+        yet + timedelta(days=6), None, "RD", 7, 7, "")
+
+
+@pytest.fixture
+def app_grouping(app):
+    """Insert a grouping into the repository."""
+    yet = now()
+    host = app.get_repository().get_user_by_ident("host")
+    return set_grouping_new_code(app.get_repository(), Grouping(
+        None, ".code", "g-Name", host.key, yet, yet + timedelta(days=1),
+        None, "RD", 17, 7, "Notizie"))

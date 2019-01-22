@@ -26,6 +26,8 @@ import uuid
 from flask import g, session, url_for
 from flask.sessions import SecureCookieSessionInterface
 
+import pytest
+
 from werkzeug.http import parse_cookie
 
 from ... import utils
@@ -55,25 +57,25 @@ def test_home_anonymous(client):
     assert url_for('logout') not in data
 
 
-def insert_simple_grouping(repository):
+@pytest.fixture
+def grouping(app):
     """Insert a grouping into the repository."""
     now = utils.now()
-    host = repository.get_user_by_ident("host")
-    return set_grouping_new_code(repository, Grouping(
+    host = app.get_repository().get_user_by_ident("host")
+    return set_grouping_new_code(app.get_repository(), Grouping(
         None, ".", "Name", host.key, now, now + datetime.timedelta(days=1),
         None, "RD", 17, 7, "Notizie"))
 
 
-def test_home_host(app, client, auth):
+def test_home_host(client, auth, app_grouping: Grouping):
     """Test home view as a host."""
-    grouping = insert_simple_grouping(app.get_repository())
     auth.login("host")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "host</span>" in data
-    assert url_for('grouping_detail', key=grouping.key) in data
-    assert grouping.name in data
-    assert str(grouping.final_date.minute) in data
+    assert url_for('grouping_detail', key=app_grouping.key) in data
+    assert app_grouping.name in data
+    assert str(app_grouping.final_date.minute) in data
 
 
 def test_home_host_without_groupings(client, auth):
@@ -224,10 +226,9 @@ def test_grouping_create(app, client, auth):
     assert len(groupings) == 2
 
 
-def test_grouping_detail(app, client, auth):
+def test_grouping_detail(client, auth, app_grouping: Grouping):
     """Test grouping detail view."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_detail', key=grouping.key)
+    url = url_for('grouping_detail', key=app_grouping.key)
     response = client.get(url)
     assert response.status_code == 401
 
@@ -235,7 +236,7 @@ def test_grouping_detail(app, client, auth):
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode('utf-8')
-    assert grouping.note in data
+    assert app_grouping.note in data
 
     auth.login("user")
     response = client.get(url)
@@ -244,14 +245,14 @@ def test_grouping_detail(app, client, auth):
     assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
 
 
-def test_grouping_detail_remove(app, client, auth):
+def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping):
     """Test removal of registrations."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_detail', key=grouping.key)
+    url = url_for('grouping_detail', key=app_grouping.key)
     users = []
     for i in range(12):
         user = app.get_repository().set_user(User(None, "user%d" % i))
-        app.get_repository().set_registration(Registration(grouping.key, user.key, ''))
+        app.get_repository().set_registration(Registration(
+            app_grouping.key, user.key, ''))
         users.append(user)
     auth.login("host")
     response = client.get(url)
@@ -265,7 +266,6 @@ def test_grouping_detail_remove(app, client, auth):
         to_delete = users[:count]
         users = users[count:]
         count += 1
-        print("KEYS", count, ",".join(str(u.key) for u in to_delete))
         response = client.post(url, data={
             'u': [str(u.key) for u in to_delete],
         })
@@ -276,12 +276,11 @@ def test_grouping_detail_remove(app, client, auth):
         client.get(url_for('home'))  # Clean flash message
 
 
-def test_grouping_detail_remove_illegal(app, client, auth):
+def test_grouping_detail_remove_illegal(app, client, auth, app_grouping: Grouping):
     """If illegal UUIDs are sent, nothing happens."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_detail', key=grouping.key)
+    url = url_for('grouping_detail', key=app_grouping.key)
     auth.login("host")
-    for data in ("1,2,3", [str(grouping.key)]):
+    for data in ("1,2,3", [str(app_grouping.key)]):
         response = client.post(url, data={'u': data})
         assert response.status_code == 302
         assert response.headers['Location'] == "http://localhost" + url
@@ -290,10 +289,9 @@ def test_grouping_detail_remove_illegal(app, client, auth):
         client.get(url_for('home'))  # Clean flash message
 
 
-def test_grouping_update(app, client, auth):
+def test_grouping_update(app, client, auth, app_grouping: Grouping):
     """Test the update of an existing grouping."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_update', key=grouping.key)
+    url = url_for('grouping_update', key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -321,17 +319,16 @@ def test_grouping_update(app, client, auth):
 
     groupings = list(app.get_repository().iter_groupings())
     assert len(groupings) == 1
-    assert groupings[0].key == grouping.key
+    assert groupings[0].key == app_grouping.key
 
 
-def test_shortlink(app, client, auth):
+def test_shortlink(client, auth, app_grouping: Grouping):
     """Test home view as a host."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('shortlink', code=grouping.code)
+    url = url_for('shortlink', code=app_grouping.code)
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost/login?next_url=%2F{}%2F".format(grouping.code)
+        "http://localhost/login?next_url=%2F{}%2F".format(app_grouping.code)
 
     auth.login("host")
     response = client.get(url)
@@ -342,13 +339,12 @@ def test_shortlink(app, client, auth):
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_register', key=grouping.key)
+        "http://localhost" + url_for('grouping_register', key=app_grouping.key)
 
 
-def test_grouping_register(app, client, auth):
+def test_grouping_register(app, client, auth, app_grouping: Grouping):
     """Check the grouping registration."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_register', key=grouping.key)
+    url = url_for('grouping_register', key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -364,7 +360,7 @@ def test_grouping_register(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is stored.".format(grouping.name))]
+        [('info', "Registration for '{}' is stored.".format(app_grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
 
@@ -372,29 +368,28 @@ def test_grouping_register(app, client, auth):
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is updated.".format(grouping.name))]
+        [('info', "Registration for '{}' is updated.".format(app_grouping.name))]
 
 
-def test_grouping_register_out_of_time(app, client, auth):
+def test_grouping_register_out_of_time(app, client, auth, app_grouping: Grouping):
     """Check the grouping registration before start date and after final date."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_register', key=grouping.key)
+    url = url_for('grouping_register', key=app_grouping.key)
     auth.login('student')
 
     now = utils.now()
     app.get_repository().set_grouping(
-        grouping._replace(begin_date=now + datetime.timedelta(seconds=3600)))
+        app_grouping._replace(begin_date=now + datetime.timedelta(seconds=3600)))
     response = client.post(url, data={})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Not within the registration period for '{}'.".format(
-            grouping.name))]
+            app_grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
 
     app.get_repository().set_grouping(
-        grouping._replace(
+        app_grouping._replace(
             begin_date=now - datetime.timedelta(seconds=3600),
             final_date=now - datetime.timedelta(seconds=1800)))
     response = client.post(url, data={})
@@ -402,13 +397,12 @@ def test_grouping_register_out_of_time(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Not within the registration period for '{}'.".format(
-            grouping.name))]
+            app_grouping.name))]
 
 
-def test_grouping_deregister(app, client, auth):
+def test_grouping_deregister(app, client, auth, app_grouping: Grouping):
     """Check de-registrations."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_register', key=grouping.key)
+    url = url_for('grouping_register', key=app_grouping.key)
     auth.login('student')
 
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
@@ -417,20 +411,19 @@ def test_grouping_deregister(app, client, auth):
     assert '_flashes' not in get_session_data(app, response)
 
     app.get_repository().set_registration(Registration(
-        grouping.key,
+        app_grouping.key,
         app.get_repository().get_user_by_ident('student').key,
         ''))
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is removed.".format(grouping.name))]
+        [('info', "Registration for '{}' is removed.".format(app_grouping.name))]
 
 
-def test_grouping_start(app, client, auth):
+def test_grouping_start(app, client, auth, app_grouping: Grouping):
     """Test group building view."""
-    grouping = insert_simple_grouping(app.get_repository())
-    url = url_for('grouping_start', key=grouping.key)
+    url = url_for('grouping_start', key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -448,22 +441,22 @@ def test_grouping_start(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Grouping for '{}' must be after the final date.".format(
-            grouping.name))]
+            app_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
 
-    grouping = app.get_repository().set_grouping(grouping._replace(
+    new_grouping = app.get_repository().set_grouping(app_grouping._replace(
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1)))
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_detail', key=grouping.key)
+        "http://localhost" + url_for('grouping_detail', key=new_grouping.key)
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "No registrations for '{}' found.".format(grouping.name))]
+        [('warning', "No registrations for '{}' found.".format(new_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
 
     user = app.get_repository().get_user_by_ident("user")
-    app.get_repository().set_registration(Registration(grouping.key, user.key, ''))
+    app.get_repository().set_registration(Registration(new_grouping.key, user.key, ''))
 
     response = client.get(url)
     assert response.status_code == 200

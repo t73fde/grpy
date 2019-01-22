@@ -193,24 +193,8 @@ def test_iter_users_order(repository: Repository) -> None:
     assert users == list(reversed(all_users))
 
 
-def create_grouping(repository: Repository) -> Grouping:
-    """Create a new grouping."""
-    users = repository.iter_users(where={'ident__eq': 'user'})
-    if not users:
-        user = repository.set_user(User(None, "user", Permission.HOST))
-    else:
-        user = list(users)[0]
-
-    now = utils.now()
-    return Grouping(
-        None, "code", "grouping", user.key,
-        now, now + datetime.timedelta(days=7), None,
-        "RD", 7, 7, "Note")
-
-
-def test_insert_grouping(repository: Repository):
+def test_insert_grouping(repository: Repository, grouping: Grouping):
     """Check that inserting a new grouping works."""
-    grouping = create_grouping(repository)
     new_grouping = repository.set_grouping(grouping)
     assert not grouping.key
     assert new_grouping.key
@@ -229,23 +213,22 @@ def test_insert_grouping(repository: Repository):
         repository.set_grouping(grouping)
 
 
-def test_update_grouping(repository: Repository):
+def test_update_grouping(repository: Repository, grouping: Grouping):
     """Check that updating an existing grouping works."""
-    grouping = create_grouping(repository)
-    grouping = grouping._replace(key=uuid.uuid4())
+    grouping_1 = grouping._replace(key=uuid.uuid4())
     with pytest.raises(NothingToUpdate):
-        repository.set_grouping(grouping)
+        repository.set_grouping(grouping_1)
 
-    grouping = repository.set_grouping(create_grouping(repository))
+    grouping = repository.set_grouping(grouping)
     new_grouping = grouping._replace(name="new name")
     assert grouping.key == new_grouping.key
     newer_grouping = repository.set_grouping(new_grouping)
     assert new_grouping == newer_grouping
 
 
-def test_get_grouping(repository: Repository):
+def test_get_grouping(repository: Repository, grouping: Grouping):
     """An inserted or updated grouping can be retrieved."""
-    grouping = repository.set_grouping(create_grouping(repository))
+    grouping = repository.set_grouping(grouping)
     new_grouping = repository.get_grouping(grouping.key)
     assert new_grouping == grouping
 
@@ -259,9 +242,9 @@ def test_get_grouping(repository: Repository):
         assert not_found is None
 
 
-def test_get_grouping_by_code(repository: Repository):
+def test_get_grouping_by_code(repository: Repository, grouping: Grouping):
     """An inserted or updated grouping can be retrieved by short code."""
-    grouping = repository.set_grouping(create_grouping(repository))
+    grouping = repository.set_grouping(grouping)
     new_grouping = repository.get_grouping_by_code(grouping.code)
     assert new_grouping == grouping
 
@@ -275,9 +258,9 @@ def test_get_grouping_by_code(repository: Repository):
         assert not_found is None
 
 
-def test_get_grouping_by_code_after_change(repository: Repository):
+def test_get_grouping_by_code_after_change(repository: Repository, grouping: Grouping):
     """After a change to a code, the old code must not be accessible."""
-    grouping = repository.set_grouping(create_grouping(repository))
+    grouping = repository.set_grouping(grouping)
     repository.set_grouping(grouping._replace(code="0000"))
     assert repository.get_grouping_by_code(grouping.code) is None
 
@@ -397,9 +380,9 @@ def test_delete_registration(repository: Repository):
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=1)) is None
 
 
-def test_iter_groupings_by_participant(repository: Repository):
+def test_iter_groupings_by_participant(repository: Repository, grouping: Grouping):
     """List only applied groupings."""
-    grouping = repository.set_grouping(create_grouping(repository))
+    grouping = repository.set_grouping(grouping)
     for uid in range(5):
         user_key = uuid.UUID(int=uid)
         repository.set_registration(Registration(grouping.key, user_key, ""))
