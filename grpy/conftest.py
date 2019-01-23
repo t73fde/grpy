@@ -108,5 +108,5 @@ def app_grouping(app):
     yet = now()
     host = app.get_repository().get_user_by_ident("host")
     return set_grouping_new_code(app.get_repository(), Grouping(
-        None, ".code", "g-Name", host.key, yet, yet + timedelta(days=1),
-        None, "RD", 17, 7, "Notizie"))
+        None, ".code", "g-Name", host.key, yet - timedelta(days=1),
+        yet + timedelta(days=1), None, "RD", 17, 7, "Notizie"))

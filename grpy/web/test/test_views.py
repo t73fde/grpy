@@ -94,6 +94,26 @@ def test_home_user(client, auth):
     assert " valid grouping link " in data
 
 
+def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
+    """Home view shows registration."""
+    auth.login("user")
+    user = app.get_repository().get_user_by_ident("user")
+    assert user
+    app.get_repository().set_registration(Registration(app_grouping.key, user.key, ''))
+    response = client.get(url_for('home'))
+    data = response.data.decode('utf-8')
+    assert "Registered Groupings" in data
+    assert url_for('grouping_register', key=app_grouping.key) in data
+
+    # Now change the final_date
+    app.get_repository().set_grouping(app_grouping._replace(
+        final_date=app_grouping.begin_date + datetime.timedelta(seconds=60)))
+    response = client.get(url_for('home'))
+    data = response.data.decode('utf-8')
+    assert "Registered Groupings" in data
+    assert url_for('grouping_register', key=app_grouping.key) not in data
+
+
 def test_about_anonymous(client):
     """Test about view as an anonymous user."""
     response = client.get(url_for('about'))

@@ -32,6 +32,10 @@
   <div class="w3-rest">{{ grouping.name }}</div>
 </div>
 <div class="w3-row">
+  <div class="w3-col" style="width:7em"><strong>Begin Date:</strong></div>
+  <div class="w3-rest">{{ grouping.begin_date|datetimeformat("iso-short") }}</div>
+</div>
+<div class="w3-row">
   <div class="w3-col" style="width:7em"><strong>Final Date:</strong></div>
   <div class="w3-rest">{{ grouping.final_date|datetimeformat("iso-short") }}</div>
 </div>
