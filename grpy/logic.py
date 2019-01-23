@@ -24,7 +24,6 @@ import hashlib
 import os
 
 from .models import Grouping
-from .utils import now
 
 
 def make_code(grouping: Grouping, unique: bool = False) -> str:
