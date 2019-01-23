@@ -137,7 +137,7 @@ def grouping_detail(key):
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', key=grouping.key))
     can_delete = not user_registrations
-    can_start = logic.can_grouping_start(grouping) and user_registrations
+    can_start = grouping.can_grouping_start() and user_registrations
     return render_template(
         "grouping_detail.html",
         grouping=grouping, user_registrations=user_registrations,
@@ -178,7 +178,7 @@ def grouping_register(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key == grouping.host:
         abort(403)
-    if not logic.is_registration_open(grouping):
+    if not grouping.is_registration_open():
         flash("Not within the registration period for '{}'.".format(grouping.name),
               category="warning")
         return redirect(url_for('home'))
@@ -212,7 +212,7 @@ def grouping_start(key):
     grouping = value_or_404(get_repository().get_grouping(key))
     if g.user.key != grouping.host:
         abort(403)
-    if not logic.can_grouping_start(grouping):
+    if not grouping.can_grouping_start():
         flash(
             "Grouping for '{}' must be after the final date.".format(
                 grouping.name),

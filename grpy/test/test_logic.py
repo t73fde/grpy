@@ -23,7 +23,7 @@
 import uuid
 from datetime import timedelta
 
-from ..logic import can_grouping_start, is_registration_open, make_code
+from ..logic import make_code
 from ..models import Grouping
 from ..utils import now
 
@@ -57,25 +57,3 @@ def test_make_code():
     check_code(code, grouping._replace(final_date=yet + timedelta(days=60)))
     check_code(code, grouping._replace(policy="LK"))
     check_code(None, grouping, unique=True)
-
-
-def test_is_registration_open():
-    """Registration is open if now is between begin and final date."""
-    yet = now()
-    grouping = Grouping(
-        None, ".", "name", uuid.UUID(int=0), yet + timedelta(seconds=1),
-        yet + timedelta(days=7), None, "RD", 7, 7, "Note")
-    assert not is_registration_open(grouping)
-    assert is_registration_open(grouping._replace(begin_date=yet))
-    assert not is_registration_open(grouping._replace(
-        begin_date=yet - timedelta(seconds=2), final_date=yet - timedelta(seconds=1)))
-
-
-def test_can_grouping_start():
-    """Grouping can start after the final date."""
-    yet = now()
-    grouping = Grouping(
-        None, ".", "name", uuid.UUID(int=0), yet - timedelta(days=6),
-        yet + timedelta(days=1), None, "RD", 7, 7, "Note")
-    assert not can_grouping_start(grouping)
-    assert can_grouping_start(grouping._replace(final_date=yet))

@@ -25,6 +25,8 @@ import enum
 import uuid
 from typing import FrozenSet, NamedTuple, Optional
 
+from .utils import now
+
 
 Model = NamedTuple
 KeyType = uuid.UUID
@@ -100,6 +102,14 @@ class Grouping(NamedTuple):
                 "Maximal group size < 1: {}".format(self.max_group_size))
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
+
+    def is_registration_open(self) -> bool:
+        """Check that registrations for given grouping are open."""
+        return self.begin_date < now() < self.final_date
+
+    def can_grouping_start(self) -> bool:
+        """Check that grouping process can start now."""
+        return self.final_date < now()
 
 
 class Registration(NamedTuple):
