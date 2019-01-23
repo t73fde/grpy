@@ -99,11 +99,15 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
     auth.login("user")
     user = app.get_repository().get_user_by_ident("user")
     assert user
+    register_url = url_for('grouping_register', key=app_grouping.key)
+    assert client.get(register_url).status_code == 200
+
     app.get_repository().set_registration(Registration(app_grouping.key, user.key, ''))
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "Registered Groupings" in data
-    assert url_for('grouping_register', key=app_grouping.key) in data
+    assert register_url in data
+    assert client.get(register_url).status_code == 200
 
     # Now change the final_date
     app.get_repository().set_grouping(app_grouping._replace(
@@ -111,7 +115,8 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "Registered Groupings" in data
-    assert url_for('grouping_register', key=app_grouping.key) not in data
+    assert register_url not in data
+    assert client.get(register_url).status_code == 302
 
 
 def test_about_anonymous(client):
