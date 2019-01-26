@@ -22,7 +22,7 @@
 
 from typing import NamedTuple
 
-from ..models import KeyType
+from ..models import KeyType, UserPreferences
 
 
 class UserRegistration(NamedTuple):
@@ -30,4 +30,4 @@ class UserRegistration(NamedTuple):
 
     key: KeyType  # -> User
     ident: str
-    data: str
+    preferences: UserPreferences
