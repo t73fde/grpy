@@ -131,7 +131,8 @@ def post_process_coverage(ctx, coverage_ok: bool, verbose: int) -> None:
 def coverage(ctx, verbose):
     """Perform a full test with coverage measurement."""
     verbose += ctx.obj['verbose']
-    coverage_ok = run_subprocess(["coverage", "run", "-m", "pytest"], verbose)
+    coverage_ok = run_subprocess(
+        ["coverage", "run", "-m", "pytest", "--testmon-off"], verbose)
     post_process_coverage(ctx, coverage_ok, verbose)
 
 
@@ -155,13 +156,15 @@ def full_coverage(ctx, verbose):
                 files.append(str(path).replace("/", ".")[:-3])
 
     coverage_ok = run_subprocess(
-        ["coverage", "run", "--source=" + ",".join(files), "-m", "pytest", "grpy/test"],
+        ["coverage", "run", "--source=" + ",".join(files),
+            "-m", "pytest", "--testmon-off", "grpy/test"],
         verbose)
     post_process_coverage(ctx, coverage_ok, verbose)
 
     for directory in packages:
         coverage_ok = run_subprocess(
-            ["coverage", "run", "--source=" + directory, "-m", "pytest", directory],
+            ["coverage", "run", "--source=" + directory,
+                "-m", "pytest", "--testmon-off", directory],
             verbose)
         post_process_coverage(ctx, coverage_ok, verbose)
     ctx.invoke(coverage, verbose=verbose)

@@ -30,6 +30,7 @@ pydocstyle = "*"
 dodgy = "*"
 pytest = "*"
 pytest-flask = "*"
+pytest-testmon = "*"
 
 [packages]
 Flask = "*"
