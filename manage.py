@@ -76,9 +76,12 @@ def lint_flake8(source_paths: List[str], verbose: int) -> bool:
     return run_subprocess(["flake8"] + flake8_params + source_paths, verbose)
 
 
-def coverage_report(verbose: int) -> bool:
-    """Create and display a coverage report."""
-    process = exec_subprocess(["coverage", "report"], verbose)
+def run_coverage(paths: Sequence[str], test_directory: str, verbose: int) -> bool:
+    """Run the coverage checks."""
+    process = exec_subprocess(
+        ["pytest", "--testmon-off", "--cov-report=term", "--cov-report=html"] +
+        ["--cov=" + p for p in paths] + [test_directory],
+        verbose)
     if process.returncode:
         return False
     match_obj = re.search(rb'\nTOTAL.+ (\d.+)%\n', process.stdout)
@@ -116,24 +119,14 @@ def lint(ctx, verbose):
         ctx.exit(1)
 
 
-def post_process_coverage(ctx, coverage_ok: bool, verbose: int) -> None:
-    """Execute 'coverage html' and 'coverage report'."""
-    if coverage_ok:
-        run_subprocess(["coverage", "html"], verbose)
-        coverage_ok = coverage_report(verbose)
-    if not coverage_ok:
-        ctx.exit(1)
-
-
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def coverage(ctx, verbose):
     """Perform a full test with coverage measurement."""
     verbose += ctx.obj['verbose']
-    coverage_ok = run_subprocess(
-        ["coverage", "run", "-m", "pytest", "--testmon-off"], verbose)
-    post_process_coverage(ctx, coverage_ok, verbose)
+    if not run_coverage(["grpy"], "grpy", verbose):
+        ctx.exit(1)
 
 
 @main.command()
@@ -155,18 +148,11 @@ def full_coverage(ctx, verbose):
             if path.suffix == ".py":
                 files.append(str(path).replace("/", ".")[:-3])
 
-    coverage_ok = run_subprocess(
-        ["coverage", "run", "--source=" + ",".join(files),
-            "-m", "pytest", "--testmon-off", "grpy/test"],
-        verbose)
-    post_process_coverage(ctx, coverage_ok, verbose)
-
+    if not run_coverage(files, "grpy/test", verbose):
+        ctx.exit(1)
     for directory in packages:
-        coverage_ok = run_subprocess(
-            ["coverage", "run", "--source=" + directory,
-                "-m", "pytest", "--testmon-off", directory],
-            verbose)
-        post_process_coverage(ctx, coverage_ok, verbose)
+        if not run_coverage([directory], directory, verbose):
+            ctx.exit(1)
     ctx.invoke(coverage, verbose=verbose)
 
 
