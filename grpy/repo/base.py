@@ -22,7 +22,8 @@
 
 from typing import Any, Dict, Iterator, Optional, Sequence
 
-from grpy.models import Grouping, KeyType, Registration, User, UserRegistration
+from .models import UserRegistration
+from ..models import Grouping, KeyType, Registration, User
 
 
 WhereSpec = Dict[str, Any]

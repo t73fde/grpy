@@ -129,14 +129,6 @@ class Registration(NamedTuple):
                 "Participant is not a UUID: {}".format(self.participant))
 
 
-class UserRegistration(NamedTuple):
-    """Data for grouping policies: user key, user ident, registration data."""
-
-    key: KeyType  # -> User
-    ident: str
-    data: str
-
-
 class Group(NamedTuple):
     """A group of participants for a single grouping."""
 

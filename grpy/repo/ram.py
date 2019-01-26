@@ -25,7 +25,8 @@ from typing import Any, Iterator, Optional
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from ..models import Grouping, KeyType, Model, Registration, User, UserRegistration
+from .models import UserRegistration
+from ..models import Grouping, KeyType, Model, Registration, User
 
 
 class RamRepositoryFactory(RepositoryFactory):
