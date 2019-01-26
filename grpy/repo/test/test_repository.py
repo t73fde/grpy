@@ -30,7 +30,7 @@ from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
-from ...models import Grouping, Permission, Registration, User
+from ...models import Grouping, Permission, Registration, User, UserPreferences
 
 # pylint: disable=redefined-outer-name
 
@@ -342,21 +342,31 @@ def test_iter_groupings_order(repository: Repository) -> None:
 
 def test_set_registration(repository: Repository):
     """Test add / update of an registration."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
     assert registration == repository.set_registration(registration)
 
 
 def test_get_registration(repository: Repository):
     """An inserted / updated registration can be retrieved."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
     repository.set_registration(registration)
     assert registration == repository.get_registration(
         registration.grouping, registration.participant)
 
-    new_registration = registration._replace(data="atad")
+    class Prefs(UserPreferences):
+        """Test-Class to have some other preferences."""
+
+        def __new__(cls, position: int):
+            """Create new tuple."""
+            self = super().__new__(cls)
+            self.position = position
+            return self
+
+    prefs = Prefs(1)
+    new_registration = registration._replace(preferences=prefs)
     repository.set_registration(new_registration)
     assert repository.get_registration(
-        registration.grouping, registration.participant).data == "atad"
+        registration.grouping, registration.participant).preferences == prefs
 
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
@@ -365,13 +375,13 @@ def test_iter_registrations(repository: Repository):
     """Iterate over all registrations."""
     for i in range(7):
         repository.set_registration(Registration(
-            uuid.UUID(int=i), uuid.UUID(int=100 + i), ''))
+            uuid.UUID(int=i), uuid.UUID(int=100 + i), UserPreferences()))
         assert len(repository.iter_registrations()) == i + 1
 
 
 def test_delete_registration(repository: Repository):
     """A deleted registration cannot be retrieved."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), "data")
+    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
     repository.set_registration(registration)
 
     repository.delete_registration(uuid.UUID(int=0), uuid.UUID(int=1))
@@ -385,7 +395,8 @@ def test_iter_groupings_by_participant(repository: Repository, grouping: Groupin
     grouping = repository.set_grouping(grouping)
     for uid in range(5):
         user_key = uuid.UUID(int=uid)
-        repository.set_registration(Registration(grouping.key, user_key, ""))
+        repository.set_registration(Registration(
+            grouping.key, user_key, UserPreferences()))
         assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
 
 
@@ -393,7 +404,8 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
     """Iterate over all user data of registrations."""
     for i in range(7):
         user = repository.set_user(User(None, "user-%d" % i))
-        repository.set_registration(Registration(uuid.UUID(int=100), user.key, ''))
+        repository.set_registration(Registration(
+            uuid.UUID(int=100), user.key, UserPreferences()))
         assert len(list(repository.iter_user_registrations_by_grouping(
             uuid.UUID(int=100)))) == i + 1
     assert list(repository.iter_user_registrations_by_grouping(

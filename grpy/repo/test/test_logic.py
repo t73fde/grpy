@@ -27,7 +27,7 @@ import pytest
 
 from ..base import DuplicateKey, Repository
 from ..logic import registration_count, set_grouping_new_code
-from ...models import Grouping, Registration
+from ...models import Grouping, Registration, UserPreferences
 
 
 def test_set_grouping_new_code(repository: Repository, grouping: Grouping):
@@ -66,5 +66,6 @@ def test_registration_count(repository: Repository, grouping: Grouping):
     assert registration_count(repository, grouping) == 0
 
     for i in range(10):
-        repository.set_registration(Registration(grouping.key, uuid.UUID(int=i), ''))
+        repository.set_registration(Registration(
+            grouping.key, uuid.UUID(int=i), UserPreferences()))
         assert registration_count(repository, grouping) == i + 1

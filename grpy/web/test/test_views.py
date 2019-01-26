@@ -31,7 +31,7 @@ import pytest
 from werkzeug.http import parse_cookie
 
 from ... import utils
-from ...models import Grouping, Registration, User
+from ...models import Grouping, Registration, User, UserPreferences
 from ...repo.logic import set_grouping_new_code
 
 
@@ -102,7 +102,8 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
     register_url = url_for('grouping_register', key=app_grouping.key)
     assert client.get(register_url).status_code == 200
 
-    app.get_repository().set_registration(Registration(app_grouping.key, user.key, ''))
+    app.get_repository().set_registration(Registration(
+        app_grouping.key, user.key, UserPreferences()))
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "Registered Groupings" in data
@@ -277,7 +278,7 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping):
     for i in range(12):
         user = app.get_repository().set_user(User(None, "user%d" % i))
         app.get_repository().set_registration(Registration(
-            app_grouping.key, user.key, ''))
+            app_grouping.key, user.key, UserPreferences()))
         users.append(user)
     auth.login("host")
     response = client.get(url)
@@ -438,7 +439,7 @@ def test_grouping_deregister(app, client, auth, app_grouping: Grouping):
     app.get_repository().set_registration(Registration(
         app_grouping.key,
         app.get_repository().get_user_by_ident('student').key,
-        ''))
+        UserPreferences()))
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
@@ -481,7 +482,8 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping):
     client.get(url_for('home'))  # Clear flashes
 
     user = app.get_repository().get_user_by_ident("user")
-    app.get_repository().set_registration(Registration(new_grouping.key, user.key, ''))
+    app.get_repository().set_registration(
+        Registration(new_grouping.key, user.key, UserPreferences()))
 
     response = client.get(url)
     assert response.status_code == 200

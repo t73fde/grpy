@@ -30,7 +30,7 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import Grouping, Registration
+from ..models import Grouping, Registration, UserPreferences
 from ..policies import get_policies
 from ..repo.base import Repository
 from ..repo.logic import registration_count, set_grouping_new_code
@@ -188,7 +188,7 @@ def grouping_register(key):
     if form.validate_on_submit():
         if form.submit_register.data:
             get_repository().set_registration(
-                Registration(grouping.key, g.user.key, ''))
+                Registration(grouping.key, g.user.key, UserPreferences()))
             if registration:
                 flash("Registration for '{}' is updated.".format(grouping.name),
                       category="info")

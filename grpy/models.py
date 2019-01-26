@@ -112,12 +112,16 @@ class Grouping(NamedTuple):
         return self.final_date < now()
 
 
+class UserPreferences(NamedTuple):
+    """Base class for user preferences for a given policy."""
+
+
 class Registration(NamedTuple):
     """Data for an registration for a grouping by a participant."""
 
     grouping: KeyType  # -> Grouping
     participant: KeyType  # -> User
-    data: str
+    preferences: UserPreferences
 
     def validate(self) -> None:
         """Check model for consistency."""
@@ -127,6 +131,9 @@ class Registration(NamedTuple):
         if not isinstance(self.participant, uuid.UUID):
             raise ValidationFailed(
                 "Participant is not a UUID: {}".format(self.participant))
+        if not isinstance(self.preferences, UserPreferences):
+            raise ValidationFailed(
+                "Preferences is not a UserPreferences: {}".format(self.preferences))
 
 
 class Group(NamedTuple):

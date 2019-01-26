@@ -207,7 +207,7 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some participants."""
         return process_where_order(
-            (UserRegistration(p, self.get_user(p).ident, r.data)
+            (UserRegistration(p, self.get_user(p).ident, r.preferences)
                 for (g, p), r in self._registrations.items() if g == grouping),
             where,
             order)

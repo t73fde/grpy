@@ -25,7 +25,8 @@ from datetime import timedelta
 
 import pytest
 
-from ..models import Grouping, Permission, Registration, User, ValidationFailed
+from ..models import (
+    Grouping, Permission, Registration, User, UserPreferences, ValidationFailed)
 from ..utils import now
 
 
@@ -131,14 +132,17 @@ def test_can_grouping_start():
 
 def test_registration_validation():
     """A valid model raises no exception."""
-    Registration(uuid.UUID(int=0), uuid.UUID(int=0), "").validate()
+    Registration(uuid.UUID(int=0), uuid.UUID(int=0), UserPreferences()).validate()
 
 
 def test_registration_validation_failed():
     """An invalid model raises exception."""
     with pytest.raises(ValidationFailed) as exc:
-        Registration(None, uuid.UUID(int=0), "").validate()
+        Registration(None, uuid.UUID(int=0), UserPreferences()).validate()
     assert "Grouping is not a UUID:" in str(exc)
     with pytest.raises(ValidationFailed) as exc:
-        Registration(uuid.UUID(int=0), None, "").validate()
+        Registration(uuid.UUID(int=0), None, UserPreferences()).validate()
     assert "Participant is not a UUID:" in str(exc)
+    with pytest.raises(ValidationFailed) as exc:
+        Registration(uuid.UUID(int=0), uuid.UUID(int=0), "").validate()
+    assert "Preferences is not a UserPreferences:" in str(exc)
