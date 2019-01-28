@@ -22,12 +22,11 @@
 
 from typing import NamedTuple
 
-from ..models import KeyType, UserPreferences
+from ..models import User, UserPreferences
 
 
 class UserRegistration(NamedTuple):
-    """Data for grouping policies: user key, user ident, registration data."""
+    """Data for grouping policies: user data, registration data."""
 
-    key: KeyType  # -> User
-    ident: str
+    user: User
     preferences: UserPreferences

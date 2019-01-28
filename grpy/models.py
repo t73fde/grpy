@@ -23,7 +23,7 @@
 import datetime
 import enum
 import uuid
-from typing import FrozenSet, NamedTuple, Optional
+from typing import Dict, FrozenSet, NamedTuple, Optional
 
 from .utils import now
 
@@ -136,9 +136,6 @@ class Registration(NamedTuple):
                 "Preferences is not a UserPreferences: {}".format(self.preferences))
 
 
-class Group(NamedTuple):
-    """A group of participants for a single grouping."""
-
-    grouping: KeyType  # -> Grouping
-    number: int
-    members: FrozenSet[KeyType]  # -> User
+PolicyData = Dict[User, UserPreferences]
+Group = FrozenSet[User]
+Groups = FrozenSet[Group]
