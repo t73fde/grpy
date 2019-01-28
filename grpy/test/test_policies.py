@@ -20,7 +20,44 @@
 
 """Tests for the grouping policies."""
 
-from ..policies import get_policies, get_policy_name
+import pytest
+
+from ..policies import Policy, create_policy, get_policies, get_policy_name
+
+
+def test_group_sizes():
+    """Check the different group sizes."""
+    policy = Policy()
+    for max_group_size in range(10):
+        assert policy.group_sizes(0, max_group_size, 0) == []
+
+    for num_p in range(10):
+        assert policy.group_sizes(num_p, 1, 0) == ([(1, 1)] * num_p)
+
+    for num_r in range(10):
+        assert policy.group_sizes(0, 1, num_r) == ([(1, 0)] * num_r)
+
+    test_data = (
+        (1, 1, 1, [(1, 1), (1, 0)]),
+        (1, 7, 3, [(4, 1)]),
+        (5, 5, 0, [(5, 5)]),
+        (5, 5, 1, [(3, 3), (3, 2)]),
+        (9, 7, 2, [(5, 5), (6, 4)]),
+        (9, 6, 2, [(5, 5), (6, 4)]),
+        (24, 6, 5, [(5, 5), (6, 5), (6, 5), (6, 5), (6, 4)]),
+        (24, 6, 7, [(5, 4), (5, 4), (5, 4), (5, 4), (5, 4), (6, 4)]),
+        (5, 5, 10, [(5, 3), (5, 2), (5, 0)]),
+    )
+    for num_p, size, num_r, result in test_data:
+        assert policy.group_sizes(num_p, size, num_r) == result
+
+
+def test_group_sizes_error():
+    """Check the different group sizes if error values."""
+    policy = Policy()
+    for num_p, num_r in ((1, 0), (0, 1), (3, 1), (-1, 0), (0, -1)):
+        with pytest.raises(ValueError):
+            policy.group_sizes(num_p, 0, num_r)
 
 
 def test_get_policies():
@@ -34,3 +71,9 @@ def test_get_policy_name():
     for code, name in get_policies():
         assert name == get_policy_name(code)
     assert get_policy_name("") == ""
+
+
+def test_create_policy():
+    """Test to create a policy object."""
+    assert create_policy("") is None
+    assert create_policy('RD').NAME.lower() == "random"

@@ -20,20 +20,90 @@
 
 """Policies for group forming."""
 
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
+
+from .models import Groups, PolicyData
 
 
-POLICIES = [
-    ('RD', "Random"),
-]
-POLICY_DICT = dict(POLICIES)
+class Policy:
+    """An abstract policy how to form groups."""
+
+    NAME = ""
+
+    @staticmethod
+    def group_sizes(
+            number_of_participants: int,
+            max_group_size: int,
+            member_reserve: int) -> Sequence[Tuple[int, int]]:
+        """Return a vector of group sizes."""
+        if number_of_participants < 0:
+            raise ValueError("number_of_participants < 0: %d" % number_of_participants)
+        if member_reserve < 0:
+            raise ValueError("member_reserve < 0: %d" % member_reserve)
+        potential_participants = number_of_participants + member_reserve
+        if potential_participants <= 0:
+            return []
+        if max_group_size <= 0:
+            raise ValueError("max_group_size <= 0: %d" % max_group_size)
+
+        empty_groups = 0
+        while member_reserve > max_group_size + 1:
+            empty_groups += 1
+            member_reserve -= max_group_size
+            potential_participants -= max_group_size
+
+        num_groups, remaining = divmod(
+            potential_participants, max_group_size)
+        if remaining > 0:
+            num_groups += 1
+        number_of_part_groups, remaining = divmod(
+            potential_participants, max_group_size)
+        if remaining > 0:
+            number_of_part_groups += 1
+
+        average_group_size, remaining = divmod(
+            potential_participants, num_groups)
+        groups = [average_group_size] * (num_groups - remaining) + [
+            average_group_size + 1] * remaining
+
+        average_participants, remaining = divmod(
+            number_of_participants, number_of_part_groups)
+        part_groups = [average_participants + 1] * remaining + [
+            average_participants] * (number_of_part_groups - remaining)
+        return list(zip(groups, part_groups)) + [(max_group_size, 0)] * empty_groups
+
+    def build_groups(self, data: PolicyData) -> Groups:
+        """Build a set of groups based on policy data."""
+        raise NotImplementedError("Policy.build_groups")
+
+
+class RandomPolicy(Policy):
+    """Build groups randomly."""
+
+    NAME = "Random"
+
+    def build_groups(self, data: PolicyData) -> Groups:
+        """Build a set of groups based on policy data."""
+
+
+POLICIES = {
+    'RD': RandomPolicy,
+}
 
 
 def get_policies() -> List[Tuple[str, str]]:
     """Return list of policies."""
-    return list(POLICIES)
+    return [(code, policy.NAME) for code, policy in POLICIES.items()]
 
 
 def get_policy_name(code: str) -> str:
     """Return policy name for given code."""
-    return POLICY_DICT.get(code, "")
+    policy = POLICIES.get(code)
+    if policy:
+        return policy.NAME
+    return ""
+
+
+def create_policy(code: str) -> Policy:
+    """Create a policy object based on code."""
+    return POLICIES.get(code)
