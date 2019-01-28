@@ -159,10 +159,20 @@ def full_coverage(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
+def outdated(ctx, verbose):
+    """Check for outdated packages."""
+    if not run_subprocess(["pipenv", "check"], verbose):
+        ctx.exit(1)
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
 def check(ctx, verbose):
     """Perform a check: lint and coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(coverage, verbose=verbose)
+    ctx.invoke(outdated, verbose=verbose)
 
 
 @main.command()
@@ -172,6 +182,7 @@ def full_check(ctx, verbose):
     """Perform a full check: lint and full-coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(full_coverage, verbose=verbose)
+    ctx.invoke(outdated, verbose=verbose)
 
 
 if __name__ == '__main__':
