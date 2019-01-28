@@ -230,4 +230,4 @@ def grouping_start(key):
         pass
     return render_template(
         "grouping_start.html",
-        grouping=grouping, user_registrations=user_registrations, form=form)
+        grouping=grouping, registration_count=len(user_registrations), form=form)
