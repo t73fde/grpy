@@ -4,6 +4,9 @@ stages:
 
 check:
   stage: test
+  only:
+  - master
+  - deploy
   image: hshnwinps/dev
   script:
   - pipenv install --dev
