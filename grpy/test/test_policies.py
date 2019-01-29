@@ -22,7 +22,9 @@
 
 import pytest
 
-from ..policies import Policy, create_policy, get_policies, get_policy_name
+from ..models import User, UserPreferences
+from ..policies import (
+    Policy, RandomPolicy, create_policy, get_policies, get_policy_name)
 
 
 def test_group_sizes():
@@ -65,6 +67,23 @@ def test_group_sizes_error():
     for num_p, num_r in ((1, 0), (0, 1), (3, 1), (-1, 0), (0, -1)):
         with pytest.raises(ValueError):
             policy.group_sizes(num_p, 0, num_r)
+
+
+def test_random_policy():
+    """The random policy places all users into groups."""
+    data = {}
+    for i in range(20):
+        data[User(None, "user-%d" % i)] = UserPreferences()
+
+    policy = RandomPolicy()
+    groups = policy.build_groups(data)
+
+    users = {user for user in data}
+    for group in groups:
+        for member in group:
+            assert member in users
+            users.remove(member)
+    assert users == set()
 
 
 def test_get_policies():

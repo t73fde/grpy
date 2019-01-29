@@ -20,6 +20,7 @@
 
 """Policies for group forming."""
 
+import random
 from typing import List, Sequence, Tuple
 
 from .models import Groups, PolicyData
@@ -73,6 +74,14 @@ class RandomPolicy(Policy):
 
     def build_groups(self, data: PolicyData) -> Groups:
         """Build a set of groups based on policy data."""
+        users = [user for user in data]
+        random.shuffle(users)
+        sizes = self.group_sizes(len(users), 7, 0)
+        groups = set()
+        for size in sizes:
+            groups.add(frozenset(users[-size:]))
+            users = users[:-size]
+        return frozenset(groups)
 
 
 POLICIES = {
