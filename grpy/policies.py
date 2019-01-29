@@ -106,4 +106,7 @@ def get_policy_name(code: str) -> str:
 
 def create_policy(code: str) -> Policy:
     """Create a policy object based on code."""
-    return POLICIES.get(code)
+    policy_class = POLICIES.get(code)
+    if policy_class:
+        return policy_class()
+    return None

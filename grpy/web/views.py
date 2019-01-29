@@ -31,7 +31,7 @@ from .utils import (
     value_or_404)
 from .. import logic, utils
 from ..models import Grouping, Registration, UserPreferences
-from ..policies import get_policies
+from ..policies import create_policy, get_policies
 from ..repo.base import Repository
 from ..repo.logic import registration_count, set_grouping_new_code
 
@@ -228,7 +228,11 @@ def grouping_start(key):
 
     form = forms.StartGroupingForm()
     if form.validate_on_submit():
-        pass
+        policy_data = {u: p for (u, p) in user_registrations}
+        policy = create_policy(grouping.policy)
+        groups = policy.build_groups(
+            policy_data, grouping.max_group_size, grouping.member_reserve)
+        print("GROUPS", groups)
     return render_template(
         "grouping_start.html",
         grouping=grouping, registration_count=len(user_registrations), form=form)

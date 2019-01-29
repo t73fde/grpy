@@ -489,3 +489,21 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping):
     assert response.status_code == 200
     data = response.data.decode('utf-8')
     assert "Start" in data
+
+
+def test_grouping_build(app, client, auth, app_grouping: Grouping):
+    """Test the group building process."""
+    # Create a bunch of users and their registrations
+    for i in range(20):
+        user = app.get_repository().set_user(User(None, "user_%d" % i))
+        app.get_repository().set_registration(
+            Registration(app_grouping.key, user.key, UserPreferences()))
+
+    url = url_for('grouping_start', key=app_grouping.key)
+    app.get_repository().set_grouping(app_grouping._replace(
+        begin_date=utils.now() - datetime.timedelta(days=7),
+        final_date=utils.now() - datetime.timedelta(seconds=1),
+        max_group_size=6, member_reserve=5))
+    auth.login('host')
+    response = client.post(url)
+    assert response.status_code == 200

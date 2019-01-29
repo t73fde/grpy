@@ -105,4 +105,6 @@ def test_get_policy_name():
 def test_create_policy():
     """Test to create a policy object."""
     assert create_policy("") is None
-    assert create_policy('RD').NAME.lower() == "random"
+    random = create_policy('RD')
+    assert isinstance(random, RandomPolicy)
+    assert random.NAME.lower() == "random"
