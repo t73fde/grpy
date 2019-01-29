@@ -34,7 +34,7 @@ class Policy:
     def group_sizes(
             number_of_participants: int,
             max_group_size: int,
-            member_reserve: int) -> Sequence[Tuple[int, int]]:
+            member_reserve: int) -> Sequence[int]:
         """Return a vector of group sizes."""
         if number_of_participants < 0:
             raise ValueError("number_of_participants < 0: %d" % number_of_participants)
@@ -52,25 +52,14 @@ class Policy:
             member_reserve -= max_group_size
             potential_participants -= max_group_size
 
-        num_groups, remaining = divmod(
-            potential_participants, max_group_size)
-        if remaining > 0:
+        num_groups, remainder = divmod(potential_participants, max_group_size)
+        if remainder > 0:
             num_groups += 1
-        number_of_part_groups, remaining = divmod(
-            potential_participants, max_group_size)
-        if remaining > 0:
-            number_of_part_groups += 1
 
-        average_group_size, remaining = divmod(
-            potential_participants, num_groups)
-        groups = [average_group_size] * (num_groups - remaining) + [
-            average_group_size + 1] * remaining
-
-        average_participants, remaining = divmod(
-            number_of_participants, number_of_part_groups)
-        part_groups = [average_participants + 1] * remaining + [
-            average_participants] * (number_of_part_groups - remaining)
-        return list(zip(groups, part_groups)) + [(max_group_size, 0)] * empty_groups
+        avg_group_size, remainder = divmod(number_of_participants, num_groups)
+        groups = [avg_group_size + 1] * remainder + \
+                 [avg_group_size] * (num_groups - remainder)
+        return groups + [0] * empty_groups
 
     def build_groups(self, data: PolicyData) -> Groups:
         """Build a set of groups based on policy data."""
