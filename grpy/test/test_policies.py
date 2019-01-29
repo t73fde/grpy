@@ -76,14 +76,17 @@ def test_random_policy():
         data[User(None, "user-%d" % i)] = UserPreferences()
 
     policy = RandomPolicy()
-    groups = policy.build_groups(data)
+    for max_group_size in range(1, 10):
+        for member_reserve in range(10):
+            groups = policy.build_groups(data, max_group_size, member_reserve)
 
-    users = {user for user in data}
-    for group in groups:
-        for member in group:
-            assert member in users
-            users.remove(member)
-    assert users == set()
+            users = {user for user in data}
+            for group in groups:
+                assert len(group) <= max_group_size
+                for member in group:
+                    assert member in users
+                    users.remove(member)
+            assert users == set()
 
 
 def test_get_policies():

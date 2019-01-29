@@ -62,7 +62,8 @@ class Policy:
                  [avg_group_size] * (num_groups - remainder)
         return groups + [0] * empty_groups
 
-    def build_groups(self, data: PolicyData) -> Groups:
+    def build_groups(
+            self, data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
         """Build a set of groups based on policy data."""
         raise NotImplementedError("Policy.build_groups")
 
@@ -72,11 +73,12 @@ class RandomPolicy(Policy):
 
     NAME = "Random"
 
-    def build_groups(self, data: PolicyData) -> Groups:
+    def build_groups(
+            self, data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
         """Build a set of groups based on policy data."""
         users = [user for user in data]
         random.shuffle(users)
-        sizes = self.group_sizes(len(users), 7, 0)
+        sizes = self.group_sizes(len(users), max_group_size, member_reserve)
         groups = set()
         for size in sizes:
             groups.add(frozenset(users[-size:]))
