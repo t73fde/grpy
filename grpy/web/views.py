@@ -33,7 +33,7 @@ from .. import logic, utils
 from ..models import Grouping, Registration, UserPreferences
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
-from ..repo.logic import registration_count, set_grouping_new_code
+from ..repo.logic import set_grouping_new_code
 
 
 def get_repository() -> Repository:
@@ -52,7 +52,8 @@ def home():
                     "host__eq": g.user.key,
                     "close_date__ge": utils.now()},
                 order=["final_date"]))
-            counts = [registration_count(repository, g) for g in groupings]
+            counts = [
+                repository.count_registrations_by_grouping(g) for g.key in groupings]
             groupings = zip(groupings, counts)
 
         registrations = utils.LazyList(get_repository().iter_groupings_by_participant(

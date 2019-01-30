@@ -112,12 +112,9 @@ class Repository:
         """Return registration with given grouping and participant."""
         raise NotImplementedError("Repository.get_registration")
 
-    def iter_registrations(
-            self,
-            where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Registration]:
-        """Return an iterator of all or some registrations."""
-        raise NotImplementedError("Repository.iter_registrations")
+    def count_registrations_by_grouping(self, grouping: KeyType) -> int:
+        """Return number of registration for given grouping."""
+        raise NotImplementedError("Repository.count_registrations_by_grouping")
 
     def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
         """Delete the given registration from the repository."""

@@ -20,15 +20,13 @@
 
 """Tests for the repository logic."""
 
-import datetime
-import uuid
 from unittest.mock import patch
 
 import pytest
 
 from ..base import DuplicateKey, Repository
-from ..logic import registration_count, set_grouping_new_code
-from ...models import Grouping, Registration, UserPreferences
+from ..logic import set_grouping_new_code
+from ...models import Grouping
 
 
 def test_set_grouping_new_code(repository: Repository, grouping: Grouping):
@@ -53,23 +51,3 @@ def test_set_grouping_new_code_no_random(repository: Repository, grouping: Group
         with pytest.raises(OverflowError) as exc:
             set_grouping_new_code(repository, grouping)
         assert exc.value.args == ("grpy.repo.logic.set_grouping_new_code",)
-
-
-def test_registration_count(repository: Repository, grouping: Grouping):
-    """Test the count calculation for a grouping."""
-
-    # An non-existing grouping has no registrations
-    never = datetime.datetime(1970, 1, 1)
-    assert registration_count(
-        repository,
-        Grouping(
-            None, "", "", uuid.UUID(int=0), never, never, None, "", -1, -1, "")) == 0
-
-    grouping = repository.set_grouping(grouping)
-    assert grouping.key is not None
-    assert registration_count(repository, grouping) == 0
-
-    for i in range(10):
-        repository.set_registration(Registration(
-            grouping.key, uuid.UUID(int=i), UserPreferences()))
-        assert registration_count(repository, grouping) == i + 1

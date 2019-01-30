@@ -171,12 +171,9 @@ class RamRepository(Repository):
         """Return registration with given grouping and participant."""
         return self._registrations.get((grouping, participant), None)
 
-    def iter_registrations(
-            self,
-            where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Registration]:
-        """Return an iterator of all or some registrations."""
-        return process_where_order(self._registrations.values(), where, order)
+    def count_registrations_by_grouping(self, grouping: KeyType) -> int:
+        """Return number of registration for given grouping."""
+        return len([g for g, _ in self._registrations if g == grouping])
 
     def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
         """Delete the given registration from the repository."""

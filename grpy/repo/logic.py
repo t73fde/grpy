@@ -23,7 +23,6 @@
 from .base import DuplicateKey, Repository
 from ..logic import make_code
 from ..models import Grouping
-from ..utils import LazyList
 
 
 def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Grouping:
@@ -38,9 +37,3 @@ def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Groupin
                 raise
         counter += 1
     raise OverflowError("grpy.repo.logic.set_grouping_new_code")
-
-
-def registration_count(repository: Repository, grouping: Grouping) -> int:
-    """Return the number of registrations for a given grouping."""
-    return len(LazyList(
-        repository.iter_registrations(where={'grouping__eq': grouping.key})))

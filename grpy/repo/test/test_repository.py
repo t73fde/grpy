@@ -382,12 +382,20 @@ def test_get_registration(repository: Repository):
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
 
-def test_iter_registrations(repository: Repository):
-    """Iterate over all registrations."""
-    for i in range(7):
+def test_count_registrations_by_grouping(repository: Repository, grouping: Grouping):
+    """Test the count calculation for a grouping."""
+
+    # An non-existing grouping has no registrations
+    assert repository.count_registrations_by_grouping(uuid.uuid4()) == 0
+
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
+    assert repository.count_registrations_by_grouping(grouping.key) == 0
+
+    for i in range(10):
         repository.set_registration(Registration(
-            uuid.UUID(int=i), uuid.UUID(int=100 + i), UserPreferences()))
-        assert len(utils.LazyList(repository.iter_registrations())) == i + 1
+            grouping.key, uuid.UUID(int=i), UserPreferences()))
+        assert repository.count_registrations_by_grouping(grouping.key) == i + 1
 
 
 def test_delete_registration(repository: Repository):
