@@ -276,7 +276,7 @@ def process_where(
             where_field = where_spec_split[0]
             where_relop = where_spec_split[1]
             pred = WherePredicate(where_field, where_relop, where_val).pred()
-            result = iter(elem for elem in result if pred(elem))
+            result = iter([elem for elem in result if pred(elem)])
     return result
 
 
