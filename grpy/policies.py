@@ -29,8 +29,6 @@ from .models import Groups, PolicyData
 class Policy:
     """An abstract policy how to form groups."""
 
-    NAME = ""
-
     @staticmethod
     def group_sizes(
             number_of_participants: int,
@@ -71,8 +69,6 @@ class Policy:
 class RandomPolicy(Policy):
     """Build groups randomly."""
 
-    NAME = "Random"
-
     def build_groups(
             self, data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
         """Build a set of groups based on policy data."""
@@ -86,27 +82,27 @@ class RandomPolicy(Policy):
         return tuple(groups)
 
 
-POLICIES = {
-    'RD': RandomPolicy,
-}
+POLICIES = (
+    ('RD', "Random", RandomPolicy),
+)
+POLICY_META = [(code, name) for (code, name, _) in POLICIES]
+POLICY_NAMES = dict(POLICY_META)
+POLICY_FUNCS = {code: func for (code, _, func) in POLICIES}
 
 
 def get_policies() -> List[Tuple[str, str]]:
     """Return list of policies."""
-    return [(code, policy.NAME) for code, policy in POLICIES.items()]
+    return list(POLICY_META)
 
 
 def get_policy_name(code: str) -> str:
     """Return policy name for given code."""
-    policy = POLICIES.get(code)
-    if policy:
-        return policy.NAME
-    return ""
+    return POLICY_NAMES.get(code, "")
 
 
 def create_policy(code: str) -> Policy:
     """Create a policy object based on code."""
-    policy_class = POLICIES.get(code)
+    policy_class = POLICY_FUNCS.get(code)
     if policy_class:
         return policy_class()
     return None

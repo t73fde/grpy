@@ -110,4 +110,3 @@ def test_create_policy():
     assert create_policy("") is None
     random = create_policy('RD')
     assert isinstance(random, RandomPolicy)
-    assert random.NAME.lower() == "random"
