@@ -20,11 +20,14 @@
 
 """Tests for the grouping policies."""
 
+from typing import Set
+
 import pytest
 
-from ..models import User, UserPreferences
+from ..models import Groups, User, UserPreferences
 from ..policies import (
-    get_policy, get_policy_name, get_policy_names, group_sizes, random_policy)
+    get_policy, get_policy_name, get_policy_names, group_sizes, no_policy,
+    random_policy)
 
 
 def test_group_sizes():
@@ -67,6 +70,40 @@ def test_group_sizes_error():
             group_sizes(num_p, 0, num_r)
 
 
+def assert_members_and_sizes(groups: Groups, users: Set[User], max_group_size: int):
+    """Assert that group contains all users and have descending group size."""
+    last_size = max_group_size
+    for group in groups:
+        assert len(group) <= max_group_size
+        assert len(group) <= last_size
+        last_size = len(group)
+        for member in group:
+            assert member in users
+            users.remove(member)
+    assert users == set()
+
+
+def test_no_policy():
+    """The no policy places all users into groups by name."""
+    data = {}
+    for i in range(20):
+        data[User(None, "user-%03d" % i)] = UserPreferences()
+
+    for max_group_size in range(1, 10):
+        for member_reserve in range(10):
+            groups = no_policy(data, max_group_size, member_reserve)
+            users = {user for user in data}
+            assert_members_and_sizes(groups, users, max_group_size)
+            last_ident = ""
+            for group in groups:
+                idents = [member.ident for member in group]
+                if idents:
+                    assert last_ident < min(idents)
+                    last_ident = max(idents)
+                else:
+                    last_ident = chr(65536)
+
+
 def test_random_policy():
     """The random policy places all users into groups."""
     data = {}
@@ -76,17 +113,8 @@ def test_random_policy():
     for max_group_size in range(1, 10):
         for member_reserve in range(10):
             groups = random_policy(data, max_group_size, member_reserve)
-
             users = {user for user in data}
-            last_size = max_group_size
-            for group in groups:
-                assert len(group) <= max_group_size
-                assert len(group) <= last_size
-                last_size = len(group)
-                for member in group:
-                    assert member in users
-                    users.remove(member)
-            assert users == set()
+            assert_members_and_sizes(groups, users, max_group_size)
 
 
 def test_get_policies():
@@ -104,5 +132,6 @@ def test_get_policy_name():
 
 def test_create_policy():
     """Test to create a policy object."""
-    assert get_policy("") is None
+    for code in ('', ' ', '____'):
+        assert get_policy(code) == no_policy  # pylint: disable=comparison-with-callable
     assert get_policy('RD') == random_policy  # pylint: disable=comparison-with-callable
