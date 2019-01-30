@@ -81,8 +81,11 @@ def test_random_policy():
             groups = policy.build_groups(data, max_group_size, member_reserve)
 
             users = {user for user in data}
+            last_size = max_group_size
             for group in groups:
                 assert len(group) <= max_group_size
+                assert len(group) <= last_size
+                last_size = len(group)
                 for member in group:
                     assert member in users
                     users.remove(member)

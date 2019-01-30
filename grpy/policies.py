@@ -79,11 +79,11 @@ class RandomPolicy(Policy):
         users = [user for user in data]
         random.shuffle(users)
         sizes = self.group_sizes(len(users), max_group_size, member_reserve)
-        groups = set()
+        groups = []
         for size in sizes:
-            groups.add(frozenset(users[-size:]))
+            groups.append(frozenset(users[-size:]))
             users = users[:-size]
-        return frozenset(groups)
+        return tuple(groups)
 
 
 POLICIES = {

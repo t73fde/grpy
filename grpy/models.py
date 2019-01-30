@@ -23,7 +23,7 @@
 import datetime
 import enum
 import uuid
-from typing import Dict, FrozenSet, NamedTuple, Optional
+from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple
 
 from .utils import now
 
@@ -138,4 +138,4 @@ class Registration(NamedTuple):
 
 PolicyData = Dict[User, UserPreferences]
 Group = FrozenSet[User]
-Groups = FrozenSet[Group]
+Groups = Tuple[Group, ...]
