@@ -22,6 +22,7 @@
 
 import hashlib
 import os
+from typing import List
 
 from .models import Grouping
 
@@ -39,11 +40,11 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
         sha.update(value.encode('utf-8'))
     if unique:
         sha.update(os.urandom(8))
-    value = int(sha.hexdigest(), 16)
+    num_value = int(sha.hexdigest(), 16)
 
     encoding = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-    result = []
+    result: List[str] = []
     while len(result) < 6:
-        value, rem = divmod(value, len(encoding))
+        num_value, rem = divmod(num_value, len(encoding))
         result.append(encoding[rem])
     return ''.join(result)

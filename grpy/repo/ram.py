@@ -21,7 +21,7 @@
 """In-memory repository, stored in RAM."""
 
 import uuid
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Sequence, TypeVar
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
@@ -34,7 +34,7 @@ class RamRepositoryFactory(RepositoryFactory):
 
     def __init__(self, repository_url: str):
         """Initialize the factory."""
-        self._repository = None
+        self._repository: Optional[RamRepository] = None
         self._url = repository_url
 
     @property
@@ -263,8 +263,11 @@ class WherePredicate:
         return data_value > self.value
 
 
+ModelT = TypeVar('ModelT')
+
+
 def process_where(
-        result: Iterator[Model], where: Optional[WhereSpec]) -> Iterator[Model]:
+        result: Iterator[ModelT], where: Optional[WhereSpec]) -> Iterator[ModelT]:
     """Filter result according to specification."""
     if where:
         for where_spec, where_val in where.items():
@@ -277,11 +280,11 @@ def process_where(
 
 
 def process_order(
-        result: Iterator[Model], order: Optional[OrderSpec]) -> Iterator[Model]:
+        result: Iterator[ModelT], order: Optional[OrderSpec]) -> Sequence[ModelT]:
     """Sort result with respect to order specifications."""
     if not order:
         return result
-    result = list(result)
+    list_result = list(result)
     for order_field in reversed(order):
         if order_field.startswith("-"):
             reverse = True
@@ -291,17 +294,17 @@ def process_order(
             if order_field.startswith("+"):
                 order_field = order_field[1:]
 
-        result.sort(
+        list_result.sort(
             key=lambda obj: getattr(
                 obj, order_field),  # pylint: disable=cell-var-from-loop
             reverse=reverse)
-    return result
+    return list_result
 
 
 def process_where_order(
-        result: Iterator[Model],
+        result: Iterator[ModelT],
         where: Optional[WhereSpec],
-        order: Optional[OrderSpec]) -> Iterator[Grouping]:
+        order: Optional[OrderSpec]) -> Iterator[ModelT]:
     """Process the where and order specification."""
     result = process_where(result, where)
     result = process_order(result, order)
