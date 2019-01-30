@@ -149,10 +149,14 @@ class RepositoryFactory:
     this parsed URL is `str`.
     """
 
+    def __init__(self, repository_url: str):
+        """Initialize the factory with the URL."""
+        self._url = repository_url
+
     @property
     def url(self) -> str:
         """Return the configured URL to access the data store."""
-        raise NotImplementedError("RepositoryFactory.url")
+        return self._url
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""

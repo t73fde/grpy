@@ -23,6 +23,7 @@
 from datetime import timedelta
 
 from .. import utils
+from ..utils import LazyList
 
 
 def test_now() -> None:
@@ -30,3 +31,93 @@ def test_now() -> None:
     tzinfo = utils.now().tzinfo
     assert tzinfo.utcoffset(None) == timedelta(0)
     assert tzinfo.tzname(None) == "UTC"
+
+
+class MockIterator:
+    """An iterator that counts how many its next method is called."""
+
+    def __init__(self, max_count):
+        """The next method can be called max_count."""
+        self.max_count = max_count
+        self.count = 0
+
+    def __iter__(self):
+        """This is an iterable too."""
+        return self
+
+    def __next__(self):
+        """Return the next value."""
+        if self.max_count <= self.count:
+            raise StopIteration
+        self.count += 1
+        return self.count
+
+
+def test_lazy_list_bool():
+    """Test the lazy list as a boolean."""
+    lazy = LazyList([])
+    assert not lazy
+    assert not bool(lazy)
+    assert LazyList([1, 2, 3])
+    assert not LazyList(i for i in [])
+    assert LazyList(i for i in [1])
+    assert not LazyList(())
+    assert LazyList((1,))
+    assert not LazyList(MockIterator(0))
+
+    mock_iterator = MockIterator(1)
+    assert LazyList(mock_iterator)
+    assert mock_iterator.count == 1
+
+    mock_iterator = MockIterator(2)
+    lazy = LazyList(mock_iterator)
+    assert lazy
+    assert bool(lazy)
+    assert mock_iterator.count == 1
+
+
+def test_lazy_list_len():
+    """Calculating the length result in consuming the whole iterator."""
+    assert len(LazyList([])) == 0  # pylint: disable=len-as-condition
+    assert len(LazyList([1, 2, 3])) == 3
+    assert len(LazyList(i for i in [])) == 0  # pylint: disable=len-as-condition
+    assert len(LazyList(i for i in [1])) == 1
+    assert len(LazyList(())) == 0  # pylint: disable=len-as-condition
+    assert len(LazyList((1,))) == 1
+
+    for i in range(10):
+        mock_iterator = MockIterator(i)
+        assert len(LazyList(mock_iterator)) == i
+        assert mock_iterator.count == i
+
+
+def test_lazy_list_iterator():
+    """The lazy list is itself an iterator."""
+    assert list(LazyList([])) == []
+    assert list(LazyList([1, 2, 3])) == [1, 2, 3]
+    assert list(LazyList(i for i in [])) == []
+    assert list(LazyList(i for i in [1])) == [1]
+    assert list(LazyList(())) == []
+    assert list(LazyList((1,))) == [1]
+
+    for i in range(10):
+        mock_iterator = MockIterator(i)
+        assert list(LazyList(mock_iterator)) == list(range(1, i + 1))
+        assert mock_iterator.count == i
+
+
+def test_lazy_list_bool_next():
+    """Test combinations of bool and next function calls."""
+    mock_iterator = MockIterator(7)
+    lazy = LazyList(mock_iterator)
+    assert bool(lazy)
+    assert next(lazy) == 1
+    assert mock_iterator.count == 1
+    assert bool(lazy)
+    assert mock_iterator.count == 2
+    assert next(lazy) == 2
+    assert mock_iterator.count == 2
+    assert bool(lazy)
+    assert mock_iterator.count == 3
+    assert len(lazy) == 5
+    assert mock_iterator.count == 7

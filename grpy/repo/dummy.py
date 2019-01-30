@@ -31,13 +31,8 @@ class DummyRepositoryFactory(RepositoryFactory):
 
     def __init__(self, repository_url: str, reason: Optional[str] = None):
         """Initialize the factory."""
-        self._url = repository_url
+        super().__init__(repository_url)
         self._reason = reason
-
-    @property
-    def url(self) -> str:
-        """Return the configured URL to access the data store."""
-        return self._url
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""

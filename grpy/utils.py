@@ -20,6 +20,7 @@
 
 """Some random utilities."""
 
+import collections
 from datetime import datetime
 
 from pytz import utc
@@ -28,3 +29,43 @@ from pytz import utc
 def now() -> datetime:
     """Return the current UTC time."""
     return datetime.now(tz=utc)
+
+
+class LazyList:
+    """A list-like structure based on an iterator."""
+
+    def __init__(self, iterator):
+        """Initialize lazy list with an iterator."""
+        self._iterator = iter(iterator)
+        self._front = collections.deque()
+
+    def _consume(self) -> bool:
+        """Move one element from iterator to front elements."""
+        try:
+            element = next(self._iterator)
+        except StopIteration:
+            return False
+        self._front.append(element)
+        return True
+
+    def __bool__(self):
+        """Treat it like a boolean."""
+        if self._front:
+            return True
+        return self._consume()
+
+    def __len__(self) -> int:
+        """Return the length of the iterator."""
+        while self._consume():
+            pass
+        return len(self._front)
+
+    def __iter__(self):
+        """Return itself to be an iterable."""
+        return self
+
+    def __next__(self):
+        """Return the next element."""
+        if self._front:
+            return self._front.popleft()
+        return next(self._iterator)

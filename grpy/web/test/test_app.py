@@ -35,8 +35,8 @@ def test_config():
     with app.test_request_context():
         repository = app.get_repository()
         assert repository is app.get_repository()
-        assert not repository.iter_users()
-        assert not repository.iter_groupings()
+        assert not list(repository.iter_users())
+        assert not list(repository.iter_groupings())
     with app.test_request_context():
         repository = app.get_repository()
         g_repo = g.pop('repository', None)
