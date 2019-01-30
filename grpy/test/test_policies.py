@@ -24,20 +24,19 @@ import pytest
 
 from ..models import User, UserPreferences
 from ..policies import (
-    Policy, RandomPolicy, create_policy, get_policies, get_policy_name)
+    get_policy, get_policy_name, get_policy_names, group_sizes, random_policy)
 
 
 def test_group_sizes():
     """Check the different group sizes."""
-    policy = Policy()
     for max_group_size in range(10):
-        assert policy.group_sizes(0, max_group_size, 0) == []
+        assert group_sizes(0, max_group_size, 0) == []
 
     for num_p in range(10):
-        assert policy.group_sizes(num_p, 1, 0) == ([1] * num_p)
+        assert group_sizes(num_p, 1, 0) == ([1] * num_p)
 
     for num_r in range(10):
-        assert policy.group_sizes(0, 1, num_r) == ([0] * num_r)
+        assert group_sizes(0, 1, num_r) == ([0] * num_r)
 
     test_data = (
         (1, 1, 1, [1, 0]),
@@ -58,15 +57,14 @@ def test_group_sizes():
         (80, 5, 10, [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 0]),
     )
     for num_p, size, num_r, result in test_data:
-        assert policy.group_sizes(num_p, size, num_r) == result
+        assert group_sizes(num_p, size, num_r) == result
 
 
 def test_group_sizes_error():
     """Check the different group sizes if error values."""
-    policy = Policy()
     for num_p, num_r in ((1, 0), (0, 1), (3, 1), (-1, 0), (0, -1)):
         with pytest.raises(ValueError):
-            policy.group_sizes(num_p, 0, num_r)
+            group_sizes(num_p, 0, num_r)
 
 
 def test_random_policy():
@@ -75,10 +73,9 @@ def test_random_policy():
     for i in range(20):
         data[User(None, "user-%d" % i)] = UserPreferences()
 
-    policy = RandomPolicy()
     for max_group_size in range(1, 10):
         for member_reserve in range(10):
-            groups = policy.build_groups(data, max_group_size, member_reserve)
+            groups = random_policy(data, max_group_size, member_reserve)
 
             users = {user for user in data}
             last_size = max_group_size
@@ -94,19 +91,18 @@ def test_random_policy():
 
 def test_get_policies():
     """At least there must be the random policy."""
-    policies = get_policies()
+    policies = get_policy_names()
     assert policies[0][1].lower() == "random"
 
 
 def test_get_policy_name():
     """Always get the right name for a policy code."""
-    for code, name in get_policies():
+    for code, name in get_policy_names():
         assert name == get_policy_name(code)
     assert get_policy_name("") == ""
 
 
 def test_create_policy():
     """Test to create a policy object."""
-    assert create_policy("") is None
-    random = create_policy('RD')
-    assert isinstance(random, RandomPolicy)
+    assert get_policy("") is None
+    assert get_policy('RD') == random_policy  # pylint: disable=comparison-with-callable

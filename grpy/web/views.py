@@ -31,7 +31,7 @@ from .utils import (
     value_or_404)
 from .. import logic, utils
 from ..models import Grouping, Registration, UserPreferences
-from ..policies import create_policy, get_policies
+from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
 from ..repo.logic import registration_count, set_grouping_new_code
 
@@ -102,7 +102,7 @@ def grouping_create():
     if not g.user.is_host:
         abort(403)
     form = forms.GroupingForm()
-    form.policy.choices = [('', '')] + get_policies()
+    form.policy.choices = [('', '')] + get_policy_names()
     if form.validate_on_submit():
         grouping = make_model(
             Grouping, form.data, {"code": ".", "host": g.user.key})
@@ -155,7 +155,7 @@ def grouping_update(key):
         form = forms.GroupingForm()
     else:
         form = forms.GroupingForm(obj=grouping)
-    form.policy.choices = get_policies()
+    form.policy.choices = get_policy_names()
     if form.validate_on_submit():
         grouping = update_model(grouping, form.data)
         get_repository().set_grouping(grouping)
@@ -229,9 +229,8 @@ def grouping_start(key):
     form = forms.StartGroupingForm()
     if form.validate_on_submit():
         policy_data = {u: p for (u, p) in user_registrations}
-        policy = create_policy(grouping.policy)
-        groups = policy.build_groups(
-            policy_data, grouping.max_group_size, grouping.member_reserve)
+        policy = get_policy(grouping.policy)
+        groups = policy(policy_data, grouping.max_group_size, grouping.member_reserve)
         print("GROUPS", groups)
     return render_template(
         "grouping_start.html",
