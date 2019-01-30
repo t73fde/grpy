@@ -47,18 +47,18 @@ def home():
     if g.user:
         if g.user.is_host:
             repository = get_repository()
-            groupings = repository.iter_groupings(
+            groupings = list(repository.iter_groupings(
                 where={
                     "host__eq": g.user.key,
                     "close_date__ge": utils.now()},
-                order=["final_date"])
+                order=["final_date"]))
             counts = [registration_count(repository, g) for g in groupings]
             groupings = zip(groupings, counts)
 
-        registrations = get_repository().iter_groupings_by_participant(
+        registrations = utils.LazyList(get_repository().iter_groupings_by_participant(
             g.user.key,
             where={"close_date__ge": utils.now()},
-            order=["final_date"])
+            order=["final_date"]))
     return render_template(
         "home.html", groupings=groupings, registrations=registrations)
 
@@ -219,7 +219,7 @@ def grouping_start(key):
                 grouping.name),
             category="warning")
         return redirect(url_for('home'))
-    user_registrations = list(
+    user_registrations = utils.LazyList(
         get_repository().iter_user_registrations_by_grouping(grouping.key))
     if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),

@@ -21,7 +21,7 @@
 """In-memory repository, stored in RAM."""
 
 import uuid
-from typing import Any, Iterator, Optional, Sequence, TypeVar
+from typing import Any, Iterator, Optional, TypeVar
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
@@ -34,13 +34,8 @@ class RamRepositoryFactory(RepositoryFactory):
 
     def __init__(self, repository_url: str):
         """Initialize the factory."""
+        super().__init__(repository_url)
         self._repository: Optional[RamRepository] = None
-        self._url = repository_url
-
-    @property
-    def url(self) -> str:
-        """Return the configured URL to access the data store."""
-        return self._url
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""
@@ -207,7 +202,7 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some participants."""
         return process_where_order(
-            (UserRegistration(self.get_user(p), r.preferences)
+            (UserRegistration(self._users[p], r.preferences)
                 for (g, p), r in self._registrations.items() if g == grouping),
             where,
             order)
@@ -275,12 +270,12 @@ def process_where(
             where_field = where_spec_split[0]
             where_relop = where_spec_split[1]
             pred = WherePredicate(where_field, where_relop, where_val).pred()
-            result = [elem for elem in result if pred(elem)]
+            result = iter(elem for elem in result if pred(elem))
     return result
 
 
 def process_order(
-        result: Iterator[ModelT], order: Optional[OrderSpec]) -> Sequence[ModelT]:
+        result: Iterator[ModelT], order: Optional[OrderSpec]) -> Iterator[ModelT]:
     """Sort result with respect to order specifications."""
     if not order:
         return result
@@ -298,7 +293,7 @@ def process_order(
             key=lambda obj: getattr(
                 obj, order_field),  # pylint: disable=cell-var-from-loop
             reverse=reverse)
-    return list_result
+    return iter(list_result)
 
 
 def process_where_order(

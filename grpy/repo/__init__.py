@@ -20,6 +20,7 @@
 
 """Database layer for grpy."""
 
+from typing import Dict, Type
 from urllib.parse import urlparse
 
 from .base import RepositoryFactory
@@ -27,7 +28,7 @@ from .dummy import DummyRepositoryFactory
 from .ram import RamRepositoryFactory
 
 
-FACTORY_DIRECTORY = {
+FACTORY_DIRECTORY: Dict[str, Type[RepositoryFactory]] = {
     "ram": RamRepositoryFactory,
 }
 

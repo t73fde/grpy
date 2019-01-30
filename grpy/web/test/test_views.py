@@ -239,7 +239,7 @@ def test_grouping_create(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
 
     groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
-    assert len(groupings) == 1
+    assert len(list(groupings)) == 1
 
     response = client.post(url, data={
         'name': "name", 'begin_date': "1970-01-01 00:00",
@@ -249,7 +249,7 @@ def test_grouping_create(app, client, auth):
     assert response.headers['Location'] == "http://localhost/"
 
     groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
-    assert len(groupings) == 2
+    assert len(list(groupings)) == 2
 
 
 def test_grouping_detail(client, auth, app_grouping: Grouping):

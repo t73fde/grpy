@@ -137,7 +137,7 @@ def setup_users(repository: Repository, count: int) -> List[User]:
 def test_iter_users(repository: Repository) -> None:
     """List all users."""
     all_users = setup_users(repository, 17)
-    iter_users = list(repository.iter_users())
+    iter_users = utils.LazyList(repository.iter_users())
     assert len(iter_users) == len(all_users)
     assert set(iter_users) == set(all_users)
 
@@ -152,10 +152,10 @@ def test_iter_users_where(repository: Repository) -> None:
 
     for field_name in User._fields:
         where = {field_name + "__eq": None}
-        users = list(repository.iter_users(where=where))
-        assert users == []
+        users = utils.LazyList(repository.iter_users(where=where))
+        assert not users
         where = {field_name + "__ne": None}
-        users = list(repository.iter_users(where=where))
+        users = utils.LazyList(repository.iter_users(where=where))
         assert set(users) == set(all_users)
 
     for _ in range(len(all_users)):
@@ -178,8 +178,9 @@ def test_iter_users_where(repository: Repository) -> None:
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        no_users = list(repository.iter_users(where={'key__eq': uuid.uuid4()}))
-        assert no_users == []
+        no_users = utils.LazyList(repository.iter_users(
+            where={'key__eq': uuid.uuid4()}))
+        assert not no_users
 
 
 def test_iter_users_order(repository: Repository) -> None:
@@ -288,7 +289,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
 def test_iter_groupings(repository: Repository) -> None:
     """List all groupings."""
     all_groupings = setup_groupings(repository, 17)
-    iter_groupings = list(repository.iter_groupings())
+    iter_groupings = utils.LazyList(repository.iter_groupings())
     assert len(iter_groupings) == len(all_groupings)
     assert set(iter_groupings) == set(all_groupings)
 
@@ -300,6 +301,11 @@ def test_iter_groupings_where(repository: Repository) -> None:
     non_groupings = list(repository.iter_groupings(where={'close_date__ne': None}))
     assert len(groupings) + len(non_groupings) == len(all_groupings)
     assert set(groupings + non_groupings) == set(all_groupings)
+
+    groupings = list(repository.iter_groupings(where={'close_date__lt': utils.now()}))
+    assert set(groupings) == set(all_groupings)
+    groupings = list(repository.iter_groupings(where={'close_date__le': utils.now()}))
+    assert set(groupings) == set(all_groupings)
 
     for _ in range(len(all_groupings)):
         grouping = random.choice(all_groupings)
@@ -324,9 +330,9 @@ def test_iter_groupings_where(repository: Repository) -> None:
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
-        no_groupings = list(repository.iter_groupings(
+        no_groupings = utils.LazyList(repository.iter_groupings(
             where={'key__eq': uuid.uuid4()}))
-        assert no_groupings == []
+        assert not no_groupings
 
 
 def test_iter_groupings_order(repository: Repository) -> None:
@@ -376,7 +382,7 @@ def test_iter_registrations(repository: Repository):
     for i in range(7):
         repository.set_registration(Registration(
             uuid.UUID(int=i), uuid.UUID(int=100 + i), UserPreferences()))
-        assert len(repository.iter_registrations()) == i + 1
+        assert len(utils.LazyList(repository.iter_registrations())) == i + 1
 
 
 def test_delete_registration(repository: Repository):
@@ -406,7 +412,7 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
         user = repository.set_user(User(None, "user-%d" % i))
         repository.set_registration(Registration(
             uuid.UUID(int=100), user.key, UserPreferences()))
-        assert len(list(repository.iter_user_registrations_by_grouping(
+        assert len(utils.LazyList(repository.iter_user_registrations_by_grouping(
             uuid.UUID(int=100)))) == i + 1
-    assert list(repository.iter_user_registrations_by_grouping(
-        uuid.UUID(int=111))) == []
+    assert not utils.LazyList(repository.iter_user_registrations_by_grouping(
+        uuid.UUID(int=111)))
