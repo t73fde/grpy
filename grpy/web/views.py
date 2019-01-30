@@ -139,9 +139,14 @@ def grouping_detail(key):
         return redirect(url_for('grouping_detail', key=grouping.key))
     can_delete = not user_registrations
     can_start = grouping.can_grouping_start() and user_registrations
+    groups = get_repository().get_groups(grouping.key)
+    group_list = []
+    for group in groups:
+        group_list.append(sorted(member.ident for member in group))
     return render_template(
         "grouping_detail.html",
-        grouping=grouping, user_registrations=user_registrations,
+        grouping=grouping, group_list=group_list,
+        user_registrations=user_registrations,
         can_delete=can_delete, can_start=can_start, form=form)
 
 
@@ -231,7 +236,9 @@ def grouping_start(key):
         policy_data = {u: p for (u, p) in user_registrations}
         policy = get_policy(grouping.policy)
         groups = policy(policy_data, grouping.max_group_size, grouping.member_reserve)
-        print("GROUPS", groups)
+        get_repository().set_groups(grouping.key, groups)
+        return redirect(url_for('grouping_detail', key=grouping.key))
+
     return render_template(
         "grouping_start.html",
         grouping=grouping, registration_count=len(user_registrations), form=form)

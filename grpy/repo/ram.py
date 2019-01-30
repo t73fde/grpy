@@ -212,9 +212,9 @@ class RamRepository(Repository):
         """Set / replace groups builded for grouping."""
         self._groups[grouping] = groups
 
-    def get_groups(self, grouping: KeyType) -> Optional[Groups]:
+    def get_groups(self, grouping: KeyType) -> Groups:
         """Get groups builded for grouping."""
-        return self._groups.get(grouping, None)
+        return self._groups.get(grouping, ())
 
 
 class WherePredicate:

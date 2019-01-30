@@ -143,7 +143,7 @@ class Repository:
         """Set / replace groups builded for grouping."""
         raise NotImplementedError("Repository.set_groups")
 
-    def get_groups(self, grouping: KeyType) -> Optional[Groups]:
+    def get_groups(self, grouping: KeyType) -> Groups:
         """Get groups builded for grouping."""
         raise NotImplementedError("Repository.get_groups")
 

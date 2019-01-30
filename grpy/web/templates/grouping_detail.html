@@ -70,6 +70,17 @@
   <a href="{{ url_for('grouping_start', key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
   {% endif %}
 </div>
+{% if group_list %}
+<div class="w3-panel">
+  <h1>Groups</h1>
+  <table>
+  <tr><td>#</td><td>Member</td></tr>
+  {%- for group in group_list %}
+  <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>
+  {%- endfor %}
+  </table>
+</div>
+{% endif %}
 {% if user_registrations %}
 <div class="w3-panel">
   <h1>Registered users ({{ user_registrations|length }})</h1>

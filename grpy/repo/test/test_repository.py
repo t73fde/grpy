@@ -429,7 +429,7 @@ def test_set_get_groups(repository: Repository, grouping: Grouping):
     """Setting / replacing a group works."""
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None
-    assert repository.get_groups(grouping.key) is None
+    assert repository.get_groups(grouping.key) == ()
 
     users = [repository.set_user(User(None, "user=%03d" % i)) for i in range(20)]
     user_list = list(users)

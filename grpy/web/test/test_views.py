@@ -494,6 +494,18 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping):
     assert "Start" in data
 
 
+def test_grouping_detail_no_group(client, auth, app_grouping: Grouping):
+    """A fresh grouping has no calculated groups."""
+    url = url_for('grouping_detail', key=app_grouping.key)
+    response = client.get(url)
+    auth.login("host")
+    response = client.get(url)
+    assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert "Groups" not in data
+    assert "Member" not in data
+
+
 def test_grouping_build(app, client, auth, app_grouping: Grouping):
     """Test the group building process."""
     assert app_grouping.key is not None
@@ -510,4 +522,11 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping):
         max_group_size=6, member_reserve=5))
     auth.login('host')
     response = client.post(url)
+    assert response.status_code == 302
+    detail_url = url_for('grouping_detail', key=app_grouping.key)
+    assert response.headers['Location'] == "http://localhost" + detail_url
+    response = client.get(detail_url)
     assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert "Groups" in data
+    assert "Member" in data
