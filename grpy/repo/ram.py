@@ -26,7 +26,7 @@ from typing import Any, Iterator, Optional, TypeVar
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserRegistration
-from ..models import Grouping, KeyType, Model, Registration, User
+from ..models import Grouping, Groups, KeyType, Model, Registration, User
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -79,6 +79,7 @@ class RamRepository(Repository):
         self._groupings = {}
         self._groupings_code = {}
         self._registrations = {}
+        self._groups = {}
         self._next_key = 0x10000
 
     def close(self):
@@ -206,6 +207,14 @@ class RamRepository(Repository):
                 for (g, p), r in self._registrations.items() if g == grouping),
             where,
             order)
+
+    def set_groups(self, grouping: KeyType, groups: Groups) -> None:
+        """Set / replace groups builded for grouping."""
+        self._groups[grouping] = groups
+
+    def get_groups(self, grouping: KeyType) -> Optional[Groups]:
+        """Get groups builded for grouping."""
+        return self._groups.get(grouping, None)
 
 
 class WherePredicate:

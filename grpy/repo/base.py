@@ -23,7 +23,7 @@
 from typing import Any, Dict, Iterator, Optional, Sequence
 
 from .models import UserRegistration
-from ..models import Grouping, KeyType, Registration, User
+from ..models import Grouping, Groups, KeyType, Registration, User
 
 
 WhereSpec = Dict[str, Any]
@@ -138,6 +138,14 @@ class Repository:
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some participants."""
         raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
+
+    def set_groups(self, grouping: KeyType, groups: Groups) -> None:
+        """Set / replace groups builded for grouping."""
+        raise NotImplementedError("Repository.set_groups")
+
+    def get_groups(self, grouping: KeyType) -> Optional[Groups]:
+        """Get groups builded for grouping."""
+        raise NotImplementedError("Repository.get_groups")
 
 
 class RepositoryFactory:

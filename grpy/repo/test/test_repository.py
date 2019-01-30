@@ -423,3 +423,23 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
             uuid.UUID(int=100)))) == i + 1
     assert not utils.LazyList(repository.iter_user_registrations_by_grouping(
         uuid.UUID(int=111)))
+
+
+def test_set_get_groups(repository: Repository, grouping: Grouping):
+    """Setting / replacing a group works."""
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
+    assert repository.get_groups(grouping.key) is None
+
+    users = [repository.set_user(User(None, "user=%03d" % i)) for i in range(20)]
+    user_list = list(users)
+    group_list = []
+    while user_list:
+        group_size = random.randint(3, 7)
+        group = frozenset(user_list[-group_size:])
+        group_list.append(group)
+        user_list = user_list[:-group_size]
+    groups = tuple(group_list)
+
+    repository.set_groups(grouping.key, groups)
+    assert repository.get_groups(grouping.key) == groups
