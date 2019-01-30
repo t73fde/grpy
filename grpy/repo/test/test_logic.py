@@ -20,6 +20,7 @@
 
 """Tests for the repository logic."""
 
+import datetime
 import uuid
 from unittest.mock import patch
 
@@ -58,11 +59,14 @@ def test_registration_count(repository: Repository, grouping: Grouping):
     """Test the count calculation for a grouping."""
 
     # An non-existing grouping has no registrations
+    never = datetime.datetime(1970, 1, 1)
     assert registration_count(
         repository,
-        Grouping(None, None, None, None, None, None, None, None, None, None, None)) == 0
+        Grouping(
+            None, "", "", uuid.UUID(int=0), never, never, None, "", -1, -1, "")) == 0
 
     grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     assert registration_count(repository, grouping) == 0
 
     for i in range(10):

@@ -22,7 +22,7 @@
 import datetime
 import random
 import uuid
-from typing import List
+from typing import List, cast
 
 import pytest
 
@@ -65,7 +65,7 @@ def test_insert_user(repository: Repository):
 
 def test_update_user(repository: Repository):
     """Check that updating an existing user works."""
-    user = User(uuid.uuid4(), "user", True)
+    user = User(uuid.uuid4(), "user")
     with pytest.raises(NothingToUpdate):
         repository.set_user(user)
 
@@ -84,17 +84,17 @@ def test_update_user(repository: Repository):
 def test_get_user(repository: Repository):
     """An inserted or updated user can be retrieved."""
     user = repository.set_user(User(None, "user", Permission.HOST))
+    assert user.key is not None
     new_user = repository.get_user(user.key)
     assert new_user == user
 
     newer_user = user._replace(permission=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user(user.key)
+    assert last_user is not None
     assert last_user.is_host != user.is_host
 
-    for key in (None, "", 0, uuid.uuid4()):
-        not_found = repository.get_user(key)
-        assert not_found is None
+    assert repository.get_user(uuid.uuid4()) is None
 
 
 def test_get_user_by_ident(repository: Repository):
@@ -106,9 +106,10 @@ def test_get_user_by_ident(repository: Repository):
     newer_user = user._replace(permission=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user_by_ident(user.ident)
+    assert last_user is not None
     assert last_user.is_host != user.is_host
 
-    for ident in (None, "", "invalid"):
+    for ident in ("", "invalid"):
         not_found = repository.get_user_by_ident(ident)
         assert not_found is None
 
@@ -116,8 +117,9 @@ def test_get_user_by_ident(repository: Repository):
 def test_get_user_by_ident_change(repository: Repository):
     """After a change to an ident, the old name must not be accessible."""
     ident = "user"
-    repository.set_user(User(None, ident, True))
+    repository.set_user(User(None, ident))
     user = repository.get_user_by_ident(ident)
+    assert user is not None
     user = user._replace(ident="resu")
     repository.set_user(user)
     assert repository.get_user_by_ident(ident) is None
@@ -126,11 +128,11 @@ def test_get_user_by_ident_change(repository: Repository):
 def setup_users(repository: Repository, count: int) -> List[User]:
     """Insert some users into repository."""
     result = []
-    is_host = False
+    permission = Permission(0)
     for i in range(count):
-        user = repository.set_user(User(None, "user-%d" % i, is_host))
+        user = repository.set_user(User(None, "user-%d" % i, permission))
         result.append(user)
-        is_host = not is_host
+        permission = Permission(0) if permission else Permission.HOST
     return result
 
 
@@ -152,11 +154,11 @@ def test_iter_users_where(repository: Repository) -> None:
 
     for field_name in User._fields:
         where = {field_name + "__eq": None}
-        users = utils.LazyList(repository.iter_users(where=where))
-        assert not users
+        lazy_users = utils.LazyList(repository.iter_users(where=where))
+        assert not lazy_users
         where = {field_name + "__ne": None}
-        users = utils.LazyList(repository.iter_users(where=where))
-        assert set(users) == set(all_users)
+        lazy_users = utils.LazyList(repository.iter_users(where=where))
+        assert set(lazy_users) == set(all_users)
 
     for _ in range(len(all_users)):
         user = random.choice(all_users)
@@ -230,6 +232,7 @@ def test_update_grouping(repository: Repository, grouping: Grouping):
 def test_get_grouping(repository: Repository, grouping: Grouping):
     """An inserted or updated grouping can be retrieved."""
     grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     new_grouping = repository.get_grouping(grouping.key)
     assert new_grouping == grouping
 
@@ -238,14 +241,13 @@ def test_get_grouping(repository: Repository, grouping: Grouping):
     last_grouping = repository.get_grouping(grouping.key)
     assert last_grouping.name != grouping.name
 
-    for key in (None, "", 0, uuid.uuid4()):
-        not_found = repository.get_grouping(key)
-        assert not_found is None
+    assert repository.get_grouping(uuid.uuid4()) is None
 
 
 def test_get_grouping_by_code(repository: Repository, grouping: Grouping):
     """An inserted or updated grouping can be retrieved by short code."""
     grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     new_grouping = repository.get_grouping_by_code(grouping.code)
     assert new_grouping == grouping
 
@@ -254,7 +256,7 @@ def test_get_grouping_by_code(repository: Repository, grouping: Grouping):
     last_grouping = repository.get_grouping(grouping.key)
     assert last_grouping.name != grouping.name
 
-    for ident in (None, "", "invalid"):
+    for ident in ("", "invalid"):
         not_found = repository.get_user_by_ident(ident)
         assert not_found is None
 
@@ -269,16 +271,19 @@ def test_get_grouping_by_code_after_change(repository: Repository, grouping: Gro
 def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     """Insert some groupings into repository."""
     hosts = [
-        repository.set_user(User(None, "host-1", True)),
-        repository.set_user(User(None, "host-2", True)),
+        repository.set_user(User(None, "host-1", Permission.HOST)),
+        repository.set_user(User(None, "host-2", Permission.HOST)),
     ]
+    for host in hosts:
+        assert host.key is not None
     now = utils.now()
     timedelta = datetime.timedelta
     days = 0
     result = []
     for i in range(count):
         grouping = repository.set_grouping(Grouping(
-            None, "cd%d" % i, "grouping-%d" % i, hosts[days % len(hosts)].key,
+            None, "cd%d" % i, "grouping-%d" % i,
+            cast(uuid.UUID, hosts[days % len(hosts)].key),
             now + timedelta(days=days), now + timedelta(days=days + 7), None,
             "RD", days + 1, 5, "Note %d" % i))
         result.append(grouping)
@@ -399,6 +404,7 @@ def test_delete_registration(repository: Repository):
 def test_iter_groupings_by_participant(repository: Repository, grouping: Grouping):
     """List only applied groupings."""
     grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     for uid in range(5):
         user_key = uuid.UUID(int=uid)
         repository.set_registration(Registration(
@@ -410,6 +416,7 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
     """Iterate over all user data of registrations."""
     for i in range(7):
         user = repository.set_user(User(None, "user-%d" % i))
+        assert user.key is not None
         repository.set_registration(Registration(
             uuid.UUID(int=100), user.key, UserPreferences()))
         assert len(utils.LazyList(repository.iter_user_registrations_by_grouping(

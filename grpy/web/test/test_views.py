@@ -96,6 +96,7 @@ def test_home_user(client, auth):
 
 def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
     """Home view shows registration."""
+    assert app_grouping.key is not None
     auth.login("user")
     user = app.get_repository().get_user_by_ident("user")
     assert user
@@ -273,6 +274,7 @@ def test_grouping_detail(client, auth, app_grouping: Grouping):
 
 def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping):
     """Test removal of registrations."""
+    assert app_grouping.key is not None
     url = url_for('grouping_detail', key=app_grouping.key)
     users = []
     for i in range(12):
@@ -428,6 +430,7 @@ def test_grouping_register_out_of_time(app, client, auth, app_grouping: Grouping
 
 def test_grouping_deregister(app, client, auth, app_grouping: Grouping):
     """Check de-registrations."""
+    assert app_grouping.key is not None
     url = url_for('grouping_register', key=app_grouping.key)
     auth.login('student')
 
@@ -493,6 +496,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping):
 
 def test_grouping_build(app, client, auth, app_grouping: Grouping):
     """Test the group building process."""
+    assert app_grouping.key is not None
     # Create a bunch of users and their registrations
     for i in range(20):
         user = app.get_repository().set_user(User(None, "user_%d" % i))

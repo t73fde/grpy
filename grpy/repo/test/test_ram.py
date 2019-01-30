@@ -30,7 +30,7 @@ def test_url() -> None:
 
 def test_always_same_repository() -> None:
     """The factory will always return the same repository."""
-    factory = RamRepositoryFactory(None)
+    factory = RamRepositoryFactory("")
     repo_1 = factory.create()
     repo_2 = factory.create()
     assert repo_1 == repo_2
@@ -38,9 +38,9 @@ def test_always_same_repository() -> None:
 
 def test_different_factories_different_repositories() -> None:
     """Different factories create different repositories."""
-    factory_1 = RamRepositoryFactory(None)
+    factory_1 = RamRepositoryFactory("")
     repo_1 = factory_1.create()
-    factory_2 = RamRepositoryFactory(None)
+    factory_2 = RamRepositoryFactory("")
     repo_2 = factory_2.create()
     assert repo_1 is not repo_2
     assert repo_1 != repo_2

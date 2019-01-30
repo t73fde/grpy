@@ -30,7 +30,7 @@ def test_url() -> None:
 
 def test_different_repository() -> None:
     """The factory will always return different repositories."""
-    factory = DummyRepositoryFactory(None)
+    factory = DummyRepositoryFactory("")
     repo_1 = factory.create()
     repo_2 = factory.create()
     assert repo_1 is not repo_2

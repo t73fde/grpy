@@ -20,7 +20,8 @@
 
 """Test the utilities module."""
 
-from datetime import timedelta
+from datetime import timedelta, tzinfo
+from typing import cast
 
 from .. import utils
 from ..utils import LazyList
@@ -28,9 +29,9 @@ from ..utils import LazyList
 
 def test_now() -> None:
     """The now functions returns an UTC timestamp."""
-    tzinfo = utils.now().tzinfo
-    assert tzinfo.utcoffset(None) == timedelta(0)
-    assert tzinfo.tzname(None) == "UTC"
+    now_tzinfo = cast(tzinfo, utils.now().tzinfo)
+    assert now_tzinfo.utcoffset(None) == timedelta(0)
+    assert now_tzinfo.tzname(None) == "UTC"
 
 
 class MockIterator:
