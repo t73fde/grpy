@@ -169,4 +169,4 @@ class RepositoryFactory:
 
     def create(self):
         """Create and setup a repository."""
-        raise NotImplementedError("RepositoryFactory.open")
+        raise NotImplementedError("RepositoryFactory.create")
