@@ -27,6 +27,7 @@ from urllib.parse import urlparse
 from .base import (
     OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserRegistration
+from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Registration, User
 
 
@@ -48,18 +49,18 @@ class SqliteRepositoryFactory(RepositoryFactory):
             self._database = None
         else:
             self._database = parsed_url.path
+        self._repository = None
 
     def _connect(self) -> Optional[sqlite3.Connection]:
         """Connect to the database or return None."""
+        database_name = self._database if self._database else ":memory:"
         try:
-            return sqlite3.connect(self._database)
+            return sqlite3.connect(database_name)
         except Exception:  # pylint: disable=broad-except
             return None
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""
-        if self._database is None:
-            return True
         connection = self._connect()
         if connection:
             cursor = connection.cursor()
@@ -70,13 +71,19 @@ class SqliteRepositoryFactory(RepositoryFactory):
 
     def create(self) -> Repository:
         """Create and setup a repository."""
+        if self._database is None:
+            if self._repository is None:
+                self._repository = ProxyRepository(SqliteRepository(self._connect()))
+            return self._repository
+        return SqliteRepository(self._connect())
 
 
 class SqliteRepository(Repository):
     """SQLite-based repository."""
 
-    def __init__(self):
+    def __init__(self, connection):
         """Initialize the repository."""
+        self._connection = connection
 
     def close(self):
         """Close the repository: nothing to do here."""

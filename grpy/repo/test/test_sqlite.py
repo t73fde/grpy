@@ -61,3 +61,29 @@ def test_connect():
     finally:
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)
+
+
+def test_memory_always_same_repository() -> None:
+    """The factory will always return the same repository for in-memory SQLite."""
+    factory = SqliteRepositoryFactory("sqlite:")
+    repo_1 = factory.create()
+    assert repo_1 is not None
+    repo_2 = factory.create()
+    assert repo_2 is not None
+    assert repo_1 == repo_2
+
+
+def test_real_always_other_repository() -> None:
+    """The factory will always return another repository for real SQLite."""
+    temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+    try:
+        temp_file.close()
+        factory = SqliteRepositoryFactory("sqlite://" + temp_file.name)
+        repo_1 = factory.create()
+        assert repo_1 is not None
+        repo_2 = factory.create()
+        assert repo_2 is not None
+        assert repo_1 != repo_2
+    finally:
+        os.unlink(temp_file.name)
+    assert not os.path.exists(temp_file.name)
