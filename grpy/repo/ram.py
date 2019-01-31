@@ -26,6 +26,7 @@ from typing import Any, Iterator, Optional, TypeVar
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserRegistration
+from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Model, Registration, User
 
 
@@ -45,28 +46,7 @@ class RamRepositoryFactory(RepositoryFactory):
         """Create and setup a repository."""
         if not self._repository:
             self._repository = RamRepository()
-        return RamRepositoryProxy(self._repository)
-
-
-class RamRepositoryProxy:
-    """A proxy to a repository that checks create/open and close calls."""
-
-    def __init__(self, repository: Repository):
-        """Set the repository delegate."""
-        self.__delegate = repository
-
-    def close(self):
-        """Close the repository."""
-        self.__delegate.close()
-        self.__delegate = None
-
-    def __getattr__(self, name: str):
-        """Return value of attribute, if is_open."""
-        return getattr(self.__delegate, name)
-
-    def __eq__(self, other):
-        """Return True if both proxies have the same delegate."""
-        return self.__delegate == other.__delegate  # pylint: disable=protected-access
+        return ProxyRepository(self._repository)
 
 
 class RamRepository(Repository):
