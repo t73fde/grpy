@@ -63,14 +63,14 @@ def test_connect():
     assert not os.path.exists(temp_file.name)
 
 
-def test_memory_always_same_repository() -> None:
-    """The factory will always return the same repository for in-memory SQLite."""
+def test_memory_always_other_repository() -> None:
+    """The factory will always return another repository for in-memory SQLite."""
     factory = SqliteRepositoryFactory("sqlite:")
     repo_1 = factory.create()
     assert repo_1 is not None
     repo_2 = factory.create()
     assert repo_2 is not None
-    assert repo_1 == repo_2
+    assert repo_1 != repo_2
 
 
 def test_real_always_other_repository() -> None:

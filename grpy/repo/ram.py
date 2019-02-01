@@ -22,13 +22,32 @@
 
 import random
 import uuid
-from typing import Any, Iterator, Optional, TypeVar
+from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
-from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Model, Registration, User
+
+
+class RamRepositoryState:  # pylint: disable=too-few-public-methods
+    """The actual data stored for a RamRepository."""
+
+    def __init__(self):
+        """Initialize the repository."""
+        self.users: Dict[KeyType, User] = {}
+        self.users_ident: Dict[str, User] = {}
+        self.groupings: Dict[KeyType, Grouping] = {}
+        self.groupings_code: Dict[str, Grouping] = {}
+        self.registrations: Dict[Tuple[KeyType, KeyType], Registration] = {}
+        self.groups: Dict[KeyType, Groups] = {}
+        self._next_key = 0x10000
+
+    def next_uuid(self) -> uuid.UUID:
+        """Return a new UUID."""
+        result = uuid.UUID(int=self._next_key)
+        self._next_key += 1
+        return result
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -38,6 +57,7 @@ class RamRepositoryFactory(RepositoryFactory):
         """Initialize the factory."""
         super().__init__(repository_url)
         self._repository: Optional[RamRepository] = None
+        self._state: Optional[RamRepositoryState] = None
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""
@@ -49,122 +69,112 @@ class RamRepositoryFactory(RepositoryFactory):
 
     def create(self) -> Repository:
         """Create and setup a repository."""
-        if not self._repository:
-            self._repository = RamRepository()
-        return ProxyRepository(self._repository)
+        if not self._state:
+            self._state = RamRepositoryState()
+        return RamRepository(self._state)
 
 
 class RamRepository(Repository):
     """RAM repository."""
 
-    def __init__(self):
+    def __init__(self, state):
         """Initialize the repository."""
-        self._users = {}
-        self._users_ident = {}
-        self._groupings = {}
-        self._groupings_code = {}
-        self._registrations = {}
-        self._groups = {}
-        self._next_key = 0x10000
+        self._state = state
 
     def close(self):
         """Close the repository: nothing to do here."""
-
-    def _uuid(self) -> uuid.UUID:
-        """Return a new UUID."""
-        result = uuid.UUID(int=self._next_key)
-        self._next_key += 1
-        return result
+        self._state = None
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
         user.validate()
         if user.key:
             try:
-                previous_user = self._users[user.key]
+                previous_user = self._state.users[user.key]
             except KeyError:
                 raise NothingToUpdate("Missing user", user.key)
             if previous_user.ident != user.ident:
-                del self._users_ident[previous_user.ident]
+                del self._state.users_ident[previous_user.ident]
         else:
-            user = user._replace(key=self._uuid())
+            user = user._replace(key=self._state.next_uuid())
 
-        other_user = self._users_ident.get(user.ident)
+        other_user = self._state.users_ident.get(user.ident)
         if other_user and user.key != other_user.key:
             raise DuplicateKey("User.ident", user.ident)
-        self._users[user.key] = self._users_ident[user.ident] = user
+        self._state.users[user.key] = self._state.users_ident[user.ident] = user
         return user
 
     def get_user(self, user_key: KeyType) -> Optional[User]:
         """Return user with given key or None."""
-        return self._users.get(user_key, None)
+        return self._state.users.get(user_key, None)
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
-        return self._users_ident.get(ident, None)
+        return self._state.users_ident.get(ident, None)
 
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[User]:
         """Return an iterator of all or some users."""
-        return process_where_order(self._users.values(), where, order)
+        return process_where_order(self._state.users.values(), where, order)
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         grouping.validate()
         if grouping.key:
             try:
-                previous_grouping = self._groupings[grouping.key]
+                previous_grouping = self._state.groupings[grouping.key]
             except KeyError:
                 raise NothingToUpdate("Missing grouping", grouping.key)
             if previous_grouping.code != grouping.code:
-                del self._groupings_code[previous_grouping.code]
+                del self._state.groupings_code[previous_grouping.code]
         else:
-            grouping = grouping._replace(key=self._uuid())
+            grouping = grouping._replace(key=self._state.next_uuid())
 
-        other_grouping = self._groupings_code.get(grouping.code)
+        other_grouping = self._state.groupings_code.get(grouping.code)
         if other_grouping and grouping.key != other_grouping.key:
             raise DuplicateKey("Grouping.code", grouping.code)
 
-        self._groupings[grouping.key] = self._groupings_code[grouping.code] = grouping
+        self._state.groupings[grouping.key] = \
+            self._state.groupings_code[grouping.code] = grouping
         return grouping
 
     def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
         """Return grouping with given key."""
-        return self._groupings.get(grouping_key, None)
+        return self._state.groupings.get(grouping_key, None)
 
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
-        return self._groupings_code.get(code, None)
+        return self._state.groupings_code.get(code, None)
 
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all or some groupings."""
-        return process_where_order(self._groupings.values(), where, order)
+        return process_where_order(self._state.groupings.values(), where, order)
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         registration.validate()
-        self._registrations[(registration.grouping_key, registration.user_key)] = \
-            registration
+        self._state.registrations[
+            (registration.grouping_key, registration.user_key)] = registration
         return registration
 
     def get_registration(
             self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
         """Return registration with given grouping and user."""
-        return self._registrations.get((grouping_key, user_key), None)
+        return self._state.registrations.get((grouping_key, user_key), None)
 
     def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
         """Return number of registration for given grouping."""
-        return len([g for g, _ in self._registrations if g == grouping_key])
+        return len([g for g, _ in self._state.registrations if g == grouping_key])
 
     def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
         """Delete the given registration from the repository."""
         try:
-            del self._registrations[(grouping_key, user_key)]
+            del self._state.registrations[(grouping_key, user_key)]
         except KeyError:
             pass
 
@@ -175,7 +185,8 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         return process_where_order(
-            (self._groupings[g] for g, p in self._registrations if p == user_key),
+            (self._state.groupings[g] for g, p in self._state.registrations
+                if p == user_key),
             where,
             order)
 
@@ -186,18 +197,19 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some user."""
         return process_where_order(
-            (UserRegistration(self._users[p], r.preferences)
-                for (g, p), r in self._registrations.items() if g == grouping_key),
+            (UserRegistration(self._state.users[p], r.preferences)
+                for (g, p), r in self._state.registrations.items()
+                if g == grouping_key),
             where,
             order)
 
     def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
-        self._groups[grouping_key] = groups
+        self._state.groups[grouping_key] = groups
 
     def get_groups(self, grouping_key: KeyType) -> Groups:
         """Get groups builded for grouping."""
-        return self._groups.get(grouping_key, ())
+        return self._state.groups.get(grouping_key, ())
 
     def iter_groups_by_user(
             self,
@@ -206,12 +218,12 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""
         result = []
-        for grouping, groups in self._groups.items():
-            grouping_obj = self._groupings[grouping]
+        for grouping, groups in self._state.groups.items():
+            grouping_obj = self._state.groupings[grouping]
             for group in groups:
                 if user_key in group:
                     named_group = frozenset(
-                        NamedUser(g, self._users[g].ident) for g in group)
+                        NamedUser(g, self._state.users[g].ident) for g in group)
                     result.append(UserGroup(grouping, grouping_obj.name, named_group))
         return process_where_order(iter(result), where, order)
 

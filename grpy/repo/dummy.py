@@ -23,7 +23,7 @@
 from typing import Optional
 
 from .base import Repository, RepositoryFactory
-from .ram import RamRepository
+from .ram import RamRepository, RamRepositoryState
 
 
 class DummyRepositoryFactory(RepositoryFactory):
@@ -44,4 +44,4 @@ class DummyRepositoryFactory(RepositoryFactory):
 
     def create(self) -> Repository:
         """Create a new dummy repository."""
-        return RamRepository()
+        return RamRepository(RamRepositoryState())

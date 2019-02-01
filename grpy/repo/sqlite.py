@@ -27,7 +27,6 @@ from urllib.parse import urlparse
 from .base import (
     OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserGroup, UserRegistration
-from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Registration, User
 
 
@@ -49,7 +48,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
             self._database = None
         else:
             self._database = parsed_url.path
-        self._repository: Optional[Repository] = None
+        self._connection: Optional[sqlite3.Connection] = None
 
     def _connect(self) -> Optional[sqlite3.Connection]:
         """Connect to the database or return None."""
@@ -74,10 +73,12 @@ class SqliteRepositoryFactory(RepositoryFactory):
     def create(self) -> Repository:
         """Create and setup a repository."""
         if self._database is None:
-            if self._repository is None:
-                self._repository = ProxyRepository(SqliteRepository(self._connect()))
-            return self._repository
-        return SqliteRepository(self._connect())
+            if self._connection is None:
+                self._connection = self._connect()
+            connection = self._connection
+        else:
+            connection = self._connect()
+        return SqliteRepository(connection)
 
 
 class SqliteRepository(Repository):
