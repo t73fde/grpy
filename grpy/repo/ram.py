@@ -91,9 +91,9 @@ class RamRepository(Repository):
         self._users[user.key] = self._users_ident[user.ident] = user
         return user
 
-    def get_user(self, key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: KeyType) -> Optional[User]:
         """Return user with given key or None."""
-        return self._users.get(key, None)
+        return self._users.get(user_key, None)
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
@@ -126,11 +126,11 @@ class RamRepository(Repository):
         self._groupings[grouping.key] = self._groupings_code[grouping.code] = grouping
         return grouping
 
-    def get_grouping(self, key: KeyType) -> Grouping:
+    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
         """Return grouping with given key."""
-        return self._groupings.get(key, None)
+        return self._groupings.get(grouping_key, None)
 
-    def get_grouping_by_code(self, code: str) -> Grouping:
+    def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
         return self._groupings_code.get(code, None)
 
@@ -144,67 +144,68 @@ class RamRepository(Repository):
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         registration.validate()
-        self._registrations[(registration.grouping, registration.participant)] = \
+        self._registrations[(registration.grouping_key, registration.user_key)] = \
             registration
         return registration
 
-    def get_registration(self, grouping: KeyType, participant: KeyType) -> Registration:
-        """Return registration with given grouping and participant."""
-        return self._registrations.get((grouping, participant), None)
+    def get_registration(
+            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+        """Return registration with given grouping and user."""
+        return self._registrations.get((grouping_key, user_key), None)
 
-    def count_registrations_by_grouping(self, grouping: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
         """Return number of registration for given grouping."""
-        return len([g for g, _ in self._registrations if g == grouping])
+        return len([g for g, _ in self._registrations if g == grouping_key])
 
-    def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
+    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
         """Delete the given registration from the repository."""
         try:
-            del self._registrations[(grouping, participant)]
+            del self._registrations[(grouping_key, user_key)]
         except KeyError:
             pass
 
-    def iter_groupings_by_participant(
+    def iter_groupings_by_user(
             self,
-            participant: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
-        """Return an iterator of all groupings the participant applied to."""
+        """Return an iterator of all groupings the user applied to."""
         return process_where_order(
-            (self.get_grouping(g) for g, p in self._registrations if p == participant),
+            (self.get_grouping(g) for g, p in self._registrations if p == user_key),
             where,
             order)
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping: KeyType,
+            grouping_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
-        """Return an iterator of user data of some participants."""
+        """Return an iterator of user data of some user."""
         return process_where_order(
             (UserRegistration(self._users[p], r.preferences)
-                for (g, p), r in self._registrations.items() if g == grouping),
+                for (g, p), r in self._registrations.items() if g == grouping_key),
             where,
             order)
 
-    def set_groups(self, grouping: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
-        self._groups[grouping] = groups
+        self._groups[grouping_key] = groups
 
-    def get_groups(self, grouping: KeyType) -> Groups:
+    def get_groups(self, grouping_key: KeyType) -> Groups:
         """Get groups builded for grouping."""
-        return self._groups.get(grouping, ())
+        return self._groups.get(grouping_key, ())
 
     def iter_groups_by_user(
             self,
-            user: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
-        """Return an iterator of group data of some participants."""
+        """Return an iterator of group data of some user."""
         result = []
         for grouping, groups in self._groups.items():
             grouping_obj = self._groupings[grouping]
             for group in groups:
-                if user in group:
+                if user_key in group:
                     named_group = frozenset(
                         NamedUser(g, self._users[g].ident) for g in group)
                     result.append(UserGroup(grouping, grouping_obj.name, named_group))

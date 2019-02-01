@@ -49,7 +49,7 @@ class Repository:
         """Add / update the given user."""
         raise NotImplementedError("Repository.set_user")
 
-    def get_user(self, key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: KeyType) -> Optional[User]:
         """Return user for given primary key."""
         raise NotImplementedError("Repository.get_user")
 
@@ -84,11 +84,11 @@ class Repository:
         """Add / update the given grouping."""
         raise NotImplementedError("Repository.set_grouping")
 
-    def get_grouping(self, key: KeyType) -> Grouping:
+    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
         """Return grouping with given key."""
         raise NotImplementedError("Repository.get_grouping")
 
-    def get_grouping_by_code(self, code: str) -> Grouping:
+    def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
         raise NotImplementedError("Repository.get_grouping_by_code")
 
@@ -108,48 +108,49 @@ class Repository:
         """Add / update a grouping registration."""
         raise NotImplementedError("Repository.add_registration")
 
-    def get_registration(self, grouping: KeyType, participant: KeyType) -> Registration:
-        """Return registration with given grouping and participant."""
+    def get_registration(
+            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+        """Return registration with given grouping and user."""
         raise NotImplementedError("Repository.get_registration")
 
-    def count_registrations_by_grouping(self, grouping: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
         """Return number of registration for given grouping."""
         raise NotImplementedError("Repository.count_registrations_by_grouping")
 
-    def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
+    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
         """Delete the given registration from the repository."""
         raise NotImplementedError("Repository.delete_registration")
 
-    def iter_groupings_by_participant(
+    def iter_groupings_by_user(
             self,
-            participant: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
-        """Return an iterator of all groupings the participant applied to."""
-        raise NotImplementedError("Repository.iter_groupings_by_participant")
+        """Return an iterator of all groupings the user applied to."""
+        raise NotImplementedError("Repository.iter_groupings_by_user")
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping: KeyType,
+            grouping_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
-        """Return an iterator of user data of some participants."""
+        """Return an iterator of user data of some user."""
         raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
 
-    def set_groups(self, grouping: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
         raise NotImplementedError("Repository.set_groups")
 
-    def get_groups(self, grouping: KeyType) -> Groups:
+    def get_groups(self, grouping_key: KeyType) -> Groups:
         """Get groups builded for grouping."""
         raise NotImplementedError("Repository.get_groups")
 
     def iter_groups_by_user(
             self,
-            user: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
-        """Return an iterator of group data of some participants."""
+        """Return an iterator of group data of some user."""
         raise NotImplementedError("Repository.iter_groups_by_user")
 
 

@@ -91,7 +91,7 @@ class SqliteRepository(Repository):
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
 
-    def get_user(self, key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: KeyType) -> Optional[User]:
         """Return user with given key or None."""
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
@@ -106,10 +106,10 @@ class SqliteRepository(Repository):
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
 
-    def get_grouping(self, key: KeyType) -> Grouping:
+    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
         """Return grouping with given key."""
 
-    def get_grouping_by_code(self, code: str) -> Grouping:
+    def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
 
     def iter_groupings(
@@ -121,38 +121,39 @@ class SqliteRepository(Repository):
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
 
-    def get_registration(self, grouping: KeyType, participant: KeyType) -> Registration:
-        """Return registration with given grouping and participant."""
+    def get_registration(
+            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+        """Return registration with given grouping and user."""
 
-    def count_registrations_by_grouping(self, grouping: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
         """Return number of registration for given grouping."""
 
-    def delete_registration(self, grouping: KeyType, participant: KeyType) -> None:
+    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
         """Delete the given registration from the repository."""
 
-    def iter_groupings_by_participant(
+    def iter_groupings_by_user(
             self,
-            participant: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
-        """Return an iterator of all groupings the participant applied to."""
+        """Return an iterator of all groupings the user applied to."""
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping: KeyType,
+            grouping_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
-        """Return an iterator of user data of some participants."""
+        """Return an iterator of user data of some user."""
 
-    def set_groups(self, grouping: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
 
-    def get_groups(self, grouping: KeyType) -> Groups:
+    def get_groups(self, grouping_key: KeyType) -> Groups:
         """Get groups builded for grouping."""
 
     def iter_groups_by_user(
             self,
-            user: KeyType,
+            user_key: KeyType,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
-        """Return an iterator of group data of some participants."""
+        """Return an iterator of group data of some user."""

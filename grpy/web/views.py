@@ -58,22 +58,22 @@ def home():
             repository = get_repository()
             groupings = list(repository.iter_groupings(
                 where={
-                    "host__eq": g.user.key,
+                    "host_key__eq": g.user.key,
                     "close_date__ge": utils.now()},
                 order=["final_date"]))
             counts = [
                 repository.count_registrations_by_grouping(g) for g.key in groupings]
             groupings = zip(groupings, counts)
 
-        registrations = utils.LazyList(get_repository().iter_groupings_by_participant(
+        registrations = utils.LazyList(get_repository().iter_groupings_by_user(
             g.user.key,
             where={"close_date__ge": utils.now()},
             order=["final_date"]))
         group_list = []
         for group in get_repository().iter_groups_by_user(g.user.key):
             group_list.append(UserGroup(
-                group.grouping,
-                group.name,
+                group.grouping_key,
+                group.grouping_name,
                 sorted(m.user_ident for m in group.group)))
     return render_template(
         "home.html",
@@ -122,7 +122,7 @@ def grouping_create():
     form.policy.choices = [('', '')] + get_policy_names()
     if form.validate_on_submit():
         grouping = make_model(
-            Grouping, form.data, {"code": ".", "host": g.user.key})
+            Grouping, form.data, {"code": ".", "host_key": g.user.key})
         set_grouping_new_code(
             get_repository(), grouping._replace(code=logic.make_code(grouping)))
         return redirect(url_for("home"))
@@ -133,7 +133,7 @@ def grouping_create():
 def grouping_detail(key):
     """Show details of a grouping."""
     grouping = value_or_404(get_repository().get_grouping(key))
-    if g.user.key != grouping.host:
+    if g.user.key != grouping.host_key:
         abort(403)
     user_registrations = list(map(
         lambda r: r.user,
@@ -146,11 +146,11 @@ def grouping_detail(key):
         count = 0
         for user in delete_users:
             try:
-                participant = uuid.UUID(user)
+                user_key = uuid.UUID(user)
             except ValueError:
                 continue
-            if participant in user_keys:
-                get_repository().delete_registration(grouping.key, participant)
+            if user_key in user_keys:
+                get_repository().delete_registration(grouping.key, user_key)
                 count += 1
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', key=grouping.key))
@@ -171,7 +171,7 @@ def grouping_detail(key):
 def grouping_update(key):
     """Update an existing grouping."""
     grouping = value_or_404(get_repository().get_grouping(key))
-    if g.user.key != grouping.host:
+    if g.user.key != grouping.host_key:
         abort(403)
     if request.method == 'POST':
         form = forms.GroupingForm()
@@ -189,7 +189,7 @@ def grouping_update(key):
 def shortlink(code: str):
     """Show information for short link."""
     grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
-    if g.user.key == grouping.host:
+    if g.user.key == grouping.host_key:
         return render_template("grouping_code.html", code=grouping.code)
 
     return redirect(url_for('grouping_register', key=grouping.key))
@@ -199,7 +199,7 @@ def shortlink(code: str):
 def grouping_register(key):
     """Register for a grouping."""
     grouping = value_or_404(get_repository().get_grouping(key))
-    if g.user.key == grouping.host:
+    if g.user.key == grouping.host_key:
         abort(403)
     if not grouping.is_registration_open():
         flash("Not within the registration period for '{}'.".format(grouping.name),
@@ -220,7 +220,7 @@ def grouping_register(key):
                       category="info")
         elif registration and form.submit_deregister.data:
             get_repository().delete_registration(
-                registration.grouping, registration.participant)
+                registration.grouping_key, registration.user_key)
             flash("Registration for '{}' is removed.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
@@ -233,7 +233,7 @@ def grouping_register(key):
 def grouping_start(key):
     """Start the grouping process."""
     grouping = value_or_404(get_repository().get_grouping(key))
-    if g.user.key != grouping.host:
+    if g.user.key != grouping.host_key:
         abort(403)
     if not grouping.can_grouping_start():
         flash(

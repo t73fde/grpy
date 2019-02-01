@@ -42,6 +42,6 @@ class NamedUser(NamedTuple):
 class UserGroup(NamedTuple):
     """Group data for a given user."""
 
-    grouping: KeyType  # -> models.Grouping
-    name: str
+    grouping_key: KeyType  # -> models.Grouping
+    grouping_name: str
     group: FrozenSet[NamedUser]

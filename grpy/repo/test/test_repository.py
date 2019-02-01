@@ -204,7 +204,7 @@ def test_insert_grouping(repository: Repository, grouping: Grouping):
     assert new_grouping.key
     assert new_grouping.code == grouping.code
     assert new_grouping.name == grouping.name
-    assert new_grouping.host == grouping.host
+    assert new_grouping.host_key == grouping.host_key
     assert new_grouping.begin_date == grouping.begin_date
     assert new_grouping.final_date == grouping.final_date
     assert new_grouping.close_date == grouping.close_date
@@ -363,7 +363,7 @@ def test_get_registration(repository: Repository):
     registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
     repository.set_registration(registration)
     assert registration == repository.get_registration(
-        registration.grouping, registration.participant)
+        registration.grouping_key, registration.user_key)
 
     class Prefs(UserPreferences):
         """Test-Class to have some other preferences."""
@@ -378,7 +378,7 @@ def test_get_registration(repository: Repository):
     new_registration = registration._replace(preferences=prefs)
     repository.set_registration(new_registration)
     assert repository.get_registration(
-        registration.grouping, registration.participant).preferences == prefs
+        registration.grouping_key, registration.user_key).preferences == prefs
 
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
@@ -410,7 +410,7 @@ def test_delete_registration(repository: Repository):
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=1)) is None
 
 
-def test_iter_groupings_by_participant(repository: Repository, grouping: Grouping):
+def test_iter_groupings_by_user(repository: Repository, grouping: Grouping):
     """List only applied groupings."""
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None
@@ -418,7 +418,7 @@ def test_iter_groupings_by_participant(repository: Repository, grouping: Groupin
         user_key = uuid.UUID(int=uid)
         repository.set_registration(Registration(
             grouping.key, user_key, UserPreferences()))
-        assert grouping == list(repository.iter_groupings_by_participant(user_key))[0]
+        assert grouping == list(repository.iter_groupings_by_user(user_key))[0]
 
 
 def test_iter_user_registrations_by_grouping(repository: Repository):
@@ -471,6 +471,6 @@ def test_iter_groups_by_user(repository: Repository, grouping: Grouping):
         named_user_groups = list(repository.iter_groups_by_user(user.key))
         assert named_user_groups
         for named_user_group in named_user_groups:
-            assert named_user_group.grouping == grouping.key
-            assert named_user_group.name == grouping.name
+            assert named_user_group.grouping_key == grouping.key
+            assert named_user_group.grouping_name == grouping.name
             assert frozenset(user.user_key for user in named_user_group.group) in groups

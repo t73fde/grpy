@@ -68,7 +68,7 @@ class Grouping(NamedTuple):
     key: Optional[KeyType]
     code: str
     name: str
-    host: KeyType  # -> User
+    host_key: KeyType  # -> User
     begin_date: datetime.datetime
     final_date: datetime.datetime
     close_date: Optional[datetime.datetime]
@@ -85,8 +85,8 @@ class Grouping(NamedTuple):
             raise ValidationFailed("Code is empty: {}".format(self))
         if not self.name:
             raise ValidationFailed("Name is empty: {}".format(self))
-        if not isinstance(self.host, uuid.UUID):
-            raise ValidationFailed("Host is not a UUID: {}".format(self.host))
+        if not isinstance(self.host_key, uuid.UUID):
+            raise ValidationFailed("Host is not a UUID: {}".format(self.host_key))
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
                 "Begin date after final date: {} >= {}".format(
@@ -119,18 +119,18 @@ class UserPreferences(NamedTuple):
 class Registration(NamedTuple):
     """Data for an registration for a grouping by a participant."""
 
-    grouping: KeyType  # -> Grouping
-    participant: KeyType  # -> User
+    grouping_key: KeyType  # -> Grouping
+    user_key: KeyType  # -> User
     preferences: UserPreferences
 
     def validate(self) -> None:
         """Check model for consistency."""
-        if not isinstance(self.grouping, uuid.UUID):
+        if not isinstance(self.grouping_key, uuid.UUID):
             raise ValidationFailed(
-                "Grouping is not a UUID: {}".format(self.grouping))
-        if not isinstance(self.participant, uuid.UUID):
+                "Grouping is not a UUID: {}".format(self.grouping_key))
+        if not isinstance(self.user_key, uuid.UUID):
             raise ValidationFailed(
-                "Participant is not a UUID: {}".format(self.participant))
+                "Participant is not a UUID: {}".format(self.user_key))
         if not isinstance(self.preferences, UserPreferences):
             raise ValidationFailed(
                 "Preferences is not a UserPreferences: {}".format(self.preferences))
