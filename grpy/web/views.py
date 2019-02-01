@@ -21,6 +21,7 @@
 """Web views for grpy."""
 
 import uuid
+from typing import NamedTuple, Sequence
 
 from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
@@ -30,7 +31,7 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import Grouping, Registration, UserPreferences
+from ..models import Grouping, KeyType, Registration, UserPreferences
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
@@ -41,9 +42,17 @@ def get_repository() -> Repository:
     return current_app.get_repository()
 
 
+class UserGroup(NamedTuple):
+    """A group for a given user, prepared for view."""
+
+    grouping_key: KeyType  # --> models.grouping
+    grouping_name: str
+    named_group: Sequence[str]
+
+
 def home():
     """Show home page."""
-    groupings = registrations = []
+    groupings = registrations = group_list = []
     if g.user:
         if g.user.is_host:
             repository = get_repository()
@@ -60,8 +69,15 @@ def home():
             g.user.key,
             where={"close_date__ge": utils.now()},
             order=["final_date"]))
+        group_list = []
+        for group in get_repository().iter_groups_by_user(g.user.key):
+            group_list.append(UserGroup(
+                group.grouping,
+                group.name,
+                sorted(m.user_ident for m in group.group)))
     return render_template(
-        "home.html", groupings=groupings, registrations=registrations)
+        "home.html",
+        groupings=groupings, registrations=registrations, group_list=group_list)
 
 
 def about():
@@ -140,9 +156,8 @@ def grouping_detail(key):
         return redirect(url_for('grouping_detail', key=grouping.key))
     can_delete = not user_registrations
     can_start = grouping.can_grouping_start() and user_registrations
-    groups = get_repository().get_groups(grouping.key)
     group_list = []
-    for group in groups:
+    for group in get_repository().get_groups(grouping.key):
         group_list.append(
             sorted(get_repository().get_user(member).ident for member in group))
     return render_template(

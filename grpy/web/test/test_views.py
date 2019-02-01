@@ -510,10 +510,12 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping):
     """Test the group building process."""
     assert app_grouping.key is not None
     # Create a bunch of users and their registrations
+    users = []
     for i in range(20):
         user = app.get_repository().set_user(User(None, "user_%d" % i))
         app.get_repository().set_registration(
             Registration(app_grouping.key, user.key, UserPreferences()))
+        users.append(user)
 
     url = url_for('grouping_start', key=app_grouping.key)
     app.get_repository().set_grouping(app_grouping._replace(
@@ -530,3 +532,13 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping):
     data = response.data.decode('utf-8')
     assert "Groups" in data
     assert "Member" in data
+    for user in users:
+        assert user.ident in data
+
+    home_url = url_for('home')
+    for user in users:
+        auth.login(user.ident)
+        response = client.get(home_url)
+        assert response.status_code == 200
+        data = response.data.decode('utf-8')
+        assert data.count(user.ident) > 1

@@ -73,7 +73,7 @@
 {% if group_list %}
 <div class="w3-panel">
   <h1>Groups</h1>
-  <table>
+  <table class="w3-table w3-bordered">
   <tr><td>#</td><td>Member</td></tr>
   {%- for group in group_list %}
   <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>

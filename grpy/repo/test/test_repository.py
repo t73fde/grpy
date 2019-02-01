@@ -468,9 +468,9 @@ def test_iter_groups_by_user(repository: Repository, grouping: Grouping):
     users, groups = insert_groups(repository, grouping)
     for user in users:
         assert user.key is not None
-        user_groups = list(repository.iter_groups_by_user(user.key))
-        assert user_groups
-        for user_group in user_groups:
-            assert user_group.grouping == grouping.key
-            assert user_group.name == grouping.name
-            assert user_group.group in groups
+        named_user_groups = list(repository.iter_groups_by_user(user.key))
+        assert named_user_groups
+        for named_user_group in named_user_groups:
+            assert named_user_group.grouping == grouping.key
+            assert named_user_group.name == grouping.name
+            assert frozenset(user.user_key for user in named_user_group.group) in groups

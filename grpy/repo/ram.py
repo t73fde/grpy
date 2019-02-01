@@ -26,7 +26,7 @@ from typing import Any, Iterator, Optional, TypeVar
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from .models import UserGroup, UserRegistration
+from .models import NamedUser, UserGroup, UserRegistration
 from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Model, Registration, User
 
@@ -205,7 +205,9 @@ class RamRepository(Repository):
             grouping_obj = self._groupings[grouping]
             for group in groups:
                 if user in group:
-                    result.append(UserGroup(grouping, grouping_obj.name, group))
+                    named_group = frozenset(
+                        NamedUser(g, self._users[g].ident) for g in group)
+                    result.append(UserGroup(grouping, grouping_obj.name, named_group))
         return process_where_order(result, where, order)
 
 

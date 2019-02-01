@@ -20,9 +20,9 @@
 
 """Repository related data models."""
 
-from typing import NamedTuple
+from typing import FrozenSet, NamedTuple
 
-from ..models import Group, KeyType, User, UserPreferences
+from ..models import KeyType, User, UserPreferences
 
 
 class UserRegistration(NamedTuple):
@@ -32,9 +32,16 @@ class UserRegistration(NamedTuple):
     preferences: UserPreferences
 
 
+class NamedUser(NamedTuple):
+    """The identifying data of an user."""
+
+    user_key: KeyType  # -> models.User
+    user_ident: str
+
+
 class UserGroup(NamedTuple):
     """Group data for a given user."""
 
     grouping: KeyType  # -> models.Grouping
     name: str
-    group: Group
+    group: FrozenSet[NamedUser]
