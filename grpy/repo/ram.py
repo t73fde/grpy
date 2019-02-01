@@ -20,6 +20,7 @@
 
 """In-memory repository, stored in RAM."""
 
+import random
 import uuid
 from typing import Any, Iterator, Optional, TypeVar
 
@@ -263,22 +264,23 @@ def process_where(
 def process_order(
         result: Iterator[ModelT], order: Optional[OrderSpec]) -> Iterator[ModelT]:
     """Sort result with respect to order specifications."""
-    if not order:
-        return result
     list_result = list(result)
-    for order_field in reversed(order):
-        if order_field.startswith("-"):
-            reverse = True
-            order_field = order_field[1:]
-        else:
-            reverse = False
-            if order_field.startswith("+"):
+    if order:
+        for order_field in reversed(order):
+            if order_field.startswith("-"):
+                reverse = True
                 order_field = order_field[1:]
+            else:
+                reverse = False
+                if order_field.startswith("+"):
+                    order_field = order_field[1:]
 
-        list_result.sort(
-            key=lambda obj: getattr(
-                obj, order_field),  # pylint: disable=cell-var-from-loop
-            reverse=reverse)
+            list_result.sort(
+                key=lambda obj: getattr(
+                    obj, order_field),  # pylint: disable=cell-var-from-loop
+                reverse=reverse)
+    else:
+        random.shuffle(list_result)
     return iter(list_result)
 
 
