@@ -21,7 +21,8 @@
 """Policies for group forming."""
 
 import random
-from typing import Callable, List, Sequence, Tuple
+import uuid
+from typing import Callable, List, Sequence, Tuple, cast
 
 from .models import Groups, PolicyData
 
@@ -62,7 +63,7 @@ def no_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Gro
     sizes = group_sizes(len(users), max_group_size, member_reserve)
     groups = []
     for size in sizes:
-        groups.append(frozenset(user.key for user in users[-size:]))
+        groups.append(frozenset(cast(uuid.UUID, user.key) for user in users[-size:]))
         users = users[:-size]
     return tuple(groups)
 
@@ -74,7 +75,7 @@ def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) ->
     sizes = group_sizes(len(users), max_group_size, member_reserve)
     groups = []
     for size in sizes:
-        groups.append(frozenset(user.key for user in users[-size:]))
+        groups.append(frozenset(cast(uuid.UUID, user.key) for user in users[-size:]))
         users = users[:-size]
     return tuple(groups)
 

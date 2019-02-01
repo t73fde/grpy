@@ -240,6 +240,7 @@ def test_get_grouping(repository: Repository, grouping: Grouping):
     newer_grouping = grouping._replace(name="new name")
     repository.set_grouping(newer_grouping)
     last_grouping = repository.get_grouping(grouping.key)
+    assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
     assert repository.get_grouping(uuid.uuid4()) is None
@@ -255,6 +256,7 @@ def test_get_grouping_by_code(repository: Repository, grouping: Grouping):
     newer_grouping = grouping._replace(name="new name")
     repository.set_grouping(newer_grouping)
     last_grouping = repository.get_grouping(grouping.key)
+    assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
     for ident in ("", "invalid"):
@@ -377,8 +379,10 @@ def test_get_registration(repository: Repository):
     prefs = Prefs(1)
     new_registration = registration._replace(preferences=prefs)
     repository.set_registration(new_registration)
-    assert repository.get_registration(
-        registration.grouping_key, registration.user_key).preferences == prefs
+    newer_registration = repository.get_registration(
+        registration.grouping_key, registration.user_key)
+    assert newer_registration is not None
+    assert newer_registration.preferences == prefs
 
     assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
 
@@ -442,7 +446,7 @@ def insert_groups(
     group_list = []
     while user_list:
         group_size = random.randint(3, 7)
-        group = frozenset(user.key for user in user_list[-group_size:])
+        group = frozenset(cast(uuid.UUID, user.key) for user in user_list[-group_size:])
         group_list.append(group)
         user_list = user_list[:-group_size]
     groups = tuple(group_list)
@@ -457,6 +461,7 @@ def insert_groups(
 def test_set_get_groups(repository: Repository, grouping: Grouping):
     """Setting / replacing a group works."""
     grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     assert repository.get_groups(grouping.key) == ()
     _, groups = insert_groups(repository, grouping)
     assert repository.get_groups(grouping.key) == groups

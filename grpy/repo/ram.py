@@ -171,7 +171,7 @@ class RamRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         return process_where_order(
-            (self.get_grouping(g) for g, p in self._registrations if p == user_key),
+            (self._groupings[g] for g, p in self._registrations if p == user_key),
             where,
             order)
 
@@ -209,7 +209,7 @@ class RamRepository(Repository):
                     named_group = frozenset(
                         NamedUser(g, self._users[g].ident) for g in group)
                     result.append(UserGroup(grouping, grouping_obj.name, named_group))
-        return process_where_order(result, where, order)
+        return process_where_order(iter(result), where, order)
 
 
 class WherePredicate:
