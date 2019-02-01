@@ -26,7 +26,7 @@ from typing import Any, Iterator, Optional, TypeVar
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from .models import UserRegistration
+from .models import UserGroup, UserRegistration
 from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Model, Registration, User
 
@@ -193,6 +193,23 @@ class RamRepository(Repository):
     def get_groups(self, grouping: KeyType) -> Groups:
         """Get groups builded for grouping."""
         return self._groups.get(grouping, ())
+
+    def iter_groups_by_user(
+            self,
+            user: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+        """Return an iterator of group data of some participants."""
+        user_obj = self._users[user]
+        print("UOBJ", user_obj)
+        result = []
+        for grouping, groups in self._groups.items():
+            grouping_obj = self._groupings[grouping]
+            for group in groups:
+                print("GROU", group)
+                if user_obj in group:
+                    result.append(UserGroup(grouping, grouping_obj.name, group))
+        return process_where_order(result, where, order)
 
 
 class WherePredicate:

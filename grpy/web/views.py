@@ -143,7 +143,8 @@ def grouping_detail(key):
     groups = get_repository().get_groups(grouping.key)
     group_list = []
     for group in groups:
-        group_list.append(sorted(member.ident for member in group))
+        group_list.append(
+            sorted(get_repository().get_user(member).ident for member in group))
     return render_template(
         "grouping_detail.html",
         grouping=grouping, group_list=group_list,

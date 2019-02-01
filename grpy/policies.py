@@ -62,7 +62,7 @@ def no_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Gro
     sizes = group_sizes(len(users), max_group_size, member_reserve)
     groups = []
     for size in sizes:
-        groups.append(frozenset(users[-size:]))
+        groups.append(frozenset(user.key for user in users[-size:]))
         users = users[:-size]
     return tuple(groups)
 
@@ -74,7 +74,7 @@ def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) ->
     sizes = group_sizes(len(users), max_group_size, member_reserve)
     groups = []
     for size in sizes:
-        groups.append(frozenset(users[-size:]))
+        groups.append(frozenset(user.key for user in users[-size:]))
         users = users[:-size]
     return tuple(groups)
 

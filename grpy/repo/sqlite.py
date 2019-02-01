@@ -26,7 +26,7 @@ from urllib.parse import urlparse
 
 from .base import (
     OrderSpec, Repository, RepositoryFactory, WhereSpec)
-from .models import UserRegistration
+from .models import UserGroup, UserRegistration
 from .proxy import ProxyRepository
 from ..models import Grouping, Groups, KeyType, Registration, User
 
@@ -149,3 +149,10 @@ class SqliteRepository(Repository):
 
     def get_groups(self, grouping: KeyType) -> Groups:
         """Get groups builded for grouping."""
+
+    def iter_groups_by_user(
+            self,
+            user: KeyType,
+            where: Optional[WhereSpec] = None,
+            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+        """Return an iterator of group data of some participants."""

@@ -22,7 +22,7 @@
 import datetime
 import random
 import uuid
-from typing import List, cast
+from typing import List, Tuple, cast
 
 import pytest
 
@@ -30,7 +30,8 @@ from .. import create_factory
 from ..base import DuplicateKey, NothingToUpdate, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
-from ...models import Grouping, Permission, Registration, User, UserPreferences
+from ...models import (
+    Grouping, Groups, Permission, Registration, User, UserPreferences)
 
 # pylint: disable=redefined-outer-name
 
@@ -433,21 +434,29 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
         uuid.UUID(int=111)))
 
 
-def test_set_get_groups(repository: Repository, grouping: Grouping):
-    """Setting / replacing a group works."""
-    grouping = repository.set_grouping(grouping)
-    assert grouping.key is not None
-    assert repository.get_groups(grouping.key) == ()
-
+def insert_groups(
+        repository: Repository, grouping: Grouping) -> Tuple[List[User], Groups]:
+    """Create a tuple of result groups for a grouping."""
     users = [repository.set_user(User(None, "user=%03d" % i)) for i in range(20)]
     user_list = list(users)
     group_list = []
     while user_list:
         group_size = random.randint(3, 7)
-        group = frozenset(user_list[-group_size:])
+        group = frozenset(user.key for user in user_list[-group_size:])
         group_list.append(group)
         user_list = user_list[:-group_size]
     groups = tuple(group_list)
 
+    assert grouping.key is not None
     repository.set_groups(grouping.key, groups)
+    assert users
+    assert groups
+    return (users, groups)
+
+
+def test_set_get_groups(repository: Repository, grouping: Grouping):
+    """Setting / replacing a group works."""
+    grouping = repository.set_grouping(grouping)
+    assert repository.get_groups(grouping.key) == ()
+    _, groups = insert_groups(repository, grouping)
     assert repository.get_groups(grouping.key) == groups

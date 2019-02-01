@@ -22,7 +22,7 @@
 
 from typing import NamedTuple
 
-from ..models import User, UserPreferences
+from ..models import Group, KeyType, User, UserPreferences
 
 
 class UserRegistration(NamedTuple):
@@ -30,3 +30,11 @@ class UserRegistration(NamedTuple):
 
     user: User
     preferences: UserPreferences
+
+
+class UserGroup(NamedTuple):
+    """Group data for a given user."""
+
+    grouping: KeyType  # -> models.Grouping
+    name: str
+    group: Group

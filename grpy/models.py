@@ -137,5 +137,5 @@ class Registration(NamedTuple):
 
 
 PolicyData = Dict[User, UserPreferences]
-Group = FrozenSet[User]
+Group = FrozenSet[KeyType]  # -> User
 Groups = Tuple[Group, ...]

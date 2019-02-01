@@ -20,11 +20,12 @@
 
 """Tests for the grouping policies."""
 
+import uuid
 from typing import Set
 
 import pytest
 
-from ..models import Groups, User, UserPreferences
+from ..models import Groups, KeyType, User, UserPreferences
 from ..policies import (
     get_policy, get_policy_name, get_policy_names, group_sizes, no_policy,
     random_policy)
@@ -70,7 +71,7 @@ def test_group_sizes_error():
             group_sizes(num_p, 0, num_r)
 
 
-def assert_members_and_sizes(groups: Groups, users: Set[User], max_group_size: int):
+def assert_members_and_sizes(groups: Groups, users: Set[KeyType], max_group_size: int):
     """Assert that group contains all users and have descending group size."""
     last_size = max_group_size
     for group in groups:
@@ -86,17 +87,20 @@ def assert_members_and_sizes(groups: Groups, users: Set[User], max_group_size: i
 def test_no_policy():
     """The no policy places all users into groups by name."""
     data = {}
+    repository = {}
     for i in range(20):
-        data[User(None, "user-%03d" % i)] = UserPreferences()
+        user = User(uuid.UUID(int=i), "user-%03d" % i)
+        repository[user.key] = user
+        data[user] = UserPreferences()
 
     for max_group_size in range(1, 10):
         for member_reserve in range(10):
             groups = no_policy(data, max_group_size, member_reserve)
-            users = {user for user in data}
+            users = {user.key for user in data}
             assert_members_and_sizes(groups, users, max_group_size)
             last_ident = ""
             for group in groups:
-                idents = [member.ident for member in group]
+                idents = [repository[member].ident for member in group]
                 if idents:
                     assert last_ident < min(idents)
                     last_ident = max(idents)
@@ -108,12 +112,12 @@ def test_random_policy():
     """The random policy places all users into groups."""
     data = {}
     for i in range(20):
-        data[User(None, "user-%d" % i)] = UserPreferences()
+        data[User(uuid.UUID(int=i), "user-%d" % i)] = UserPreferences()
 
     for max_group_size in range(1, 10):
         for member_reserve in range(10):
             groups = random_policy(data, max_group_size, member_reserve)
-            users = {user for user in data}
+            users = {user.key for user in data}
             assert_members_and_sizes(groups, users, max_group_size)
 
 
