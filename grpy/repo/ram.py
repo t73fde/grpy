@@ -200,14 +200,11 @@ class RamRepository(Repository):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some participants."""
-        user_obj = self._users[user]
-        print("UOBJ", user_obj)
         result = []
         for grouping, groups in self._groups.items():
             grouping_obj = self._groupings[grouping]
             for group in groups:
-                print("GROU", group)
-                if user_obj in group:
+                if user in group:
                     result.append(UserGroup(grouping, grouping_obj.name, group))
         return process_where_order(result, where, order)
 

@@ -460,3 +460,17 @@ def test_set_get_groups(repository: Repository, grouping: Grouping):
     assert repository.get_groups(grouping.key) == ()
     _, groups = insert_groups(repository, grouping)
     assert repository.get_groups(grouping.key) == groups
+
+
+def test_iter_groups_by_user(repository: Repository, grouping: Grouping):
+    """Is a user belongs to some groups, return that groups."""
+    grouping = repository.set_grouping(grouping)
+    users, groups = insert_groups(repository, grouping)
+    for user in users:
+        assert user.key is not None
+        user_groups = list(repository.iter_groups_by_user(user.key))
+        assert user_groups
+        for user_group in user_groups:
+            assert user_group.grouping == grouping.key
+            assert user_group.name == grouping.name
+            assert user_group.group in groups
