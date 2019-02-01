@@ -32,14 +32,20 @@ from typing import List, Sequence
 import click
 
 
-def exec_subprocess(args: Sequence[str], verbose: int):
-    """Execute a subprocess with the given args and report error messages."""
+def exec_subprocess_no_report(args: Sequence[str], verbose: int):
+    """Execute a subprocess with the given args."""
     if verbose:
         click.echo("Executing '{}' ...".format(" ".join(args)), nl=False)
     process = subprocess.run(  # nosec
         args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if verbose:
         click.echo(" done.")
+    return process
+
+
+def exec_subprocess(args: Sequence[str], verbose: int):
+    """Execute a subprocess with the given args and report error messages."""
+    process = exec_subprocess_no_report(args, verbose)
     if process.returncode:
         click.echo("!!!\n!!! Error in: " + " ".join(args))
         click.echo("!!!")
@@ -69,7 +75,7 @@ def lint_flake8(source_paths: List[str], verbose: int) -> bool:
     """Run flake8."""
     try:
         from _multiprocessing import SemLock  # noqa: F401 pylint: disable=unused-import
-        flake8_params = []
+        flake8_params: List[str] = []
     except ImportError:
         flake8_params = ["-j", "1"]
 
@@ -88,7 +94,7 @@ def run_coverage(paths: Sequence[str], test_directory: str, verbose: int) -> boo
     covered = match_obj and match_obj[1] == b'100'
     if verbose > 1 or not covered:
         click.echo(process.stdout)
-    return verbose > 2 or covered
+    return verbose > 2 or bool(covered)
 
 
 @click.group()
@@ -98,6 +104,27 @@ def main(ctx, verbose):  # pylint: disable=unused-argument
     """Entry point for all sub-commands."""
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def types(ctx, verbose):
+    """Perform a type analysis."""
+    verbose += ctx.obj['verbose']
+    process = exec_subprocess_no_report(["mypy", "grpy"], verbose)
+    for message in process.stdout.split(b"\n"):
+        match_obj = re.search(rb'^[^0-9]+[0-9]+: ([^:]+): (.+)$', message)
+        if not match_obj:
+            continue
+        msg_level, msg_text = match_obj.groups()
+        if msg_level == b"note":
+            continue
+        if msg_text.startswith(b"No library stub file for module '"):
+            continue
+        if msg_text.startswith(b"Cannot find module named '"):
+            continue
+        click.echo(message)
 
 
 @main.command()
