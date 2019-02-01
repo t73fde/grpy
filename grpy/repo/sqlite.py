@@ -49,7 +49,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
             self._database = None
         else:
             self._database = parsed_url.path
-        self._repository = None
+        self._repository: Optional[Repository] = None
 
     def _connect(self) -> Optional[sqlite3.Connection]:
         """Connect to the database or return None."""
@@ -63,11 +63,13 @@ class SqliteRepositoryFactory(RepositoryFactory):
         """Test the connection to the data source."""
         connection = self._connect()
         if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT name FROM sqlite_master")
+            connection.execute("SELECT name FROM sqlite_master")
             connection.close()
             return True
         return False
+
+    def initialize(self) -> bool:
+        """Initialize the repository, if needed."""
 
     def create(self) -> Repository:
         """Create and setup a repository."""

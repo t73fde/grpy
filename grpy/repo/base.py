@@ -176,6 +176,10 @@ class RepositoryFactory:
         """Test the connection to the data source."""
         raise NotImplementedError("RepositoryFactory.can_connect.")
 
+    def initialize(self) -> bool:
+        """Initialize the repository, if needed."""
+        raise NotImplementedError("RepositoryFactory.initialize.")
+
     def create(self):
         """Create and setup a repository."""
         raise NotImplementedError("RepositoryFactory.create")

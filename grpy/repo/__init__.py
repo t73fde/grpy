@@ -44,4 +44,7 @@ def create_factory(repository_url: str) -> RepositoryFactory:
     while not factory.can_connect():
         factory = DummyRepositoryFactory(
             "dummy:", "Cannot connect to {}".format(factory.url))
+    if not factory.initialize():
+        factory = DummyRepositoryFactory(
+            "dummy:", "Cannot initialize repository {}".format(factory.url))
     return factory

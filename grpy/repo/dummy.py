@@ -38,6 +38,10 @@ class DummyRepositoryFactory(RepositoryFactory):
         """Test the connection to the data source."""
         return True
 
+    def initialize(self) -> bool:
+        """Initialize the repository, if needed."""
+        return True
+
     def create(self) -> Repository:
         """Create a new dummy repository."""
         return RamRepository()

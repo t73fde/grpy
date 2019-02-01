@@ -43,6 +43,10 @@ class RamRepositoryFactory(RepositoryFactory):
         """Test the connection to the data source."""
         return True
 
+    def initialize(self) -> bool:
+        """Initialize the repository, if needed."""
+        return True
+
     def create(self) -> Repository:
         """Create and setup a repository."""
         if not self._repository:

@@ -51,6 +51,15 @@ def test_no_connection(monkeypatch):
     assert factory.url == "dummy:"
 
 
+def test_no_initialize(monkeypatch):
+    """If unable to initialize data store, a dummy factory must be returned."""
+    def return_false(_):
+        return False
+    monkeypatch.setattr(RamRepositoryFactory, "initialize", return_false)
+    factory = create_factory("ram:")
+    assert factory.url == "dummy:"
+
+
 def test_insert_user(repository: Repository):
     """Check that inserting a new user works."""
     user = User(None, "user", Permission.HOST)
