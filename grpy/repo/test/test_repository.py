@@ -31,7 +31,8 @@ from ..base import DuplicateKey, NothingToUpdate, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
 from ...models import (
-    Grouping, Groups, Permission, Registration, User, UserPreferences)
+    Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
+    UserPreferences)
 
 # pylint: disable=redefined-outer-name
 
@@ -75,7 +76,7 @@ def test_insert_user(repository: Repository):
 
 def test_update_user(repository: Repository):
     """Check that updating an existing user works."""
-    user = User(uuid.uuid4(), "user")
+    user = User(cast(UserKey, uuid.uuid4()), "user")
     with pytest.raises(NothingToUpdate):
         repository.set_user(user)
 
@@ -104,7 +105,7 @@ def test_get_user(repository: Repository):
     assert last_user is not None
     assert last_user.is_host != user.is_host
 
-    assert repository.get_user(uuid.uuid4()) is None
+    assert repository.get_user(cast(UserKey, uuid.uuid4())) is None
 
 
 def test_get_user_by_ident(repository: Repository):
@@ -228,7 +229,7 @@ def test_insert_grouping(repository: Repository, grouping: Grouping):
 
 def test_update_grouping(repository: Repository, grouping: Grouping):
     """Check that updating an existing grouping works."""
-    grouping_1 = grouping._replace(key=uuid.uuid4())
+    grouping_1 = grouping._replace(key=cast(GroupingKey, uuid.uuid4()))
     with pytest.raises(NothingToUpdate):
         repository.set_grouping(grouping_1)
 
@@ -252,7 +253,7 @@ def test_get_grouping(repository: Repository, grouping: Grouping):
     assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
-    assert repository.get_grouping(uuid.uuid4()) is None
+    assert repository.get_grouping(cast(GroupingKey, uuid.uuid4())) is None
 
 
 def test_get_grouping_by_code(repository: Repository, grouping: Grouping):
@@ -295,7 +296,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     for i in range(count):
         grouping = repository.set_grouping(Grouping(
             None, "cd%d" % i, "grouping-%d" % i,
-            cast(uuid.UUID, hosts[days % len(hosts)].key),
+            cast(UserKey, hosts[days % len(hosts)].key),
             now + timedelta(days=days), now + timedelta(days=days + 7), None,
             "RD", days + 1, 5, "Note %d" % i))
         result.append(grouping)
@@ -365,13 +366,13 @@ def test_iter_groupings_order(repository: Repository) -> None:
 
 def test_set_registration(repository: Repository):
     """Test add / update of an registration."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
+    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
     assert registration == repository.set_registration(registration)
 
 
 def test_get_registration(repository: Repository):
     """An inserted / updated registration can be retrieved."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
+    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
     repository.set_registration(registration)
     assert registration == repository.get_registration(
         registration.grouping_key, registration.user_key)
@@ -393,14 +394,15 @@ def test_get_registration(repository: Repository):
     assert newer_registration is not None
     assert newer_registration.preferences == prefs
 
-    assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=2)) is None
+    assert repository.get_registration(GroupingKey(int=0), UserKey(int=2)) is None
 
 
 def test_count_registrations_by_grouping(repository: Repository, grouping: Grouping):
     """Test the count calculation for a grouping."""
 
     # An non-existing grouping has no registrations
-    assert repository.count_registrations_by_grouping(uuid.uuid4()) == 0
+    assert repository.count_registrations_by_grouping(
+        cast(GroupingKey, uuid.uuid4())) == 0
 
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None
@@ -408,19 +410,19 @@ def test_count_registrations_by_grouping(repository: Repository, grouping: Group
 
     for i in range(10):
         repository.set_registration(Registration(
-            grouping.key, uuid.UUID(int=i), UserPreferences()))
+            grouping.key, UserKey(int=i), UserPreferences()))
         assert repository.count_registrations_by_grouping(grouping.key) == i + 1
 
 
 def test_delete_registration(repository: Repository):
     """A deleted registration cannot be retrieved."""
-    registration = Registration(uuid.UUID(int=0), uuid.UUID(int=1), UserPreferences())
+    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
     repository.set_registration(registration)
 
-    repository.delete_registration(uuid.UUID(int=0), uuid.UUID(int=1))
-    assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=1)) is None
-    repository.delete_registration(uuid.UUID(int=0), uuid.UUID(int=1))
-    assert repository.get_registration(uuid.UUID(int=0), uuid.UUID(int=1)) is None
+    repository.delete_registration(GroupingKey(int=0), UserKey(int=1))
+    assert repository.get_registration(GroupingKey(int=0), UserKey(int=1)) is None
+    repository.delete_registration(GroupingKey(int=0), UserKey(int=1))
+    assert repository.get_registration(GroupingKey(int=0), UserKey(int=1)) is None
 
 
 def test_iter_groupings_by_user(repository: Repository, grouping: Grouping):
@@ -428,7 +430,7 @@ def test_iter_groupings_by_user(repository: Repository, grouping: Grouping):
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None
     for uid in range(5):
-        user_key = uuid.UUID(int=uid)
+        user_key = UserKey(int=uid)
         repository.set_registration(Registration(
             grouping.key, user_key, UserPreferences()))
         assert grouping == list(repository.iter_groupings_by_user(user_key))[0]
@@ -440,11 +442,11 @@ def test_iter_user_registrations_by_grouping(repository: Repository):
         user = repository.set_user(User(None, "user-%d" % i))
         assert user.key is not None
         repository.set_registration(Registration(
-            uuid.UUID(int=100), user.key, UserPreferences()))
+            GroupingKey(int=100), user.key, UserPreferences()))
         assert len(utils.LazyList(repository.iter_user_registrations_by_grouping(
-            uuid.UUID(int=100)))) == i + 1
+            GroupingKey(int=100)))) == i + 1
     assert not utils.LazyList(repository.iter_user_registrations_by_grouping(
-        uuid.UUID(int=111)))
+        GroupingKey(int=111)))
 
 
 def insert_groups(
@@ -455,7 +457,7 @@ def insert_groups(
     group_list = []
     while user_list:
         group_size = random.randint(3, 7)
-        group = frozenset(cast(uuid.UUID, user.key) for user in user_list[-group_size:])
+        group = frozenset(cast(UserKey, user.key) for user in user_list[-group_size:])
         group_list.append(group)
         user_list = user_list[:-group_size]
     groups = tuple(group_list)

@@ -23,7 +23,7 @@
 from typing import Any, Dict, Iterator, Optional, Sequence
 
 from .models import UserGroup, UserRegistration
-from ..models import Grouping, Groups, KeyType, Registration, User
+from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
 
 
 WhereSpec = Dict[str, Any]
@@ -49,7 +49,7 @@ class Repository:
         """Add / update the given user."""
         raise NotImplementedError("Repository.set_user")
 
-    def get_user(self, user_key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user for given primary key."""
         raise NotImplementedError("Repository.get_user")
 
@@ -84,7 +84,7 @@ class Repository:
         """Add / update the given grouping."""
         raise NotImplementedError("Repository.set_grouping")
 
-    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
+    def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""
         raise NotImplementedError("Repository.get_grouping")
 
@@ -109,21 +109,22 @@ class Repository:
         raise NotImplementedError("Repository.add_registration")
 
     def get_registration(
-            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+            self,
+            grouping_key: GroupingKey, user_key: UserKey) -> Optional[Registration]:
         """Return registration with given grouping and user."""
         raise NotImplementedError("Repository.get_registration")
 
-    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: GroupingKey) -> int:
         """Return number of registration for given grouping."""
         raise NotImplementedError("Repository.count_registrations_by_grouping")
 
-    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
+    def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
         raise NotImplementedError("Repository.delete_registration")
 
     def iter_groupings_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the user applied to."""
@@ -131,23 +132,23 @@ class Repository:
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping_key: KeyType,
+            grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some user."""
         raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
 
-    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
         raise NotImplementedError("Repository.set_groups")
 
-    def get_groups(self, grouping_key: KeyType) -> Groups:
+    def get_groups(self, grouping_key: GroupingKey) -> Groups:
         """Get groups builded for grouping."""
         raise NotImplementedError("Repository.get_groups")
 
     def iter_groups_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""

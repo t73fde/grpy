@@ -22,7 +22,7 @@
 
 from typing import FrozenSet, NamedTuple
 
-from ..models import KeyType, User, UserPreferences
+from ..models import GroupingKey, User, UserKey, UserPreferences
 
 
 class UserRegistration(NamedTuple):
@@ -35,13 +35,13 @@ class UserRegistration(NamedTuple):
 class NamedUser(NamedTuple):
     """The identifying data of an user."""
 
-    user_key: KeyType  # -> models.User
+    user_key: UserKey
     user_ident: str
 
 
 class UserGroup(NamedTuple):
     """Group data for a given user."""
 
-    grouping_key: KeyType  # -> models.Grouping
+    grouping_key: GroupingKey
     grouping_name: str
     group: FrozenSet[NamedUser]

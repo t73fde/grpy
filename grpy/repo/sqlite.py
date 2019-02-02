@@ -22,13 +22,14 @@
 
 import sqlite3
 import uuid
-from typing import Iterator, Optional
+from typing import Iterator, Optional, cast
 from urllib.parse import urlparse
 
 from .base import (
     OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserGroup, UserRegistration
-from ..models import Grouping, Groups, KeyType, Permission, Registration, User
+from ..models import (
+    Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey)
 
 
 class SqliteRepositoryFactory(RepositoryFactory):
@@ -113,13 +114,13 @@ class SqliteRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
-        user_key = uuid.uuid4()
+        user_key = cast(UserKey, uuid.uuid4())
         self._connection.execute(
             "INSERT INTO users VALUES(?,?,?)",
             (str(user_key), user.ident, user.permission.value))
         return user._replace(key=user_key)
 
-    def get_user(self, user_key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
         cursor = self._connection.execute(
             "SELECT ident, permission FROM users WHERE key=?", (str(user_key),))
@@ -138,7 +139,7 @@ class SqliteRepository(Repository):
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
 
-    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
+    def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""
 
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
@@ -154,38 +155,39 @@ class SqliteRepository(Repository):
         """Add / update a grouping registration."""
 
     def get_registration(
-            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+            self,
+            grouping_key: GroupingKey, user_key: UserKey) -> Optional[Registration]:
         """Return registration with given grouping and user."""
 
-    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: GroupingKey) -> int:
         """Return number of registration for given grouping."""
 
-    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
+    def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
 
     def iter_groupings_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the user applied to."""
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping_key: KeyType,
+            grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some user."""
 
-    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
 
-    def get_groups(self, grouping_key: KeyType) -> Groups:
+    def get_groups(self, grouping_key: GroupingKey) -> Groups:
         """Get groups builded for grouping."""
 
     def iter_groups_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""

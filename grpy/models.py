@@ -35,6 +35,10 @@ class ValidationFailed(Exception):
     """Model validation failed."""
 
 
+class UserKey(KeyType):
+    """Key to identify an user."""
+
+
 class Permission(enum.Flag):
     """User permissions."""
 
@@ -44,7 +48,7 @@ class Permission(enum.Flag):
 class User(NamedTuple):
     """User data."""
 
-    key: Optional[KeyType]
+    key: Optional[UserKey]
     ident: str
     permission: Permission = Permission(0)
 
@@ -61,13 +65,17 @@ class User(NamedTuple):
             raise ValidationFailed("Ident is empty: {}".format(self))
 
 
+class GroupingKey(KeyType):
+    """Key to identify a grouping."""
+
+
 class Grouping(NamedTuple):
     """Grouping data."""
 
-    key: Optional[KeyType]
+    key: Optional[GroupingKey]
     code: str
     name: str
-    host_key: KeyType  # -> User
+    host_key: UserKey
     begin_date: datetime.datetime
     final_date: datetime.datetime
     close_date: Optional[datetime.datetime]
@@ -118,8 +126,8 @@ class UserPreferences(NamedTuple):
 class Registration(NamedTuple):
     """Data for an registration for a grouping by a participant."""
 
-    grouping_key: KeyType  # -> Grouping
-    user_key: KeyType  # -> User
+    grouping_key: GroupingKey
+    user_key: UserKey
     preferences: UserPreferences
 
     def validate(self) -> None:
@@ -136,5 +144,5 @@ class Registration(NamedTuple):
 
 
 PolicyData = Dict[User, UserPreferences]
-Group = FrozenSet[KeyType]  # -> User
+Group = FrozenSet[UserKey]
 Groups = Tuple[Group, ...]

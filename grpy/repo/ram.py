@@ -27,7 +27,8 @@ from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
-from ..models import Grouping, Groups, KeyType, NamedTuple, Registration, User
+from ..models import (
+    Grouping, GroupingKey, Groups, NamedTuple, Registration, User, UserKey)
 
 
 class RamRepositoryState:  # pylint: disable=too-few-public-methods
@@ -35,12 +36,12 @@ class RamRepositoryState:  # pylint: disable=too-few-public-methods
 
     def __init__(self):
         """Initialize the repository."""
-        self.users: Dict[KeyType, User] = {}
+        self.users: Dict[UserKey, User] = {}
         self.users_ident: Dict[str, User] = {}
-        self.groupings: Dict[KeyType, Grouping] = {}
+        self.groupings: Dict[GroupingKey, Grouping] = {}
         self.groupings_code: Dict[str, Grouping] = {}
-        self.registrations: Dict[Tuple[KeyType, KeyType], Registration] = {}
-        self.groups: Dict[KeyType, Groups] = {}
+        self.registrations: Dict[Tuple[GroupingKey, UserKey], Registration] = {}
+        self.groups: Dict[GroupingKey, Groups] = {}
         self._next_key = 0x10000
 
     def next_uuid(self) -> uuid.UUID:
@@ -104,7 +105,7 @@ class RamRepository(Repository):
         self._state.users[user.key] = self._state.users_ident[user.ident] = user
         return user
 
-    def get_user(self, user_key: KeyType) -> Optional[User]:
+    def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
         return self._state.users.get(user_key, None)
 
@@ -140,7 +141,7 @@ class RamRepository(Repository):
             self._state.groupings_code[grouping.code] = grouping
         return grouping
 
-    def get_grouping(self, grouping_key: KeyType) -> Optional[Grouping]:
+    def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""
         return self._state.groupings.get(grouping_key, None)
 
@@ -163,15 +164,16 @@ class RamRepository(Repository):
         return registration
 
     def get_registration(
-            self, grouping_key: KeyType, user_key: KeyType) -> Optional[Registration]:
+            self,
+            grouping_key: GroupingKey, user_key: UserKey) -> Optional[Registration]:
         """Return registration with given grouping and user."""
         return self._state.registrations.get((grouping_key, user_key), None)
 
-    def count_registrations_by_grouping(self, grouping_key: KeyType) -> int:
+    def count_registrations_by_grouping(self, grouping_key: GroupingKey) -> int:
         """Return number of registration for given grouping."""
         return len([g for g, _ in self._state.registrations if g == grouping_key])
 
-    def delete_registration(self, grouping_key: KeyType, user_key: KeyType) -> None:
+    def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
         try:
             del self._state.registrations[(grouping_key, user_key)]
@@ -180,7 +182,7 @@ class RamRepository(Repository):
 
     def iter_groupings_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all groupings the user applied to."""
@@ -192,7 +194,7 @@ class RamRepository(Repository):
 
     def iter_user_registrations_by_grouping(
             self,
-            grouping_key: KeyType,
+            grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
         """Return an iterator of user data of some user."""
@@ -203,17 +205,17 @@ class RamRepository(Repository):
             where,
             order)
 
-    def set_groups(self, grouping_key: KeyType, groups: Groups) -> None:
+    def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
         self._state.groups[grouping_key] = groups
 
-    def get_groups(self, grouping_key: KeyType) -> Groups:
+    def get_groups(self, grouping_key: GroupingKey) -> Groups:
         """Get groups builded for grouping."""
         return self._state.groups.get(grouping_key, ())
 
     def iter_groups_by_user(
             self,
-            user_key: KeyType,
+            user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""
