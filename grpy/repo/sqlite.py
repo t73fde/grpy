@@ -32,6 +32,10 @@ from ..models import (
     Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey)
 
 
+sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
+sqlite3.register_converter('UUID', lambda b: uuid.UUID(bytes_le=b))
+
+
 class SqliteRepositoryFactory(RepositoryFactory):
     """Maintain a singleton RAM-based repository."""
 
@@ -58,12 +62,14 @@ class SqliteRepositoryFactory(RepositoryFactory):
         """Connect to the database or return None."""
         if self._database:
             try:
-                return sqlite3.connect(self._database)
+                return sqlite3.connect(
+                    self._database, detect_types=sqlite3.PARSE_DECLTYPES)
             except Exception:  # pylint: disable=broad-except
                 return None
 
         if not self._connection:
-            self._connection = sqlite3.connect(":memory:")
+            self._connection = sqlite3.connect(
+                ":memory:", detect_types=sqlite3.PARSE_DECLTYPES)
         return self._connection
 
     def can_connect(self) -> bool:
@@ -87,7 +93,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
             if "users" not in tables:
                 cursor.execute("""
 CREATE TABLE users(
-    key TEXT PRIMARY KEY,
+    key UUID PRIMARY KEY,
     ident TEXT UNIQUE NOT NULL,
     permission INT)
 """)
@@ -117,15 +123,15 @@ class SqliteRepository(Repository):
         user_key = cast(UserKey, uuid.uuid4())
         self._connection.execute(
             "INSERT INTO users VALUES(?,?,?)",
-            (str(user_key), user.ident, user.permission.value))
+            (user_key, user.ident, user.permission.value))
         return user._replace(key=user_key)
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
         cursor = self._connection.execute(
-            "SELECT ident, permission FROM users WHERE key=?", (str(user_key),))
+            "SELECT key, ident, permission FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
-        return User(user_key, row[0], Permission(row[1]))
+        return User(row[0], row[1], Permission(row[2]))
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
