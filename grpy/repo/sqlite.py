@@ -21,13 +21,14 @@
 """SQLite-based repository."""
 
 import sqlite3
+import uuid
 from typing import Iterator, Optional
 from urllib.parse import urlparse
 
 from .base import (
     OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import UserGroup, UserRegistration
-from ..models import Grouping, Groups, KeyType, Registration, User
+from ..models import Grouping, Groups, KeyType, Permission, Registration, User
 
 
 class SqliteRepositoryFactory(RepositoryFactory):
@@ -75,6 +76,23 @@ class SqliteRepositoryFactory(RepositoryFactory):
 
     def initialize(self) -> bool:
         """Initialize the repository, if needed."""
+        connection = self._connect()
+        if not connection:
+            return False
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+            tables = {row[0] for row in cursor.fetchall()}
+            if "users" not in tables:
+                cursor.execute("""
+CREATE TABLE users(
+    key TEXT PRIMARY KEY,
+    ident TEXT UNIQUE NOT NULL,
+    permission INT)
+""")
+        finally:
+            cursor.close()
+        return True
 
     def create(self) -> Repository:
         """Create and setup a repository."""
@@ -94,9 +112,18 @@ class SqliteMemoryRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
+        user_key = uuid.uuid4()
+        self._connection.execute(
+            "INSERT INTO users VALUES(?,?,?)",
+            (str(user_key), user.ident, user.permission.value))
+        return user._replace(key=user_key)
 
     def get_user(self, user_key: KeyType) -> Optional[User]:
         """Return user with given key or None."""
+        cursor = self._connection.execute(
+            "SELECT ident, permission FROM users WHERE key=?", (str(user_key),))
+        row = cursor.fetchone()
+        return User(user_key, row[0], Permission(row[1]))
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""

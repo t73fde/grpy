@@ -27,6 +27,7 @@ import tempfile
 import pytest
 
 from ..sqlite import SqliteRepositoryFactory
+from ...models import User
 
 
 def test_scheme():
@@ -91,3 +92,25 @@ def test_real_always_other_repository() -> None:
     finally:
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)
+
+
+def test_memory_initialize():
+    """Initialize a memory-based repository."""
+    factory = SqliteRepositoryFactory("sqlite:")
+    assert factory.initialize()
+    assert factory.initialize()  # Doing it twice does not harm
+    repository = factory.create()
+    user = repository.set_user(User(None, "user"))
+    assert user.key is not None
+    assert user.ident == "user"
+    user_2 = repository.get_user(user.key)
+    assert user == user_2
+
+
+def test_memory_no_initialize(monkeypatch):
+    """Test for error in initializing memory-based repositories."""
+    def return_false(_):
+        return False
+    monkeypatch.setattr(SqliteRepositoryFactory, "_connect", return_false)
+    factory = SqliteRepositoryFactory("sqlite:")
+    assert factory.initialize() is False
