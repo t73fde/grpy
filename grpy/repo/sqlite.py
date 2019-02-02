@@ -52,11 +52,15 @@ class SqliteRepositoryFactory(RepositoryFactory):
 
     def _connect(self) -> Optional[sqlite3.Connection]:
         """Connect to the database or return None."""
-        database_name = self._database if self._database else ":memory:"
-        try:
-            return sqlite3.connect(database_name)
-        except Exception:  # pylint: disable=broad-except
-            return None
+        if self._database:
+            try:
+                return sqlite3.connect(self._database)
+            except Exception:  # pylint: disable=broad-except
+                return None
+
+        if not self._connection:
+            self._connection = sqlite3.connect(":memory:")
+        return self._connection
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""
@@ -72,13 +76,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
 
     def create(self) -> Repository:
         """Create and setup a repository."""
-        if self._database is None:
-            if self._connection is None:
-                self._connection = self._connect()
-            connection = self._connection
-        else:
-            connection = self._connect()
-        return SqliteRepository(connection)
+        return SqliteRepository(self._connect())
 
 
 class SqliteRepository(Repository):
