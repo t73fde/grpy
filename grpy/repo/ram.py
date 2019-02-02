@@ -27,7 +27,7 @@ from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
-from ..models import Grouping, Groups, KeyType, Model, Registration, User
+from ..models import Grouping, Groups, KeyType, NamedTuple, Registration, User
 
 
 class RamRepositoryState:  # pylint: disable=too-few-public-methods
@@ -241,36 +241,36 @@ class WherePredicate:
         """Return the appropriate filter predicate."""
         return getattr(self, self.relop + "_pred")
 
-    def eq_pred(self, data: Model) -> bool:
+    def eq_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] == self.value."""
         return getattr(data, self.name) == self.value
 
-    def ne_pred(self, data: Model) -> bool:
+    def ne_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] != self.value."""
         return getattr(data, self.name) != self.value
 
-    def lt_pred(self, data: Model) -> bool:
+    def lt_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] < self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return data_value < self.value
 
-    def le_pred(self, data: Model) -> bool:
+    def le_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] <= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return data_value <= self.value
 
-    def ge_pred(self, data: Model) -> bool:
+    def ge_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] >= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return data_value >= self.value
 
-    def gt_pred(self, data: Model) -> bool:
+    def gt_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] > self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:

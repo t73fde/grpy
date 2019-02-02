@@ -28,7 +28,6 @@ from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple
 from .utils import now
 
 
-Model = NamedTuple
 KeyType = uuid.UUID
 
 
