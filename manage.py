@@ -112,7 +112,9 @@ def main(ctx, verbose):  # pylint: disable=unused-argument
 def types(ctx, verbose):
     """Perform a type analysis."""
     verbose += ctx.obj['verbose']
-    process = exec_subprocess_no_report(["mypy", "grpy"], verbose)
+    process = exec_subprocess_no_report(
+        ["mypy", "--warn-redundant-casts", "--warn-unused-ignores",
+            "--warn-return-any", "grpy"], verbose)
     for message in process.stdout.split(b"\n"):
         match_obj = re.search(rb'^[^0-9]+[0-9]+: ([^:]+): (.+)$', message)
         if not match_obj:
