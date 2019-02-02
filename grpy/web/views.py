@@ -21,7 +21,7 @@
 """Web views for grpy."""
 
 import uuid
-from typing import NamedTuple, Sequence
+from typing import NamedTuple, Sequence, cast
 
 from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
@@ -39,7 +39,7 @@ from ..repo.logic import set_grouping_new_code
 
 def get_repository() -> Repository:
     """Return an open repository, specific for this request."""
-    return current_app.get_repository()
+    return cast(Repository, current_app.get_repository())
 
 
 class UserGroup(NamedTuple):

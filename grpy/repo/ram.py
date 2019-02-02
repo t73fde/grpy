@@ -22,7 +22,7 @@
 
 import random
 import uuid
-from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar, cast
 
 from .base import (
     DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
@@ -80,7 +80,7 @@ class RamRepository(Repository):
 
     def __init__(self, state):
         """Initialize the repository."""
-        self._state = state
+        self._state: RamRepositoryState = state
 
     def close(self):
         """Close the repository: nothing to do here."""
@@ -97,12 +97,13 @@ class RamRepository(Repository):
             if previous_user.ident != user.ident:
                 del self._state.users_ident[previous_user.ident]
         else:
-            user = user._replace(key=self._state.next_uuid())
+            user = user._replace(key=cast(UserKey, self._state.next_uuid()))
 
         other_user = self._state.users_ident.get(user.ident)
         if other_user and user.key != other_user.key:
             raise DuplicateKey("User.ident", user.ident)
-        self._state.users[user.key] = self._state.users_ident[user.ident] = user
+        self._state.users[cast(UserKey, user.key)] = \
+            self._state.users_ident[user.ident] = user
         return user
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
@@ -118,7 +119,7 @@ class RamRepository(Repository):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[User]:
         """Return an iterator of all or some users."""
-        return process_where_order(self._state.users.values(), where, order)
+        return process_where_order(iter(self._state.users.values()), where, order)
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -131,13 +132,13 @@ class RamRepository(Repository):
             if previous_grouping.code != grouping.code:
                 del self._state.groupings_code[previous_grouping.code]
         else:
-            grouping = grouping._replace(key=self._state.next_uuid())
+            grouping = grouping._replace(key=cast(GroupingKey, self._state.next_uuid()))
 
         other_grouping = self._state.groupings_code.get(grouping.code)
         if other_grouping and grouping.key != other_grouping.key:
             raise DuplicateKey("Grouping.code", grouping.code)
 
-        self._state.groupings[grouping.key] = \
+        self._state.groupings[cast(GroupingKey, grouping.key)] = \
             self._state.groupings_code[grouping.code] = grouping
         return grouping
 
@@ -154,7 +155,7 @@ class RamRepository(Repository):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
         """Return an iterator of all or some groupings."""
-        return process_where_order(self._state.groupings.values(), where, order)
+        return process_where_order(iter(self._state.groupings.values()), where, order)
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
@@ -211,7 +212,7 @@ class RamRepository(Repository):
 
     def get_groups(self, grouping_key: GroupingKey) -> Groups:
         """Get groups builded for grouping."""
-        return self._state.groups.get(grouping_key, ())
+        return cast(Groups, self._state.groups.get(grouping_key, ()))
 
     def iter_groups_by_user(
             self,
@@ -245,39 +246,39 @@ class WherePredicate:
 
     def eq_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] == self.value."""
-        return getattr(data, self.name) == self.value
+        return cast(bool, getattr(data, self.name) == self.value)
 
     def ne_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] != self.value."""
-        return getattr(data, self.name) != self.value
+        return cast(bool, getattr(data, self.name) != self.value)
 
     def lt_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] < self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
-        return data_value < self.value
+        return cast(bool, data_value < self.value)
 
     def le_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] <= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
-        return data_value <= self.value
+        return cast(bool, data_value <= self.value)
 
     def ge_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] >= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
-        return data_value >= self.value
+        return cast(bool, data_value >= self.value)
 
     def gt_pred(self, data: NamedTuple) -> bool:
         """Return True if data[self.name] > self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
-        return data_value > self.value
+        return cast(bool, data_value > self.value)
 
 
 ModelT = TypeVar('ModelT')

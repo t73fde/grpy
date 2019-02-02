@@ -21,7 +21,7 @@
 """Web application for grpy."""
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from flask import Flask, g, session
 
@@ -133,7 +133,7 @@ class GrpyApp(Flask):
             if not user:
                 user = repository.set_user(User(None, username))
             self.login(user)
-            return user
+            return cast(User, user)
         return None
 
     def log_debug(self, message: str, *args, **kwargs) -> None:
