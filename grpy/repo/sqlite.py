@@ -45,12 +45,12 @@ class SqliteRepositoryFactory(RepositoryFactory):
             netloc="", params='', query='', fragment='')
         super().__init__(parsed_url.geturl())
 
-        if not parsed_url.path:
+        if parsed_url.path:
+            self._database: Optional[str] = parsed_url.path
+            self._repository_class = SqliteRepository
+        else:
             self._database = None
             self._repository_class = SqliteMemoryRepository
-        else:
-            self._database = parsed_url.path
-            self._repository_class = SqliteRepository
         self._connection: Optional[sqlite3.Connection] = None
 
     def _connect(self) -> Optional[sqlite3.Connection]:
@@ -99,8 +99,8 @@ CREATE TABLE users(
         return self._repository_class(self._connect())
 
 
-class SqliteMemoryRepository(Repository):
-    """SQLite-based and memory-based repository."""
+class SqliteRepository(Repository):
+    """SQLite-based repository."""
 
     def __init__(self, connection):
         """Initialize the repository."""
@@ -108,6 +108,7 @@ class SqliteMemoryRepository(Repository):
 
     def close(self):
         """Close the repository."""
+        self._connection.close()
         self._connection = None
 
     def set_user(self, user: User) -> User:
@@ -190,10 +191,9 @@ class SqliteMemoryRepository(Repository):
         """Return an iterator of group data of some user."""
 
 
-class SqliteRepository(SqliteMemoryRepository):
-    """SQLite-based repository."""
+class SqliteMemoryRepository(SqliteRepository):
+    """SQLite-based and memory-based repository."""
 
     def close(self):
-        """Close the repository."""
-        self._connection.close()
-        super().close()
+        """Close the repository, but do not close the connection."""
+        self._connection = None
