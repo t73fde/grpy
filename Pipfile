@@ -32,7 +32,6 @@ dodgy = "*"
 pytest = "*"
 pytest-flask = "*"
 pytest-testmon = "*"
-pytest-watch = "*"
 pytest-cov = "*"
 
 [packages]
