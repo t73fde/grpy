@@ -19,7 +19,6 @@
 
 """Tests for the business logic."""
 
-import uuid
 from datetime import timedelta
 
 from ..logic import make_code
