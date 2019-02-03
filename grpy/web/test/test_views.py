@@ -21,6 +21,7 @@
 
 import datetime
 import uuid
+from typing import Any, Dict, cast
 
 from flask import g, session, url_for
 from flask.sessions import SecureCookieSessionInterface
@@ -34,17 +35,17 @@ from ...models import Grouping, Registration, User, UserPreferences
 from ...repo.logic import set_grouping_new_code
 
 
-def get_session_data(app, response):
+def get_session_data(app, response) -> Dict[str, Any]:
     """Retrieve the session data from a response."""
     cookie = response.headers.get('Set-Cookie')
     if not cookie:
         return {}
     session_str = parse_cookie(cookie)['session']
     session_serializer = SecureCookieSessionInterface().get_signing_serializer(app)
-    return session_serializer.loads(session_str)
+    return cast(Dict[str, Any], session_serializer.loads(session_str))
 
 
-def test_home_anonymous(client):
+def test_home_anonymous(client) -> None:
     """Test home view as an anonymous user."""
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -57,7 +58,7 @@ def test_home_anonymous(client):
 
 
 @pytest.fixture
-def grouping(app):
+def grouping(app) -> Grouping:
     """Insert a grouping into the repository."""
     now = utils.now()
     host = app.get_repository().get_user_by_ident("host")
@@ -66,7 +67,7 @@ def grouping(app):
         None, "RD", 17, 7, "Notizie"))
 
 
-def test_home_host(client, auth, app_grouping: Grouping):
+def test_home_host(client, auth, app_grouping: Grouping) -> None:
     """Test home view as a host."""
     auth.login("host")
     response = client.get(url_for('home'))
@@ -77,14 +78,14 @@ def test_home_host(client, auth, app_grouping: Grouping):
     assert str(app_grouping.final_date.minute) in data
 
 
-def test_home_host_without_groupings(client, auth):
+def test_home_host_without_groupings(client, auth) -> None:
     """Test home view as a host without groupings."""
     auth.login("host-0")
     response = client.get(url_for('home'))
     assert b'(None)' in response.data
 
 
-def test_home_user(client, auth):
+def test_home_user(client, auth) -> None:
     """Test home view as a participant."""
     auth.login("user")
     response = client.get(url_for('home'))
@@ -93,7 +94,7 @@ def test_home_user(client, auth):
     assert " valid grouping link " in data
 
 
-def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
+def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> None:
     """Home view shows registration."""
     assert app_grouping.key is not None
     auth.login("user")
@@ -120,7 +121,7 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping):
     assert client.get(register_url).status_code == 302
 
 
-def test_about_anonymous(client):
+def test_about_anonymous(client) -> None:
     """Test about view as an anonymous user."""
     response = client.get(url_for('about'))
     data = response.data.decode('utf-8')
@@ -131,7 +132,7 @@ def test_about_anonymous(client):
     assert url_for('logout') not in data
 
 
-def test_login(client):
+def test_login(client) -> None:
     """Test login view."""
     url = url_for('login')
     assert client.get(url).status_code == 200
@@ -141,7 +142,7 @@ def test_login(client):
     assert session['user_identifier'] == "host"
 
 
-def test_login_new_user(app, client):
+def test_login_new_user(app, client) -> None:
     """Test login view for new user."""
     response = client.post(
         url_for('login'), data={'username': "new_user", 'password': "1"})
@@ -151,7 +152,7 @@ def test_login_new_user(app, client):
     assert app.get_repository().get_user_by_ident("new_user")
 
 
-def test_invalid_login(client):
+def test_invalid_login(client) -> None:
     """Test login view for invalid login."""
     url = url_for('login')
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
@@ -160,7 +161,7 @@ def test_invalid_login(client):
     assert 'user_identifier' not in session
 
 
-def test_double_login(client, auth):
+def test_double_login(client, auth) -> None:
     """A double login makes the last user to be logged in."""
     auth.login("user")
     assert session['user_identifier'] == "user"
@@ -169,7 +170,7 @@ def test_double_login(client, auth):
     assert session['user_identifier'] == "host"
 
 
-def test_name_change_after_login(app, client, auth):
+def test_name_change_after_login(app, client, auth) -> None:
     """Username is changed after login."""
     auth.login("host")
     repository = app.get_repository()
@@ -179,7 +180,7 @@ def test_name_change_after_login(app, client, auth):
     assert g.user is None
 
 
-def test_login_with_redirect(app, client):
+def test_login_with_redirect(app, client) -> None:
     """Test login view when redirect after successful login."""
     url = url_for('login', next_url="/ABCDEF/")
     response = client.get(url)
@@ -195,7 +196,7 @@ def test_login_with_redirect(app, client):
     assert app.get_repository().get_user_by_ident("new_user")
 
 
-def test_logout(client, auth):
+def test_logout(client, auth) -> None:
     """Test login/logout sequence."""
     auth.login("host")
     assert session['user_identifier'] == "host"
@@ -205,7 +206,7 @@ def test_logout(client, auth):
     assert 'user_identifier' not in session
 
 
-def test_logout_without_login(client):
+def test_logout_without_login(client) -> None:
     """A logout without previous login is ignored."""
     assert 'user_identifier' not in session
     response = client.get(url_for('logout'))
@@ -214,7 +215,7 @@ def test_logout_without_login(client):
     assert 'user_identifier' not in session
 
 
-def test_grouping_create(app, client, auth):
+def test_grouping_create(app, client, auth) -> None:
     """Test the creation of new groupings."""
     url = url_for('grouping_create')
     assert client.get(url).status_code == 401
@@ -252,7 +253,7 @@ def test_grouping_create(app, client, auth):
     assert len(list(groupings)) == 2
 
 
-def test_grouping_detail(client, auth, app_grouping: Grouping):
+def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     """Test grouping detail view."""
     url = url_for('grouping_detail', key=app_grouping.key)
     response = client.get(url)
@@ -271,7 +272,7 @@ def test_grouping_detail(client, auth, app_grouping: Grouping):
     assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
 
 
-def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping):
+def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> None:
     """Test removal of registrations."""
     assert app_grouping.key is not None
     url = url_for('grouping_detail', key=app_grouping.key)
@@ -303,7 +304,8 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping):
         client.get(url_for('home'))  # Clean flash message
 
 
-def test_grouping_detail_remove_illegal(app, client, auth, app_grouping: Grouping):
+def test_grouping_detail_remove_illegal(
+        app, client, auth, app_grouping: Grouping) -> None:
     """If illegal UUIDs are sent, nothing happens."""
     url = url_for('grouping_detail', key=app_grouping.key)
     auth.login("host")
@@ -316,7 +318,7 @@ def test_grouping_detail_remove_illegal(app, client, auth, app_grouping: Groupin
         client.get(url_for('home'))  # Clean flash message
 
 
-def test_grouping_update(app, client, auth, app_grouping: Grouping):
+def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     """Test the update of an existing grouping."""
     url = url_for('grouping_update', key=app_grouping.key)
     assert client.get(url).status_code == 401
@@ -349,7 +351,7 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping):
     assert groupings[0].key == app_grouping.key
 
 
-def test_shortlink(client, auth, app_grouping: Grouping):
+def test_shortlink(client, auth, app_grouping: Grouping) -> None:
     """Test home view as a host."""
     url = url_for('shortlink', code=app_grouping.code)
     response = client.get(url)
@@ -369,7 +371,7 @@ def test_shortlink(client, auth, app_grouping: Grouping):
         "http://localhost" + url_for('grouping_register', key=app_grouping.key)
 
 
-def test_grouping_register(app, client, auth, app_grouping: Grouping):
+def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
     """Check the grouping registration."""
     url = url_for('grouping_register', key=app_grouping.key)
     assert client.get(url).status_code == 401
@@ -398,7 +400,8 @@ def test_grouping_register(app, client, auth, app_grouping: Grouping):
         [('info', "Registration for '{}' is updated.".format(app_grouping.name))]
 
 
-def test_grouping_register_out_of_time(app, client, auth, app_grouping: Grouping):
+def test_grouping_register_out_of_time(
+        app, client, auth, app_grouping: Grouping) -> None:
     """Check the grouping registration before start date and after final date."""
     url = url_for('grouping_register', key=app_grouping.key)
     auth.login('student')
@@ -427,7 +430,7 @@ def test_grouping_register_out_of_time(app, client, auth, app_grouping: Grouping
             app_grouping.name))]
 
 
-def test_grouping_deregister(app, client, auth, app_grouping: Grouping):
+def test_grouping_deregister(app, client, auth, app_grouping: Grouping) -> None:
     """Check de-registrations."""
     assert app_grouping.key is not None
     url = url_for('grouping_register', key=app_grouping.key)
@@ -449,7 +452,7 @@ def test_grouping_deregister(app, client, auth, app_grouping: Grouping):
         [('info', "Registration for '{}' is removed.".format(app_grouping.name))]
 
 
-def test_grouping_start(app, client, auth, app_grouping: Grouping):
+def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     """Test group building view."""
     url = url_for('grouping_start', key=app_grouping.key)
     assert client.get(url).status_code == 401
@@ -493,7 +496,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping):
     assert "Start" in data
 
 
-def test_grouping_detail_no_group(client, auth, app_grouping: Grouping):
+def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     """A fresh grouping has no calculated groups."""
     url = url_for('grouping_detail', key=app_grouping.key)
     response = client.get(url)
@@ -505,7 +508,7 @@ def test_grouping_detail_no_group(client, auth, app_grouping: Grouping):
     assert "Member" not in data
 
 
-def test_grouping_build(app, client, auth, app_grouping: Grouping):
+def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     """Test the group building process."""
     assert app_grouping.key is not None
     # Create a bunch of users and their registrations

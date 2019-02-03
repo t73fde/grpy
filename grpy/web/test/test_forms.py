@@ -19,21 +19,23 @@
 
 """Test the web forms."""
 
+from typing import Any, Sequence, cast
+
 from ..forms import GroupingForm
 
 
 class FormData(dict):
     """A simple formdata implementation."""
 
-    def getlist(self, key):
+    def getlist(self, key) -> Sequence[Any]:
         """Return value as a list."""
         value = self[key]
         if not isinstance(value, (list, tuple)):
-            value = [value]
-        return value
+            return [value]
+        return cast(Sequence[Any], value)
 
 
-def test_grouping_form(app):  # pylint: disable=unused-argument
+def test_grouping_form(app) -> None:  # pylint: disable=unused-argument
     """Validate some forms."""
     form = GroupingForm()
     form.policy.choices = [('RD', "Random")]

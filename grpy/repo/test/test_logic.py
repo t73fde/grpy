@@ -28,14 +28,15 @@ from ..logic import set_grouping_new_code
 from ...models import Grouping
 
 
-def test_set_grouping_new_code(repository: Repository, grouping: Grouping):
+def test_set_grouping_new_code(repository: Repository, grouping: Grouping) -> None:
     """Test the creation of new short code."""
     grouping_1 = set_grouping_new_code(repository, grouping)
     grouping_2 = set_grouping_new_code(repository, grouping)
     assert grouping_1.code != grouping_2.code
 
 
-def test_set_grouping_new_code_db_error(repository: Repository, grouping: Grouping):
+def test_set_grouping_new_code_db_error(
+        repository: Repository, grouping: Grouping) -> None:
     """Test the creation of new short codes, some repo error occurs."""
     with patch.object(repository, "set_grouping") as func:
         func.side_effect = DuplicateKey("unknown")
@@ -43,7 +44,8 @@ def test_set_grouping_new_code_db_error(repository: Repository, grouping: Groupi
             set_grouping_new_code(repository, grouping)
 
 
-def test_set_grouping_new_code_no_random(repository: Repository, grouping: Grouping):
+def test_set_grouping_new_code_no_random(
+        repository: Repository, grouping: Grouping) -> None:
     """Test the creation of new short codes, if always the same code is made."""
     with patch.object(repository, "set_grouping") as func:
         func.side_effect = DuplicateKey("Grouping.code")

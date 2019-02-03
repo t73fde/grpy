@@ -26,7 +26,7 @@ from flask import g
 from ..app import create_app
 
 
-def test_config():
+def test_config() -> None:
     """Test the testing environment."""
     assert not create_app().testing
     app = create_app(config_mapping={'TESTING': True})
@@ -43,7 +43,7 @@ def test_config():
 
 
 # pylint: disable=protected-access
-def test_env_config(monkeypatch):
+def test_env_config(monkeypatch) -> None:
     """Test overwriting config by environments vars."""
     assert "ram:" in create_app()._repository_factory.url
     monkeypatch.setitem(os.environ, 'REPOSITORY', "invalid")

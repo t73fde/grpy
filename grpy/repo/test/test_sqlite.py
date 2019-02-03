@@ -33,7 +33,7 @@ from ...models import Grouping, Permission, User, UserKey
 from ...utils import now
 
 
-def test_scheme():
+def test_scheme() -> None:
     """Only sqlite: is a valid URL scheme."""
     with pytest.raises(ValueError):
         SqliteRepositoryFactory("ram:")
@@ -46,7 +46,7 @@ def test_url() -> None:
     assert SqliteRepositoryFactory("sqlite:///").url == "sqlite:/"
 
 
-def test_connect():
+def test_connect() -> None:
     """Connecting to an SQLite DB is possible, except for invalid file names."""
     assert SqliteRepositoryFactory("sqlite:").can_connect() is True
     assert SqliteRepositoryFactory("sqlite://./\0").can_connect() is False
@@ -97,7 +97,7 @@ def test_real_always_other_repository() -> None:
     assert not os.path.exists(temp_file.name)
 
 
-def test_memory_initialize():
+def test_memory_initialize() -> None:
     """Initialize a memory-based repository."""
     factory = SqliteRepositoryFactory("sqlite:")
     assert factory.initialize()
@@ -110,7 +110,7 @@ def test_memory_initialize():
     assert user == user_2
 
 
-def test_memory_no_initialize(monkeypatch):
+def test_memory_no_initialize(monkeypatch) -> None:
     """Test for error in initializing memory-based repositories."""
     def return_false(_):
         return False
@@ -144,7 +144,7 @@ def raise_exception(_self, sql: str, _values):
     raise sqlite3.IntegrityError("Unknown")
 
 
-def test_insert_user(monkeypatch):
+def test_insert_user(monkeypatch) -> None:
     """Check that inserting a user can raise an exception."""
     repository = get_repository()
     user_1 = repository.set_user(User(None, "user_1"))
@@ -165,10 +165,11 @@ def make_grouping(code: str, host_key: UserKey) -> Grouping:
         yet + timedelta(days=1), None, "RD", 5, 3, "nOt")
 
 
-def test_set_grouping_exception(monkeypatch):
+def test_set_grouping_exception(monkeypatch) -> None:
     """Check that setting a grouping will raise an exception."""
     repository = get_repository()
     host = repository.set_user(User(None, "host", Permission.HOST))
+    assert host.key is not None
     grouping_1 = repository.set_grouping(make_grouping("code", host.key))
     grouping_2 = repository.set_grouping(make_grouping("abcd", host.key))
 

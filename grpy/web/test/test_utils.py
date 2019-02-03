@@ -27,11 +27,11 @@ from werkzeug.exceptions import NotFound
 
 from ..utils import (
     datetimeformat, login_required, make_model, update_model, value_or_404)
-from ...models import Permission, User
+from ...models import Permission, User, UserKey
 from ...utils import now
 
 
-def test_login_required(app, client, auth):
+def test_login_required(app, client, auth) -> None:
     """If no user is logged in, raise 401."""
     @login_required
     def just_a_view():
@@ -48,31 +48,32 @@ def test_login_required(app, client, auth):
     assert response.data == b"Done"
 
 
-def test_value_or_404():
+def test_value_or_404() -> None:
     """A non-none value will result into value, None values raise 404."""
     for value in ([1, 2, 3], [], "", 0, (1, 2, 3)):
         assert value == value_or_404(value)
 
 
-def test_value_or_404_none():
+def test_value_or_404_none() -> None:
     """A none value will raise 404."""
     with pytest.raises(NotFound):
         value_or_404(None)
 
 
-def test_make_model():
+def test_make_model() -> None:
     """A User model can be created from dict."""
     user = make_model(User, {"ident": "uid"}, {"permission": Permission(0)})
     assert user == User(None, "uid")
 
 
-def test_update_model():
+def test_update_model() -> None:
     """An User model can be updated from dict."""
-    user = update_model(User(1, "uid"), {'ident': "user", 'invalid': 1})
-    assert user == User(1, "user")
+    key = UserKey(int=1)
+    user = update_model(User(key, "uid"), {'ident': "user", 'invalid': 1})
+    assert user == User(key, "user")
 
 
-def test_datetime_format(app):  # pylint: disable=unused-argument
+def test_datetime_format(app) -> None:  # pylint: disable=unused-argument
     """Return a datetime according to given format."""
     assert datetimeformat(None, None, False) is None
     assert datetimeformat("", None, False) == ""

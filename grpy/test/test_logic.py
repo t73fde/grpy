@@ -23,11 +23,11 @@ import uuid
 from datetime import timedelta
 
 from ..logic import make_code
-from ..models import Grouping
+from ..models import Grouping, UserKey
 from ..utils import now
 
 
-def check_code(prev_code, grouping, unique=False):
+def check_code(prev_code, grouping, unique=False) -> None:
     """Check for a valid code."""
     code = make_code(grouping, unique)
     assert code != prev_code
@@ -42,11 +42,11 @@ def check_code(prev_code, grouping, unique=False):
         assert char not in code
 
 
-def test_make_code():
+def test_make_code() -> None:
     """Check the created code for simple properties."""
     yet = now()
     grouping = Grouping(
-        None, ".", "name", uuid.UUID(int=0), yet, yet + timedelta(days=7),
+        None, ".", "name", UserKey(int=0), yet, yet + timedelta(days=7),
         None, "RD", 7, 7, "Note")
     check_code(None, grouping)
     code = make_code(grouping)
