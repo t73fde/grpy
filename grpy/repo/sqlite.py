@@ -38,9 +38,9 @@ from ..models import (
 
 sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
-sqlite3.register_converter('USER_KEY', lambda b: uuid.UUID(bytes_le=b))
+sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))
 sqlite3.register_adapter(GroupingKey, lambda u: u.bytes_le)
-sqlite3.register_converter('GROUPING_KEY', lambda b: uuid.UUID(bytes_le=b))
+sqlite3.register_converter('GROUPING_KEY', lambda b: GroupingKey(bytes_le=b))
 sqlite3.register_adapter(Permission, lambda p: int(p.value))
 sqlite3.register_adapter(
     datetime, lambda d: d.strftime("%Y%m%d-%H%M%S.%f"))
@@ -78,6 +78,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
             try:
                 connection = sqlite3.connect(
                     self._database, detect_types=sqlite3.PARSE_DECLTYPES)
+                connection.execute("PRAGMA foreign_keys = ON")
                 connection.execute("BEGIN TRANSACTION")
                 return connection
             except Exception:  # pylint: disable=broad-except
@@ -86,6 +87,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
         if not self._connection:
             self._connection = sqlite3.connect(
                 ":memory:", detect_types=sqlite3.PARSE_DECLTYPES)
+            self._connection.execute("PRAGMA foreign_keys = ON")
         return self._connection
 
     def can_connect(self) -> bool:
@@ -127,7 +129,8 @@ CREATE TABLE groupings(
     policy TEXT NOT NULL,
     max_group_size INT NOT NULL,
     member_reserve INT NOT NULL,
-    note TEXT NOT NULL)
+    note TEXT NOT NULL,
+    FOREIGN KEY(host_key) REFERENCES users(key))
 """)
             if "registrations" not in tables:
                 cursor.execute("""
@@ -135,14 +138,18 @@ CREATE TABLE registrations(
     grouping_key GROUPING_KEY NOT NULL,
     user_key USER_KEY NOT NULL,
     preferences TEXT NOT NULL,
-    PRIMARY KEY(grouping_key, user_key))
+    PRIMARY KEY(grouping_key, user_key),
+    FOREIGN KEY(grouping_key) REFERENCES groupings(key),
+    FOREIGN KEY(user_key) REFERENCES users(key))
 """)
             if "groups" not in tables:
                 cursor.execute("""
 CREATE TABLE groups(
     grouping_key GROUPING_KEY NOT NULL,
     group_no INT NOT NULL,
-    user_key USER_KEY NOT NULL)
+    user_key USER_KEY NOT NULL,
+    FOREIGN KEY(grouping_key) REFERENCES groupings(key),
+    FOREIGN KEY(user_key) REFERENCES users(key))
 """)
                 cursor.execute("""
 CREATE INDEX idx_groups ON groups(grouping_key)

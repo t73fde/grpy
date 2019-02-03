@@ -375,15 +375,25 @@ def test_iter_groupings_order(repository: Repository) -> None:
     assert groupings == list(reversed(all_groupings))
 
 
-def test_set_registration(repository: Repository) -> None:
+def test_set_registration(repository: Repository, grouping: Grouping) -> None:
     """Test add / update of an registration."""
-    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
+    user = repository.set_user(User(None, "UsER"))
+    assert user.key is not None
+
+    registration = Registration(grouping.key, user.key, UserPreferences())
     assert registration == repository.set_registration(registration)
 
 
-def test_get_registration(repository: Repository) -> None:
+def test_get_registration(repository: Repository, grouping: Grouping) -> None:
     """An inserted / updated registration can be retrieved."""
-    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
+    user = repository.set_user(User(None, "UsER"))
+    assert user.key is not None
+
+    registration = Registration(grouping.key, user.key, UserPreferences())
     repository.set_registration(registration)
     assert registration == repository.get_registration(
         registration.grouping_key, registration.user_key)
@@ -405,7 +415,7 @@ def test_get_registration(repository: Repository) -> None:
     assert newer_registration is not None
     assert newer_registration.preferences == prefs
 
-    assert repository.get_registration(GroupingKey(int=0), UserKey(int=2)) is None
+    assert repository.get_registration(grouping.key, UserKey(int=2)) is None
 
 
 def test_count_registrations_by_grouping(
@@ -421,20 +431,27 @@ def test_count_registrations_by_grouping(
     assert repository.count_registrations_by_grouping(grouping.key) == 0
 
     for i in range(10):
+        user = repository.set_user(User(None, "USeR" + str(i)))
+        assert user.key is not None
         repository.set_registration(Registration(
-            grouping.key, UserKey(int=i), UserPreferences()))
+            grouping.key, user.key, UserPreferences()))
         assert repository.count_registrations_by_grouping(grouping.key) == i + 1
 
 
-def test_delete_registration(repository: Repository) -> None:
+def test_delete_registration(repository: Repository, grouping: Grouping) -> None:
     """A deleted registration cannot be retrieved."""
-    registration = Registration(GroupingKey(int=0), UserKey(int=1), UserPreferences())
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
+    user = repository.set_user(User(None, "UseR"))
+    assert user.key is not None
+
+    registration = Registration(grouping.key, user.key, UserPreferences())
     repository.set_registration(registration)
 
-    repository.delete_registration(GroupingKey(int=0), UserKey(int=1))
-    assert repository.get_registration(GroupingKey(int=0), UserKey(int=1)) is None
-    repository.delete_registration(GroupingKey(int=0), UserKey(int=1))
-    assert repository.get_registration(GroupingKey(int=0), UserKey(int=1)) is None
+    repository.delete_registration(grouping.key, user.key)
+    assert repository.get_registration(grouping.key, user.key) is None
+    repository.delete_registration(grouping.key, user.key)
+    assert repository.get_registration(grouping.key, user.key) is None
 
 
 def test_iter_groupings_by_user(repository: Repository, grouping: Grouping) -> None:
@@ -446,23 +463,27 @@ def test_iter_groupings_by_user(repository: Repository, grouping: Grouping) -> N
     other_grouping = repository.set_grouping(other_grouping)
     assert other_grouping.key != grouping.key
     for uid in range(5):
-        user_key = UserKey(int=uid)
+        user = repository.set_user(User(None, "USER" + str(uid)))
+        assert user.key is not None
         repository.set_registration(Registration(
-            grouping.key, user_key, UserPreferences()))
-        assert [grouping] == list(repository.iter_groupings_by_user(user_key))
+            grouping.key, user.key, UserPreferences()))
+        assert [grouping] == list(repository.iter_groupings_by_user(user.key))
         assert list(repository.iter_groupings_by_user(
-            user_key, where={'name__ne': grouping.name})) == []
+            user.key, where={'name__ne': grouping.name})) == []
 
 
-def test_iter_user_registrations_by_grouping(repository: Repository) -> None:
+def test_iter_user_registrations_by_grouping(
+        repository: Repository, grouping: Grouping) -> None:
     """Iterate over all user data of registrations."""
+    grouping = repository.set_grouping(grouping)
+    assert grouping.key is not None
     for i in range(7):
         user = repository.set_user(User(None, "user-%d" % i))
         assert user.key is not None
         repository.set_registration(Registration(
-            GroupingKey(int=100), user.key, UserPreferences()))
+            grouping.key, user.key, UserPreferences()))
         assert len(utils.LazyList(repository.iter_user_registrations_by_grouping(
-            GroupingKey(int=100)))) == i + 1
+            grouping.key))) == i + 1
     assert not utils.LazyList(repository.iter_user_registrations_by_grouping(
         GroupingKey(int=111)))
 
