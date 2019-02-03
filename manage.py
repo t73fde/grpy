@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 ##
-#    Copyright (c) 2018 Detlef Stern
+#    Copyright (c) 2019 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
