@@ -22,12 +22,16 @@
 
 import os
 import os.path
+import sqlite3
 import tempfile
+from datetime import timedelta
 
 import pytest
 
-from ..sqlite import SqliteRepositoryFactory
-from ...models import User
+from ..base import Repository
+from ..sqlite import SqliteRepository, SqliteRepositoryFactory
+from ...models import Grouping, Permission, User, UserKey
+from ...utils import now
 
 
 def test_scheme():
@@ -114,3 +118,63 @@ def test_memory_no_initialize(monkeypatch):
     monkeypatch.setattr(SqliteRepositoryFactory, "_connect", return_false)
     factory = SqliteRepositoryFactory("sqlite:")
     assert factory.initialize() is False
+
+
+def get_repository() -> Repository:
+    """Create an initialized repository."""
+    factory = SqliteRepositoryFactory("sqlite:")
+    factory.initialize()
+    return factory.create()
+
+
+class MockCursor:
+    """Simple cursor that returns something."""
+
+    def fetchone(self):  # pylint: disable=no-self-use
+        """Return one tuple."""
+        return (1,)
+
+    def close(self):
+        """Close the mock cursor."""
+
+
+def raise_exception(_self, sql: str, _values):
+    """Mock method that substitutes SqliteRepository._execute."""
+    if sql.startswith("SELECT "):
+        return MockCursor()
+    raise sqlite3.IntegrityError("Unknown")
+
+
+def test_insert_user(monkeypatch):
+    """Check that inserting a user can raise an exception."""
+    repository = get_repository()
+    user_1 = repository.set_user(User(None, "user_1"))
+    user_2 = repository.set_user(User(None, "user_2"))
+
+    monkeypatch.setattr(SqliteRepository, "_execute", raise_exception)
+    with pytest.raises(sqlite3.IntegrityError):
+        repository.set_user(User(None, "admin"))
+    with pytest.raises(sqlite3.IntegrityError):
+        repository.set_user(user_2._replace(ident=user_1.ident))
+
+
+def make_grouping(code: str, host_key: UserKey) -> Grouping:
+    """Create a grouping with a specific code for a specific host user."""
+    yet = now()
+    return Grouping(
+        None, code, "grp", host_key, yet - timedelta(days=1),
+        yet + timedelta(days=1), None, "RD", 5, 3, "nOt")
+
+
+def test_set_grouping_exception(monkeypatch):
+    """Check that setting a grouping will raise an exception."""
+    repository = get_repository()
+    host = repository.set_user(User(None, "host", Permission.HOST))
+    grouping_1 = repository.set_grouping(make_grouping("code", host.key))
+    grouping_2 = repository.set_grouping(make_grouping("abcd", host.key))
+
+    monkeypatch.setattr(SqliteRepository, "_execute", raise_exception)
+    with pytest.raises(sqlite3.IntegrityError):
+        repository.set_grouping(make_grouping("xyz", host.key))
+    with pytest.raises(sqlite3.IntegrityError):
+        repository.set_grouping(grouping_2._replace(code=grouping_1.code))

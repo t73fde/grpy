@@ -19,6 +19,8 @@
 
 """Fixtures fpr testing."""
 
+import os
+import tempfile
 from datetime import timedelta
 
 from flask import url_for
@@ -35,17 +37,27 @@ from .web.app import create_app
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture
-def app():
+@pytest.fixture(params=["ram:", "sqlite:", "sqlite:///"])
+def app(request):
     """Create an app as fixture."""
-    grpy_app = create_app({'TESTING': True})
+    if request.param == "sqlite:///":
+        temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+        temp_file.close()
+        repository_url = "sqlite://" + temp_file.name
+    else:
+        repository_url = request.param
+        temp_file = None
+
+    grpy_app = create_app({'TESTING': True, 'REPOSITORY': repository_url})
 
     with grpy_app.test_request_context():
         repository = grpy_app.get_repository()
         repository.set_user(User(None, "host", Permission.HOST))
         repository.set_user(User(None, "host-0", Permission.HOST))
 
-    return grpy_app
+    yield grpy_app
+    if temp_file:
+        os.unlink(temp_file.name)
 
 
 @pytest.fixture
@@ -62,7 +74,7 @@ class AuthenticationActions:
         """Initialize the object."""
         self._client = client
 
-    def login(self, username='test', password='test'):
+    def login(self, username, password='test'):
         """Perform the login."""
         response = self._client.post(
             url_for('login'), data={'username': username, 'password': password})
@@ -79,14 +91,25 @@ def auth(client):
     return AuthenticationActions(client)
 
 
-@pytest.fixture(params=["dummy:", "ram:"])
+@pytest.fixture(params=["dummy:", "ram:", "sqlite:", "sqlite:///"])
 def repository(request):
     """Provide an open repository."""
-    factory = create_factory(request.param)
-    assert factory.url == request.param
+    if request.param == "sqlite:///":
+        temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+        temp_file.close()
+        factory = create_factory("sqlite://" + temp_file.name)
+    else:
+        factory = create_factory(request.param)
+        temp_file = None
+        assert factory.url == request.param
+    factory.initialize()
+
     repo = factory.create()
     yield repo
+
     repo.close()
+    if temp_file:
+        os.unlink(temp_file.name)
 
 
 @pytest.fixture

@@ -62,7 +62,7 @@ def home():
                     "close_date__ge": utils.now()},
                 order=["final_date"]))
             counts = [
-                repository.count_registrations_by_grouping(g) for g.key in groupings]
+                repository.count_registrations_by_grouping(g.key) for g in groupings]
             groupings = zip(groupings, counts)
 
         registrations = utils.LazyList(get_repository().iter_groupings_by_user(

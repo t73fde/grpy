@@ -240,6 +240,15 @@ def test_update_grouping(repository: Repository, grouping: Grouping):
     assert new_grouping == newer_grouping
 
 
+def test_update_grouping_duplicate(repository: Repository, grouping: Grouping):
+    """Updating an existing grouping with duplicate code raises exception."""
+    grouping = repository.set_grouping(grouping)
+    grouping_2 = repository.set_grouping(
+        grouping._replace(key=None, code=grouping.code[::-1]))
+    with pytest.raises(DuplicateKey):
+        repository.set_grouping(grouping_2._replace(code=grouping.code))
+
+
 def test_get_grouping(repository: Repository, grouping: Grouping):
     """An inserted or updated grouping can be retrieved."""
     grouping = repository.set_grouping(grouping)
@@ -427,13 +436,19 @@ def test_delete_registration(repository: Repository):
 
 def test_iter_groupings_by_user(repository: Repository, grouping: Grouping):
     """List only applied groupings."""
+    other_grouping = grouping._replace(code="newcode", name="Another name")
+    assert grouping != other_grouping
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None
+    other_grouping = repository.set_grouping(other_grouping)
+    assert other_grouping.key != grouping.key
     for uid in range(5):
         user_key = UserKey(int=uid)
         repository.set_registration(Registration(
             grouping.key, user_key, UserPreferences()))
-        assert grouping == list(repository.iter_groupings_by_user(user_key))[0]
+        assert [grouping] == list(repository.iter_groupings_by_user(user_key))
+        assert list(repository.iter_groupings_by_user(
+            user_key, where={'name__ne': grouping.name})) == []
 
 
 def test_iter_user_registrations_by_grouping(repository: Repository):
@@ -475,6 +490,12 @@ def test_set_get_groups(repository: Repository, grouping: Grouping):
     assert grouping.key is not None
     assert repository.get_groups(grouping.key) == ()
     _, groups = insert_groups(repository, grouping)
+    assert repository.get_groups(grouping.key) == groups
+
+    smaller_groups = groups[1:]
+    repository.set_groups(grouping.key, smaller_groups)
+    assert repository.get_groups(grouping.key) == smaller_groups
+    repository.set_groups(grouping.key, groups)
     assert repository.get_groups(grouping.key) == groups
 
 

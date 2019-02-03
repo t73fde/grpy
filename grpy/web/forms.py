@@ -64,7 +64,7 @@ class GroupingForm(FlaskForm):
     member_reserve = IntegerField(
         "Member reserve", [InputRequired(), NumberRange(min=0)])
     note = StringField(
-        "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else None])
+        "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else ""])
     submit_create = SubmitField("Create")
     submit_update = SubmitField("Update")
     submit_delete = SubmitField("Delete")

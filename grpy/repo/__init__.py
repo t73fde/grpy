@@ -26,10 +26,12 @@ from urllib.parse import urlparse
 from .base import RepositoryFactory
 from .dummy import DummyRepositoryFactory
 from .ram import RamRepositoryFactory
+from .sqlite import SqliteRepositoryFactory
 
 
 FACTORY_DIRECTORY: Dict[str, Type[RepositoryFactory]] = {
     "ram": RamRepositoryFactory,
+    "sqlite": SqliteRepositoryFactory,
 }
 
 
