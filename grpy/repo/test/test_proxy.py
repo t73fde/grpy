@@ -19,13 +19,15 @@
 
 """Test specific for proxy repository."""
 
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
 
 from ..proxy import ProxyRepository, ProxyRepositoryFactory
 from ...models import (
-    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
+    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences,
+    ValidationFailed)
 
 
 class MockedProxyRepository(ProxyRepository):
@@ -74,7 +76,7 @@ def test_close(proxy: MockedProxyRepository) -> None:
 
 def test_set_user(proxy: MockedProxyRepository) -> None:
     """Add / update the given user."""
-    proxy.set_user(User(None, ""))
+    proxy.set_user(User(None, "ident"))
     assert proxy.mock.set_user.call_count == 1
 
 
@@ -161,6 +163,13 @@ def test_set_groups(proxy: MockedProxyRepository) -> None:
     """Set / replace groups builded for grouping."""
     proxy.set_groups(GroupingKey(int=0), tuple(()))
     assert proxy.mock.set_groups.call_count == 1
+
+
+def test_set_groups_no_validation(proxy: MockedProxyRepository) -> None:
+    """Set / replace groups builded for grouping."""
+    with pytest.raises(ValidationFailed, match="Group member is not an UUID: None"):
+        proxy.set_groups(GroupingKey(int=0), (frozenset({cast(UserKey, None)}),))
+    assert proxy.mock.set_groups.call_count == 0
 
 
 def test_get_groups(proxy: MockedProxyRepository) -> None:

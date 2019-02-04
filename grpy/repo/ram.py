@@ -87,7 +87,6 @@ class RamRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
-        user.validate()
         if user.key:
             try:
                 previous_user = self._state.users[user.key]
@@ -122,7 +121,6 @@ class RamRepository(Repository):
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
-        grouping.validate()
         if grouping.key:
             try:
                 previous_grouping = self._state.groupings[grouping.key]
@@ -158,7 +156,6 @@ class RamRepository(Repository):
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
-        registration.validate()
         self._state.registrations[
             (registration.grouping_key, registration.user_key)] = registration
         return registration

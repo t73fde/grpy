@@ -19,11 +19,13 @@
 
 """Proxy repository."""
 
+import uuid
 from typing import Iterator, Optional
 
 from .base import OrderSpec, Repository, RepositoryFactory, WhereSpec
 from .models import UserGroup, UserRegistration
-from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
+from ..models import (
+    Grouping, GroupingKey, Groups, Registration, User, UserKey, ValidationFailed)
 
 
 class ProxyRepository(Repository):
@@ -39,6 +41,7 @@ class ProxyRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
+        user.validate()
         return self._delegate.set_user(user)
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
@@ -58,6 +61,7 @@ class ProxyRepository(Repository):
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
+        grouping.validate()
         return self._delegate.set_grouping(grouping)
 
     def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
@@ -77,6 +81,7 @@ class ProxyRepository(Repository):
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
+        registration.validate()
         return self._delegate.set_registration(registration)
 
     def get_registration(
@@ -112,6 +117,11 @@ class ProxyRepository(Repository):
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
+        for group in groups:
+            for member in group:
+                if not isinstance(member, uuid.UUID):
+                    raise ValidationFailed(
+                        "Group member is not an UUID: {}".format(member))
         return self._delegate.set_groups(grouping_key, groups)
 
     def get_groups(self, grouping_key: GroupingKey) -> Groups:
