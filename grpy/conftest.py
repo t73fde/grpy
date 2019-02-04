@@ -60,13 +60,6 @@ def app(request):
         os.unlink(temp_file.name)
 
 
-@pytest.fixture
-def client(app):
-    """Create a test client as fixture."""
-    with app.test_client() as test_client:
-        yield test_client
-
-
 class AuthenticationActions:
     """Actions for Authentication, to be used as a fixture."""
 
@@ -74,19 +67,19 @@ class AuthenticationActions:
         """Initialize the object."""
         self._client = client
 
-    def login(self, username, password='test'):
+    def login(self, username: str, password: str = 'test') -> None:
         """Perform the login."""
         response = self._client.post(
             url_for('login'), data={'username': username, 'password': password})
         assert response.status_code == 302
 
-    def logout(self):
+    def logout(self) -> None:
         """Perform the logout."""
-        return self._client.get(url_for('logout'))
+        self._client.get(url_for('logout'))
 
 
 @pytest.fixture
-def auth(client):
+def auth(client) -> AuthenticationActions:
     """Fixture for authentication."""
     return AuthenticationActions(client)
 
