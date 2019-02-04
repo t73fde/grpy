@@ -21,7 +21,6 @@
 
 import datetime
 import random
-import uuid
 from typing import List, Tuple, cast
 
 import pytest
@@ -77,7 +76,7 @@ def test_insert_user(repository: Repository) -> None:
 
 def test_update_user(repository: Repository) -> None:
     """Check that updating an existing user works."""
-    user = User(cast(UserKey, uuid.uuid4()), "user")
+    user = User(UserKey(), "user")
     with pytest.raises(NothingToUpdate):
         repository.set_user(user)
 
@@ -106,7 +105,7 @@ def test_get_user(repository: Repository) -> None:
     assert last_user is not None
     assert last_user.is_host != user.is_host
 
-    assert repository.get_user(cast(UserKey, uuid.uuid4())) is None
+    assert repository.get_user(UserKey()) is None
 
 
 def test_get_user_by_ident(repository: Repository) -> None:
@@ -193,7 +192,7 @@ def test_iter_users_where(repository: Repository) -> None:
         assert set(users + non_users) == set(all_users)
 
         no_users = utils.LazyList(repository.iter_users(
-            where={'key__eq': uuid.uuid4()}))
+            where={'key__eq': UserKey()}))
         assert not no_users
 
 
@@ -230,7 +229,7 @@ def test_insert_grouping(repository: Repository, grouping: Grouping) -> None:
 
 def test_update_grouping(repository: Repository, grouping: Grouping) -> None:
     """Check that updating an existing grouping works."""
-    grouping_1 = grouping._replace(key=cast(GroupingKey, uuid.uuid4()))
+    grouping_1 = grouping._replace(key=GroupingKey())
     with pytest.raises(NothingToUpdate):
         repository.set_grouping(grouping_1)
 
@@ -263,7 +262,7 @@ def test_get_grouping(repository: Repository, grouping: Grouping) -> None:
     assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
-    assert repository.get_grouping(cast(GroupingKey, uuid.uuid4())) is None
+    assert repository.get_grouping(GroupingKey()) is None
 
 
 def test_get_grouping_by_code(repository: Repository, grouping: Grouping) -> None:
@@ -360,7 +359,7 @@ def test_iter_groupings_where(repository: Repository) -> None:
         assert set(groupings + non_groupings) == set(all_groupings)
 
         no_groupings = utils.LazyList(repository.iter_groupings(
-            where={'key__eq': uuid.uuid4()}))
+            where={'key__eq': GroupingKey()}))
         assert not no_groupings
 
 
@@ -423,8 +422,7 @@ def test_count_registrations_by_grouping(
     """Test the count calculation for a grouping."""
 
     # An non-existing grouping has no registrations
-    assert repository.count_registrations_by_grouping(
-        cast(GroupingKey, uuid.uuid4())) == 0
+    assert repository.count_registrations_by_grouping(GroupingKey()) == 0
 
     grouping = repository.set_grouping(grouping)
     assert grouping.key is not None

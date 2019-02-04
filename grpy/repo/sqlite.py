@@ -20,7 +20,6 @@
 """SQLite-based repository."""
 
 import sqlite3
-import uuid
 from datetime import datetime
 from typing import AbstractSet, Any, Iterator, List, Optional, Sequence, Tuple, cast
 from urllib.parse import urlparse
@@ -36,7 +35,6 @@ from ..models import (
     UserPreferences)
 
 
-sqlite3.register_adapter(uuid.UUID, lambda u: u.bytes_le)
 sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
 sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))
 sqlite3.register_adapter(GroupingKey, lambda u: u.bytes_le)
@@ -202,7 +200,7 @@ class SqliteRepository(Repository):
                 raise
             return user
 
-        user_key = cast(UserKey, uuid.uuid4())
+        user_key = UserKey()
         try:
             self._execute(
                 "INSERT INTO users VALUES(?,?,?)",
@@ -269,7 +267,7 @@ class SqliteRepository(Repository):
                 raise
             return grouping
 
-        grouping_key = cast(GroupingKey, uuid.uuid4())
+        grouping_key = GroupingKey()
         try:
             self._execute(
                 "INSERT INTO groupings VALUES(?,?,?,?,?,?,?,?,?,?,?)",

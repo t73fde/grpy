@@ -19,6 +19,7 @@
 
 """Test specific for proxy repository."""
 
+import uuid
 from typing import cast
 from unittest.mock import Mock
 
@@ -167,8 +168,18 @@ def test_set_groups(proxy: MockedProxyRepository) -> None:
 
 def test_set_groups_no_validation(proxy: MockedProxyRepository) -> None:
     """Set / replace groups builded for grouping."""
-    with pytest.raises(ValidationFailed, match="Group member is not an UUID: None"):
+    with pytest.raises(ValidationFailed, match="Group member is not an UserKey: None"):
         proxy.set_groups(GroupingKey(int=0), (frozenset({cast(UserKey, None)}),))
+    assert proxy.mock.set_groups.call_count == 0
+    with pytest.raises(
+            ValidationFailed, match=r"Group member is not an UserKey: UUID\('"):
+        proxy.set_groups(
+            GroupingKey(int=0), (frozenset({cast(UserKey, uuid.uuid4())}),))
+    assert proxy.mock.set_groups.call_count == 0
+    with pytest.raises(
+            ValidationFailed, match=r"Group member is not an UserKey: GroupingKey\('"):
+        proxy.set_groups(
+            GroupingKey(int=0), (frozenset({cast(UserKey, GroupingKey())}),))
     assert proxy.mock.set_groups.call_count == 0
 
 

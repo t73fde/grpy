@@ -19,7 +19,6 @@
 
 """Proxy repository."""
 
-import uuid
 from typing import Iterator, Optional
 
 from .base import OrderSpec, Repository, RepositoryFactory, WhereSpec
@@ -119,9 +118,9 @@ class ProxyRepository(Repository):
         """Set / replace groups builded for grouping."""
         for group in groups:
             for member in group:
-                if not isinstance(member, uuid.UUID):
+                if not isinstance(member, UserKey):
                     raise ValidationFailed(
-                        "Group member is not an UUID: {}".format(member))
+                        "Group member is not an UserKey: " + repr(member))
         return self._delegate.set_groups(grouping_key, groups)
 
     def get_groups(self, grouping_key: GroupingKey) -> Groups:

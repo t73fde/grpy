@@ -20,7 +20,6 @@
 """In-memory repository, stored in RAM."""
 
 import random
-import uuid
 from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar, cast
 
 from .base import (
@@ -41,13 +40,12 @@ class RamRepositoryState:  # pylint: disable=too-few-public-methods
         self.groupings_code: Dict[str, Grouping] = {}
         self.registrations: Dict[Tuple[GroupingKey, UserKey], Registration] = {}
         self.groups: Dict[GroupingKey, Groups] = {}
-        self._next_key = 0x10000
+        self._next_key: int = 0x10000
 
-    def next_uuid(self) -> uuid.UUID:
-        """Return a new UUID."""
-        result = uuid.UUID(int=self._next_key)
+    def next_int(self) -> int:
+        """Return a new int to produce another KeyType object."""
         self._next_key += 1
-        return result
+        return self._next_key
 
 
 class RamRepositoryFactory(RepositoryFactory):
@@ -95,7 +93,7 @@ class RamRepository(Repository):
             if previous_user.ident != user.ident:
                 del self._state.users_ident[previous_user.ident]
         else:
-            user = user._replace(key=cast(UserKey, self._state.next_uuid()))
+            user = user._replace(key=UserKey(int=self._state.next_int()))
 
         other_user = self._state.users_ident.get(user.ident)
         if other_user and user.key != other_user.key:
@@ -129,7 +127,7 @@ class RamRepository(Repository):
             if previous_grouping.code != grouping.code:
                 del self._state.groupings_code[previous_grouping.code]
         else:
-            grouping = grouping._replace(key=cast(GroupingKey, self._state.next_uuid()))
+            grouping = grouping._replace(key=GroupingKey(int=self._state.next_int()))
 
         other_grouping = self._state.groupings_code.get(grouping.code)
         if other_grouping and grouping.key != other_grouping.key:

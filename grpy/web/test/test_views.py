@@ -20,7 +20,6 @@
 """Test the web views."""
 
 import datetime
-import uuid
 from typing import Any, Dict, cast
 
 from flask import g, session, url_for
@@ -31,7 +30,7 @@ import pytest
 from werkzeug.http import parse_cookie
 
 from ... import utils
-from ...models import Grouping, Registration, User, UserPreferences
+from ...models import Grouping, GroupingKey, Registration, User, UserPreferences
 from ...repo.logic import set_grouping_new_code
 
 
@@ -269,7 +268,8 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 403
 
-    assert client.get(url_for('grouping_detail', key=uuid.uuid4())).status_code == 404
+    assert client.get(
+        url_for('grouping_detail', key=GroupingKey())).status_code == 404
 
 
 def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> None:

@@ -19,7 +19,6 @@
 
 """Web views for grpy."""
 
-import uuid
 from typing import NamedTuple, Sequence, cast
 
 from flask import (
@@ -30,7 +29,8 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import Grouping, KeyType, Registration, UserPreferences
+from ..models import (
+    Grouping, GroupingKey, KeyType, Registration, UserKey, UserPreferences)
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
@@ -131,7 +131,7 @@ def grouping_create():
 @login_required
 def grouping_detail(key):
     """Show details of a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(key))
+    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
     if g.user.key != grouping.host_key:
         abort(403)
     user_registrations = list(map(
@@ -145,7 +145,7 @@ def grouping_detail(key):
         count = 0
         for user in delete_users:
             try:
-                user_key = uuid.UUID(user)
+                user_key = UserKey(user)
             except ValueError:
                 continue
             if user_key in user_keys:
@@ -169,7 +169,7 @@ def grouping_detail(key):
 @login_required
 def grouping_update(key):
     """Update an existing grouping."""
-    grouping = value_or_404(get_repository().get_grouping(key))
+    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
     if g.user.key != grouping.host_key:
         abort(403)
     if request.method == 'POST':
@@ -197,7 +197,7 @@ def shortlink(code: str):
 @login_required
 def grouping_register(key):
     """Register for a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(key))
+    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
     if g.user.key == grouping.host_key:
         abort(403)
     if not grouping.is_registration_open():
@@ -231,7 +231,7 @@ def grouping_register(key):
 @login_required
 def grouping_start(key):
     """Start the grouping process."""
-    grouping = value_or_404(get_repository().get_grouping(key))
+    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
     if g.user.key != grouping.host_key:
         abort(403)
     if not grouping.can_grouping_start():

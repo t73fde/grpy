@@ -21,13 +21,43 @@
 
 import datetime
 import enum
-import uuid
 from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple
+from uuid import UUID, uuid4
 
 from .utils import now
 
 
-KeyType = uuid.UUID
+class KeyType(UUID):
+    """Base class for all key types."""
+
+    def __init__(
+            self,
+            hex=None, bytes_le=None, int=None,  # pylint: disable=redefined-builtin
+            key=None):
+        """Initialize the key type."""
+        if key is not None:
+            int = key.int
+        elif hex is None and bytes_le is None and int is None:
+            int = uuid4().int
+        super().__init__(hex=hex, bytes_le=bytes_le, int=int)
+
+    def __eq__(self, other) -> bool:
+        """
+        Compare key types.
+
+        This is needed to make objects of different sub-classes distinct, even
+        if they contain the same integer value.
+        """
+        if isinstance(other, type(self)):
+            return self.int == other.int
+        return False
+
+    def __hash__(self) -> int:
+        """Hash the key type.
+
+        This is needed, because `__eq__` was re-implemented.
+        """
+        return hash(self.int)
 
 
 class ValidationFailed(Exception):
@@ -58,8 +88,8 @@ class User(NamedTuple):
 
     def validate(self) -> None:
         """Check model for consistency."""
-        if self.key and not isinstance(self.key, uuid.UUID):
-            raise ValidationFailed("Key is not an UUID: {}".format(self.key))
+        if self.key and not isinstance(self.key, UserKey):
+            raise ValidationFailed("Key is not an UserKey: " + repr(self.key))
         if not self.ident:
             raise ValidationFailed("Ident is empty: {}".format(self))
 
@@ -85,14 +115,14 @@ class Grouping(NamedTuple):
 
     def validate(self) -> None:
         """Check model for consistency."""
-        if self.key and not isinstance(self.key, uuid.UUID):
-            raise ValidationFailed("Key is not an UUID: {}".format(self.key))
+        if self.key and not isinstance(self.key, GroupingKey):
+            raise ValidationFailed("Key is not a GroupingKey: " + repr(self.key))
         if not self.code:
             raise ValidationFailed("Code is empty: {}".format(self))
         if not self.name:
             raise ValidationFailed("Name is empty: {}".format(self))
-        if not isinstance(self.host_key, uuid.UUID):
-            raise ValidationFailed("Host is not an UUID: {}".format(self.host_key))
+        if not isinstance(self.host_key, UserKey):
+            raise ValidationFailed("Host is not an UserKey: " + repr(self.host_key))
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
                 "Begin date after final date: {} >= {}".format(
@@ -131,12 +161,12 @@ class Registration(NamedTuple):
 
     def validate(self) -> None:
         """Check model for consistency."""
-        if not isinstance(self.grouping_key, uuid.UUID):
+        if not isinstance(self.grouping_key, GroupingKey):
             raise ValidationFailed(
-                "Grouping is not an UUID: {}".format(self.grouping_key))
-        if not isinstance(self.user_key, uuid.UUID):
+                "Grouping is not a GroupingKey: " + repr(self.grouping_key))
+        if not isinstance(self.user_key, UserKey):
             raise ValidationFailed(
-                "Participant is not an UUID: {}".format(self.user_key))
+                "Participant is not an UserKey: " + repr(self.user_key))
         if not isinstance(self.preferences, UserPreferences):
             raise ValidationFailed(
                 "Preferences is not a UserPreferences: {}".format(self.preferences))

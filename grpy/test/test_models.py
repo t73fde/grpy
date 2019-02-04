@@ -30,6 +30,17 @@ from ..models import (
 from ..utils import now
 
 
+def test_keytype_operations() -> None:
+    """Test class methods of KeyType."""
+    user_key = UserKey(int=0)
+    grouping_key = GroupingKey(int=0)
+    assert user_key != grouping_key
+    assert UserKey() != user_key
+    assert GroupingKey() != grouping_key
+    assert UserKey(key=grouping_key) == user_key
+    assert GroupingKey(key=user_key) == grouping_key
+
+
 def test_user_is_host() -> None:
     """Test method .is_host."""
     assert User(None, "name", Permission.HOST).is_host
@@ -43,7 +54,7 @@ def test_user_validation() -> None:
 
 def test_user_validation_failed() -> None:
     """An invalid model raises exception."""
-    with pytest.raises(ValidationFailed, match="Key is not an UUID"):
+    with pytest.raises(ValidationFailed, match="Key is not an UserKey"):
         User("123", "name").validate()  # type: ignore
     with pytest.raises(ValidationFailed, match="Ident is empty"):
         User(None, "").validate()
@@ -65,11 +76,11 @@ def test_grouping_validation_failed() -> None:
     """An invalid model raises exception."""
     yet = now()
     delta = timedelta(seconds=1)
-    with pytest.raises(ValidationFailed, match="Key is not an UUID:"):
+    with pytest.raises(ValidationFailed, match="Key is not a GroupingKey:"):
         Grouping(
             cast(GroupingKey, "123"), "code", "name", UserKey(int=0), yet,
             yet + delta, None, "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Host is not an UUID:"):
+    with pytest.raises(ValidationFailed, match="Host is not an UserKey:"):
         Grouping(
             None, "code", "name", cast(UserKey, None), yet, yet + delta, None,
             "RD", 2, 0, "").validate()
@@ -133,10 +144,10 @@ def test_registration_validation() -> None:
 
 def test_registration_validation_failed() -> None:
     """An invalid model raises exception."""
-    with pytest.raises(ValidationFailed, match="Grouping is not an UUID:"):
+    with pytest.raises(ValidationFailed, match="Grouping is not a GroupingKey:"):
         Registration(
             cast(GroupingKey, None), UserKey(int=0), UserPreferences()).validate()
-    with pytest.raises(ValidationFailed, match="Participant is not an UUID:"):
+    with pytest.raises(ValidationFailed, match="Participant is not an UserKey:"):
         Registration(
             GroupingKey(int=0), cast(UserKey, None), UserPreferences()).validate()
     with pytest.raises(ValidationFailed, match="Preferences is not a UserPreferences"):
