@@ -23,7 +23,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..proxy import ProxyRepository
+from ..proxy import ProxyRepository, ProxyRepositoryFactory
 from ...models import (
     Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
 
@@ -45,7 +45,25 @@ def proxy() -> MockedProxyRepository:
     return MockedProxyRepository(delegate)
 
 
+class MockedProxyRepositoryFactory(ProxyRepositoryFactory):
+    """A ProxyRepositoryFactory that can be mocked."""
+
+    @property
+    def mock(self):
+        """Return the delegate as a mock object."""
+        return self._delegate
+
+
 # pylint: disable=redefined-outer-name
+
+
+@pytest.fixture
+def proxy_factory(proxy) -> MockedProxyRepositoryFactory:
+    """Set up a proxy repository factory."""
+    delegate_factory = Mock()
+    delegate_factory.url = "url:"
+    delegate_factory.create.return_value = proxy
+    return MockedProxyRepositoryFactory(delegate_factory)
 
 
 def test_close(proxy: MockedProxyRepository) -> None:
@@ -155,3 +173,28 @@ def test_iter_groups_by_user(proxy: MockedProxyRepository) -> None:
     """Return an iterator of group data of some user."""
     proxy.iter_groups_by_user(UserKey(int=0))
     assert proxy.mock.iter_groups_by_user.call_count == 1
+
+
+def test_factory_url(proxy_factory) -> None:
+    """Test that base URL is transferred to proxy factory."""
+    assert proxy_factory.url == "url:"
+
+
+def test_factory_can_connect(proxy_factory) -> None:
+    """Test the connection to the data source."""
+    proxy_factory.can_connect()
+    assert proxy_factory.mock.can_connect.call_count == 1
+
+
+def test_factory_initialize(proxy_factory) -> None:
+    """Initialize the repository, if needed."""
+    proxy_factory.initialize()
+    assert proxy_factory.mock.initialize.call_count == 1
+
+
+def test_factory_create(proxy_factory) -> None:
+    """Create and setup a repository."""
+    repository = proxy_factory.create()
+    assert proxy_factory.mock.create.call_count == 1
+    assert isinstance(repository, ProxyRepository)
+    assert not isinstance(repository, MockedProxyRepository)

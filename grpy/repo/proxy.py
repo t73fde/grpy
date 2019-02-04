@@ -21,7 +21,7 @@
 
 from typing import Iterator, Optional
 
-from .base import OrderSpec, Repository, WhereSpec
+from .base import OrderSpec, Repository, RepositoryFactory, WhereSpec
 from .models import UserGroup, UserRegistration
 from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
 
@@ -125,3 +125,24 @@ class ProxyRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""
         return self._delegate.iter_groups_by_user(user_key, where, order)
+
+
+class ProxyRepositoryFactory(RepositoryFactory):
+    """RepositoryFactory to create ProxRepository."""
+
+    def __init__(self, delegate: RepositoryFactory):
+        """Initialize the factory with the URL."""
+        super().__init__(delegate.url)
+        self._delegate = delegate
+
+    def can_connect(self) -> bool:
+        """Test the connection to the data source."""
+        return self._delegate.can_connect()
+
+    def initialize(self) -> bool:
+        """Initialize the repository, if needed."""
+        return self._delegate.initialize()
+
+    def create(self):
+        """Create and setup a repository."""
+        return ProxyRepository(self._delegate.create())

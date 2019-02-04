@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 
 from .base import RepositoryFactory
 from .dummy import DummyRepositoryFactory
+from .proxy import ProxyRepositoryFactory
 from .ram import RamRepositoryFactory
 from .sqlite import SqliteRepositoryFactory
 
@@ -48,4 +49,4 @@ def create_factory(repository_url: str) -> RepositoryFactory:
     if not factory.initialize():
         factory = DummyRepositoryFactory(
             "dummy:", "Cannot initialize repository {}".format(factory.url))
-    return factory
+    return ProxyRepositoryFactory(factory)
