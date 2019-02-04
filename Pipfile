@@ -33,6 +33,7 @@ pytest = "*"
 pytest-flask = "*"
 pytest-testmon = "*"
 pytest-cov = "*"
+pytest-randomly = "*"
 
 [packages]
 Flask = "*"
