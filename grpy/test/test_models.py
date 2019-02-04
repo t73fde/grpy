@@ -43,12 +43,10 @@ def test_user_validation() -> None:
 
 def test_user_validation_failed() -> None:
     """An invalid model raises exception."""
-    with pytest.raises(ValidationFailed) as exc:
+    with pytest.raises(ValidationFailed, match="Key is not an UUID"):
         User("123", "name").validate()  # type: ignore
-    assert "Key is not a UUID:" in str(exc)
-    with pytest.raises(ValidationFailed) as exc:
+    with pytest.raises(ValidationFailed, match="Ident is empty"):
         User(None, "").validate()
-    assert "Ident is empty:" in str(exc)
 
 
 def test_grouping_validation() -> None:
@@ -65,47 +63,44 @@ def test_grouping_validation() -> None:
 
 def test_grouping_validation_failed() -> None:
     """An invalid model raises exception."""
-    def assert_exc(grouping: Grouping, message: str) -> None:
-        """Test for a specific exception message."""
-        with pytest.raises(ValidationFailed) as exc:
-            grouping.validate()
-        assert message in str(exc)
-
     yet = now()
     delta = timedelta(seconds=1)
-    assert_exc(Grouping(
-        cast(GroupingKey, "123"), "code", "name", UserKey(int=0), yet,
-        yet + delta, None, "RD", 2, 0, ""),
-        "Key is not a UUID:")
-    assert_exc(Grouping(
-        None, "code", "name", cast(UserKey, None), yet, yet + delta, None,
-        "RD", 2, 0, ""),
-        "Host is not a UUID:")
-    assert_exc(Grouping(
-        None, "", "name", UserKey(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
-        "Code is empty:")
-    assert_exc(Grouping(
-        None, "code", "", UserKey(int=0), yet, yet + delta, None, "RD", 2, 0, ""),
-        "Name is empty:")
-    assert_exc(Grouping(
-        None, "code", "name", UserKey(int=0), yet, yet, None, "RD", 2, 0, ""),
-        "Begin date after final date:")
-    assert_exc(Grouping(
-        None, "code", "name", UserKey(int=0), yet, yet + delta, yet + delta,
-        "RD", 2, 0, ""),
-        "Final date after close date:")
-    assert_exc(Grouping(
-        None, "code", "name", UserKey(int=0), yet, yet + delta, None,
-        "", 2, 0, ""),
-        "Policy is empty:")
-    assert_exc(Grouping(
-        None, "code", "name", UserKey(int=0), yet, yet + delta, None,
-        "RD", 0, 0, ""),
-        "Maximal group size < 1:")
-    assert_exc(Grouping(
-        None, "code", "name", UserKey(int=0), yet, yet + delta, None,
-        "RD", 2, -1, ""),
-        "Member reserve < 0:")
+    with pytest.raises(ValidationFailed, match="Key is not an UUID:"):
+        Grouping(
+            cast(GroupingKey, "123"), "code", "name", UserKey(int=0), yet,
+            yet + delta, None, "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Host is not an UUID:"):
+        Grouping(
+            None, "code", "name", cast(UserKey, None), yet, yet + delta, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Code is empty:"):
+        Grouping(
+            None, "", "name", UserKey(int=0), yet, yet + delta, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Name is empty:"):
+        Grouping(
+            None, "code", "", UserKey(int=0), yet, yet + delta, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Begin date after final date:"):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Final date after close date:"):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet + delta, yet + delta,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Policy is empty:"):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet + delta, None,
+            "", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Maximal group size < 1:"):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet + delta, None,
+            "RD", 0, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Member reserve < 0:"):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet + delta, None,
+            "RD", 2, -1, "").validate()
 
 
 def test_is_registration_open() -> None:
@@ -138,15 +133,12 @@ def test_registration_validation() -> None:
 
 def test_registration_validation_failed() -> None:
     """An invalid model raises exception."""
-    with pytest.raises(ValidationFailed) as exc:
+    with pytest.raises(ValidationFailed, match="Grouping is not an UUID:"):
         Registration(
             cast(GroupingKey, None), UserKey(int=0), UserPreferences()).validate()
-    assert "Grouping is not a UUID:" in str(exc)
-    with pytest.raises(ValidationFailed) as exc:
+    with pytest.raises(ValidationFailed, match="Participant is not an UUID:"):
         Registration(
             GroupingKey(int=0), cast(UserKey, None), UserPreferences()).validate()
-    assert "Participant is not a UUID:" in str(exc)
-    with pytest.raises(ValidationFailed) as exc:
+    with pytest.raises(ValidationFailed, match="Preferences is not a UserPreferences"):
         Registration(
             GroupingKey(int=0), UserKey(int=0), cast(UserPreferences, "")).validate()
-    assert "Preferences is not a UserPreferences:" in str(exc)

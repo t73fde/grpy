@@ -59,7 +59,7 @@ class User(NamedTuple):
     def validate(self) -> None:
         """Check model for consistency."""
         if self.key and not isinstance(self.key, uuid.UUID):
-            raise ValidationFailed("Key is not a UUID: {}".format(self.key))
+            raise ValidationFailed("Key is not an UUID: {}".format(self.key))
         if not self.ident:
             raise ValidationFailed("Ident is empty: {}".format(self))
 
@@ -86,13 +86,13 @@ class Grouping(NamedTuple):
     def validate(self) -> None:
         """Check model for consistency."""
         if self.key and not isinstance(self.key, uuid.UUID):
-            raise ValidationFailed("Key is not a UUID: {}".format(self.key))
+            raise ValidationFailed("Key is not an UUID: {}".format(self.key))
         if not self.code:
             raise ValidationFailed("Code is empty: {}".format(self))
         if not self.name:
             raise ValidationFailed("Name is empty: {}".format(self))
         if not isinstance(self.host_key, uuid.UUID):
-            raise ValidationFailed("Host is not a UUID: {}".format(self.host_key))
+            raise ValidationFailed("Host is not an UUID: {}".format(self.host_key))
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
                 "Begin date after final date: {} >= {}".format(
@@ -133,10 +133,10 @@ class Registration(NamedTuple):
         """Check model for consistency."""
         if not isinstance(self.grouping_key, uuid.UUID):
             raise ValidationFailed(
-                "Grouping is not a UUID: {}".format(self.grouping_key))
+                "Grouping is not an UUID: {}".format(self.grouping_key))
         if not isinstance(self.user_key, uuid.UUID):
             raise ValidationFailed(
-                "Participant is not a UUID: {}".format(self.user_key))
+                "Participant is not an UUID: {}".format(self.user_key))
         if not isinstance(self.preferences, UserPreferences):
             raise ValidationFailed(
                 "Preferences is not a UserPreferences: {}".format(self.preferences))

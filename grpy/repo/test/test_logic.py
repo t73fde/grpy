@@ -49,6 +49,6 @@ def test_set_grouping_new_code_no_random(
     """Test the creation of new short codes, if always the same code is made."""
     with patch.object(repository, "set_grouping") as func:
         func.side_effect = DuplicateKey("Grouping.code")
-        with pytest.raises(OverflowError) as exc:
+        with pytest.raises(
+                OverflowError, match="grpy.repo.logic.set_grouping_new_code"):
             set_grouping_new_code(repository, grouping)
-        assert exc.value.args == ("grpy.repo.logic.set_grouping_new_code",)
