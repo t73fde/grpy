@@ -65,7 +65,7 @@
   {%- endfor %}
   </table>
 {%- endif -%}
-{% if not groupings and not registrations and not group_list %}
+{% if show_welcome %}
   <h1>Welcome!</h1>
   <p>Please use a valid grouping link to participate in a grouping.</p>
 {% endif %}

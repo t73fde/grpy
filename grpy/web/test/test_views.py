@@ -399,6 +399,13 @@ def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
     assert get_session_data(app, response)['_flashes'] == \
         [('info', "Registration for '{}' is updated.".format(app_grouping.name))]
 
+    response = client.get(url_for('home'))
+    assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert "Registered Groupings" in data
+    assert app_grouping.name in data
+    assert "Welcome!" not in data
+
 
 def test_grouping_register_out_of_time(
         app, client, auth, app_grouping: Grouping) -> None:
@@ -544,3 +551,4 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
         assert response.status_code == 200
         data = response.data.decode('utf-8')
         assert data.count(user.ident) > 1
+        assert data.count(app_grouping.name) == 1

@@ -63,18 +63,26 @@ def home():
                 repository.count_registrations_by_grouping(g.key) for g in groupings]
             groupings = zip(groupings, counts)
 
-        registrations = utils.LazyList(get_repository().iter_groupings_by_user(
-            g.user.key,
-            where={"close_date__ge": utils.now()},
-            order=["final_date"]))
         group_list = []
+        assigned_groupings = set()
         for group in get_repository().iter_groups_by_user(g.user.key):
             group_list.append(UserGroup(
                 group.grouping_key,
                 group.grouping_name,
                 sorted(m.user_ident for m in group.group)))
+            assigned_groupings.add(group.grouping_key)
+        grouping_iterator = get_repository().iter_groupings_by_user(
+            g.user.key,
+            where={"close_date__ge": utils.now()},
+            order=["final_date"])
+        registrations = [
+            grouping for grouping in grouping_iterator
+            if grouping.key not in assigned_groupings]
+
+    show_welcome = not groupings and not registrations and not group_list
     return render_template(
         "home.html",
+        show_welcome=show_welcome,
         groupings=groupings, registrations=registrations, group_list=group_list)
 
 
