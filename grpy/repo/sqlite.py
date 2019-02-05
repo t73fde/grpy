@@ -112,7 +112,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
 CREATE TABLE users(
     key USER_KEY PRIMARY KEY,
     ident TEXT UNIQUE NOT NULL,
-    permission INT)
+    permissions INT)
 """)
             if "groupings" not in tables:
                 cursor.execute("""
@@ -192,8 +192,8 @@ class SqliteRepository(Repository):
                 raise NothingToUpdate("Missing user", user.key)
             try:
                 self._execute(
-                    "UPDATE users SET ident=?, permission=? WHERE key=?",
-                    (user.ident, user.permission, user.key))
+                    "UPDATE users SET ident=?, permissions=? WHERE key=?",
+                    (user.ident, user.permissions, user.key))
             except sqlite3.IntegrityError as exc:
                 if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                     raise DuplicateKey("User.ident", user.ident)
@@ -204,7 +204,7 @@ class SqliteRepository(Repository):
         try:
             self._execute(
                 "INSERT INTO users VALUES(?,?,?)",
-                (user_key, user.ident, user.permission))
+                (user_key, user.ident, user.permissions))
         except sqlite3.IntegrityError as exc:
             if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                 raise DuplicateKey("User.ident", user.ident)
@@ -214,7 +214,7 @@ class SqliteRepository(Repository):
     def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
         cursor = self._execute(
-            "SELECT ident, permission FROM users WHERE key=?", (user_key,))
+            "SELECT ident, permissions FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
         cursor.close()
         return User(user_key, row[0], Permission(row[1])) if row else None
@@ -222,7 +222,7 @@ class SqliteRepository(Repository):
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
         cursor = self._execute(
-            "SELECT key, permission FROM users WHERE ident=?", (ident,))
+            "SELECT key, permissions FROM users WHERE ident=?", (ident,))
         row = cursor.fetchone()
         cursor.close()
         return User(row[0], ident, Permission(row[1])) if row else None
@@ -234,7 +234,7 @@ class SqliteRepository(Repository):
         """Return an iterator of all or some users."""
         where_sql, where_vals = where_clause(where)
         cursor = self._execute(
-            "SELECT key, ident, permission FROM users" +  # nosec
+            "SELECT key, ident, permissions FROM users" +  # nosec
             where_sql + order_clause(order), where_vals)
         result = []
         for row in cursor.fetchall():
@@ -393,7 +393,7 @@ class SqliteRepository(Repository):
         """Return an iterator of user data of some user."""
         where_sql, where_vals = where_clause(where, no_where=True)
         cursor = self._execute(
-            "SELECT key, ident, permission, preferences "  # nosec
+            "SELECT key, ident, permissions, preferences "  # nosec
             "FROM users, registrations "
             "WHERE key=user_key AND grouping_key=?" + where_sql + order_clause(order),
             [grouping_key] + where_vals)

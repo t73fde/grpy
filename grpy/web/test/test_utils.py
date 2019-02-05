@@ -79,7 +79,7 @@ def test_value_or_404_none() -> None:
 
 def test_make_model() -> None:
     """A User model can be created from dict."""
-    user = make_model(User, {"ident": "uid"}, {"permission": Permission(0)})
+    user = make_model(User, {"ident": "uid"}, {"permissions": Permission(0)})
     assert user == User(None, "uid")
 
 

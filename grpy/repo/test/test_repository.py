@@ -81,7 +81,7 @@ def test_update_user(repository: Repository) -> None:
         repository.set_user(user)
 
     user = repository.set_user(User(None, "user", Permission.HOST))
-    new_user = user._replace(permission=Permission(0))
+    new_user = user._replace(permissions=Permission(0))
     assert user.key == new_user.key
     newer_user = repository.set_user(new_user)
     assert new_user == newer_user
@@ -99,7 +99,7 @@ def test_get_user(repository: Repository) -> None:
     new_user = repository.get_user(user.key)
     assert new_user == user
 
-    newer_user = user._replace(permission=Permission(0))
+    newer_user = user._replace(permissions=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user(user.key)
     assert last_user is not None
@@ -114,7 +114,7 @@ def test_get_user_by_ident(repository: Repository) -> None:
     new_user = repository.get_user_by_ident(user.ident)
     assert new_user == user
 
-    newer_user = user._replace(permission=Permission(0))
+    newer_user = user._replace(permissions=Permission(0))
     repository.set_user(newer_user)
     last_user = repository.get_user_by_ident(user.ident)
     assert last_user is not None
@@ -139,11 +139,11 @@ def test_get_user_by_ident_change(repository: Repository) -> None:
 def setup_users(repository: Repository, count: int) -> List[User]:
     """Insert some users into repository."""
     result = []
-    permission = Permission(0)
+    permissions = Permission(0)
     for i in range(count):
-        user = repository.set_user(User(None, "user-%d" % i, permission))
+        user = repository.set_user(User(None, "user-%d" % i, permissions))
         result.append(user)
-        permission = Permission(0) if permission else Permission.HOST
+        permissions = Permission(0) if permissions else Permission.HOST
     return result
 
 
@@ -158,8 +158,8 @@ def test_iter_users(repository: Repository) -> None:
 def test_iter_users_where(repository: Repository) -> None:
     """Select some user from list of all users."""
     all_users = setup_users(repository, 13)
-    users = list(repository.iter_users(where={'permission__eq': Permission.HOST}))
-    non_users = list(repository.iter_users(where={'permission__ne': Permission.HOST}))
+    users = list(repository.iter_users(where={'permissions__eq': Permission.HOST}))
+    non_users = list(repository.iter_users(where={'permissions__ne': Permission.HOST}))
     assert len(users) + len(non_users) == len(all_users)
     assert set(users + non_users) == set(all_users)
 

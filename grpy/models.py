@@ -79,12 +79,12 @@ class User(NamedTuple):
 
     key: Optional[UserKey]
     ident: str
-    permission: Permission = Permission(0)
+    permissions: Permission = Permission(0)
 
     @property
     def is_host(self) -> bool:
         """Return True if user is a host."""
-        return bool(self.permission & Permission.HOST)
+        return bool(self.permissions & Permission.HOST)
 
     def validate(self) -> None:
         """Check model for consistency."""
