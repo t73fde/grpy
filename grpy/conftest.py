@@ -48,7 +48,11 @@ def app(request):
         repository_url = request.param
         temp_file = None
 
-    grpy_app = create_app({'TESTING': True, 'REPOSITORY': repository_url})
+    grpy_app = create_app({
+        'TESTING': True,
+        'REPOSITORY': repository_url,
+        'AUTH_URL': None,
+    })
 
     with grpy_app.test_request_context():
         repository = grpy_app.get_repository()

@@ -20,8 +20,11 @@
 """Test the web application object itself."""
 
 import os
+import unittest.mock
 
 from flask import g
+
+import requests
 
 from ..app import create_app
 
@@ -50,3 +53,27 @@ def test_env_config(monkeypatch) -> None:
     monkeypatch.setitem(os.environ, 'TESTING', "True")
     assert "dummy:" in create_app()._repository_factory.url
 # pylint: enable=protected-access
+
+
+def test_check_password(app, monkeypatch) -> None:
+    """Test app.check_pw."""
+    assert app.authenticate("host", "1") is not None
+
+    # Set URL to something that is non-existing
+    app.config['AUTH_URL'] = "http://this.is.sparta:480/"
+
+    def requests_head(_url, auth):  # pylint: disable=unused-argument
+        """Must return a "good" status code > 300."""
+        result = unittest.mock.Mock()
+        result.status_code = 500
+        return result
+
+    monkeypatch.setattr(requests, 'head', requests_head)
+    assert app.authenticate("user", "1") is None
+
+    def requests_head_raise(_url, auth):
+        """Must raise an RequestException."""
+        raise requests.RequestException()
+
+    monkeypatch.setattr(requests, 'head', requests_head_raise)
+    assert app.authenticate("user", "1") is None

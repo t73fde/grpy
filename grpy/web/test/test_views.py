@@ -151,8 +151,9 @@ def test_login_new_user(app, client) -> None:
     assert app.get_repository().get_user_by_ident("new_user")
 
 
-def test_invalid_login(client) -> None:
+def test_invalid_login(app, client) -> None:
     """Test login view for invalid login."""
+    app.config['AUTH_URL'] = ""
     url = url_for('login')
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
     assert response.status_code == 200

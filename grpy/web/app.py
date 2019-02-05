@@ -26,6 +26,8 @@ from flask import Flask, g, session
 
 from flask_babel import Babel
 
+import requests
+
 from . import utils, views
 from .. import policies
 from ..models import Permission, User
@@ -129,9 +131,28 @@ class GrpyApp(Flask):
         """Log out the current user."""
         session.clear()
 
+    def _check_pw(self, username: str, password: str) -> bool:
+        """Check username / password."""
+        url = self.config.get("AUTH_URL", "http://localhost:9876/")
+        if url is None:
+            return True
+        if url == "":
+            return False
+
+        try:
+            response = requests.head(url, auth=(username, password))
+            status_code = response.status_code
+        except requests.RequestException:
+            # LOGGER.exception(
+            #     "Unable to get authentication from '%s' for user '%s':",
+            #     url, username)
+            status_code = 600
+        return 200 <= status_code <= 299
+
     def authenticate(self, username: str, password: str) -> Optional[User]:
         """Authenticate by user name and password, and return user found."""
-        if username and username[0] != "x" and password:
+        username = username.lower()
+        if self._check_pw(username, password):
             repository = self.get_repository()
             user = repository.get_user_by_ident(username)
             if not user:
