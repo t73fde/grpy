@@ -65,6 +65,7 @@ class GrpyApp(Flask):
     def setup_repository(self):
         """Add a repository to the application."""
         self._repository_factory = create_factory(self.config['REPOSITORY'])
+        self.log_info("Repository URL = '" + self._repository_factory.url + "'")
         if self._repository_factory.url == "ram:" and not self.testing:
             populate_testdata(self._repository_factory)
 
@@ -142,6 +143,10 @@ class GrpyApp(Flask):
     def log_debug(self, message: str, *args, **kwargs) -> None:
         """Emit a debug message."""
         self.logger.debug(message, *args, **kwargs)  # pylint: disable=no-member
+
+    def log_info(self, message: str, *args, **kwargs) -> None:
+        """Emit a info message."""
+        self.logger.info(message, *args, **kwargs)  # pylint: disable=no-member
 
 
 def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
