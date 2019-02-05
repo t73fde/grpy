@@ -106,6 +106,10 @@ class GrpyApp(Flask):
             datetimeformat=utils.datetimeformat,
         )
 
+    def setup_werkzeug(self):
+        """Add some globals for Werkzeug."""
+        self.url_map.converters['grouping'] = utils.GroupingKeyConverter
+
     def setup_jinja(self):
         """Add some filters / globals for Jinja2."""
         self.jinja_env.globals.update(  # pylint: disable=no-member
@@ -147,6 +151,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.setup_repository()
     app.setup_user_handling()
     app.setup_babel()
+    app.setup_werkzeug()
     app.setup_jinja()
 
     app.add_url_rule("/", "home", views.home)
@@ -157,18 +162,18 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
         "/groupings/", "grouping_create", views.grouping_create,
         methods=('GET', 'POST'))
     app.add_url_rule(
-        "/groupings/<uuid:key>/", "grouping_detail", views.grouping_detail,
-        methods=('GET', 'POST'))
+        "/groupings/<grouping:grouping_key>/", "grouping_detail",
+        views.grouping_detail, methods=('GET', 'POST'))
     app.add_url_rule(
-        "/groupings/<uuid:key>/edit", "grouping_update", views.grouping_update,
-        methods=('GET', 'POST'))
+        "/groupings/<grouping:grouping_key>/edit", "grouping_update",
+        views.grouping_update, methods=('GET', 'POST'))
     app.add_url_rule("/<string:code>/", "shortlink", views.shortlink)
     app.add_url_rule(
-        "/groupings/<uuid:key>/register", "grouping_register", views.grouping_register,
-        methods=('GET', 'POST'))
+        "/groupings/<grouping:grouping_key>/register", "grouping_register",
+        views.grouping_register, methods=('GET', 'POST'))
     app.add_url_rule(
-        "/groupings/<uuid:key>/start", "grouping_start", views.grouping_start,
-        methods=('GET', 'POST'))
+        "/groupings/<grouping:grouping_key>/start", "grouping_start",
+        views.grouping_start, methods=('GET', 'POST'))
     app.log_debug("Application created.")
     return app
 

@@ -72,7 +72,7 @@ def test_home_host(client, auth, app_grouping: Grouping) -> None:
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
     assert "host</span>" in data
-    assert url_for('grouping_detail', key=app_grouping.key) in data
+    assert url_for('grouping_detail', grouping_key=app_grouping.key) in data
     assert app_grouping.name in data
     assert str(app_grouping.final_date.minute) in data
 
@@ -99,7 +99,7 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     auth.login("user")
     user = app.get_repository().get_user_by_ident("user")
     assert user
-    register_url = url_for('grouping_register', key=app_grouping.key)
+    register_url = url_for('grouping_register', grouping_key=app_grouping.key)
     assert client.get(register_url).status_code == 200
 
     app.get_repository().set_registration(Registration(
@@ -254,7 +254,7 @@ def test_grouping_create(app, client, auth) -> None:
 
 def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     """Test grouping detail view."""
-    url = url_for('grouping_detail', key=app_grouping.key)
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
     response = client.get(url)
     assert response.status_code == 401
 
@@ -269,13 +269,13 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 403
 
     assert client.get(
-        url_for('grouping_detail', key=GroupingKey())).status_code == 404
+        url_for('grouping_detail', grouping_key=GroupingKey())).status_code == 404
 
 
 def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> None:
     """Test removal of registrations."""
     assert app_grouping.key is not None
-    url = url_for('grouping_detail', key=app_grouping.key)
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
     users = []
     for i in range(12):
         user = app.get_repository().set_user(User(None, "user%d" % i))
@@ -307,7 +307,7 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> No
 def test_grouping_detail_remove_illegal(
         app, client, auth, app_grouping: Grouping) -> None:
     """If illegal UUIDs are sent, nothing happens."""
-    url = url_for('grouping_detail', key=app_grouping.key)
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
     auth.login("host")
     for data in ("1,2,3", [str(app_grouping.key)]):
         response = client.post(url, data={'u': data})
@@ -320,7 +320,7 @@ def test_grouping_detail_remove_illegal(
 
 def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     """Test the update of an existing grouping."""
-    url = url_for('grouping_update', key=app_grouping.key)
+    url = url_for('grouping_update', grouping_key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -368,12 +368,12 @@ def test_shortlink(client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_register', key=app_grouping.key)
+        "http://localhost" + url_for('grouping_register', grouping_key=app_grouping.key)
 
 
 def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
     """Check the grouping registration."""
-    url = url_for('grouping_register', key=app_grouping.key)
+    url = url_for('grouping_register', grouping_key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -403,7 +403,7 @@ def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
 def test_grouping_register_out_of_time(
         app, client, auth, app_grouping: Grouping) -> None:
     """Check the grouping registration before start date and after final date."""
-    url = url_for('grouping_register', key=app_grouping.key)
+    url = url_for('grouping_register', grouping_key=app_grouping.key)
     auth.login('student')
 
     now = utils.now()
@@ -433,7 +433,7 @@ def test_grouping_register_out_of_time(
 def test_grouping_deregister(app, client, auth, app_grouping: Grouping) -> None:
     """Check de-registrations."""
     assert app_grouping.key is not None
-    url = url_for('grouping_register', key=app_grouping.key)
+    url = url_for('grouping_register', grouping_key=app_grouping.key)
     auth.login('student')
 
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
@@ -454,7 +454,7 @@ def test_grouping_deregister(app, client, auth, app_grouping: Grouping) -> None:
 
 def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     """Test group building view."""
-    url = url_for('grouping_start', key=app_grouping.key)
+    url = url_for('grouping_start', grouping_key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
 
@@ -481,7 +481,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_detail', key=new_grouping.key)
+        "http://localhost" + url_for('grouping_detail', grouping_key=new_grouping.key)
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "No registrations for '{}' found.".format(new_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
@@ -498,7 +498,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
 
 def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     """A fresh grouping has no calculated groups."""
-    url = url_for('grouping_detail', key=app_grouping.key)
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
     response = client.get(url)
     auth.login("host")
     response = client.get(url)
@@ -519,7 +519,7 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
             Registration(app_grouping.key, user.key, UserPreferences()))
         users.append(user)
 
-    url = url_for('grouping_start', key=app_grouping.key)
+    url = url_for('grouping_start', grouping_key=app_grouping.key)
     app.get_repository().set_grouping(app_grouping._replace(
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1),
@@ -527,7 +527,7 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     auth.login('host')
     response = client.post(url)
     assert response.status_code == 302
-    detail_url = url_for('grouping_detail', key=app_grouping.key)
+    detail_url = url_for('grouping_detail', grouping_key=app_grouping.key)
     assert response.headers['Location'] == "http://localhost" + detail_url
     response = client.get(detail_url)
     assert response.status_code == 200

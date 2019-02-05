@@ -26,6 +26,18 @@ from flask import abort, g, redirect, request, url_for
 
 from flask_babel import format_datetime
 
+from werkzeug.routing import UUIDConverter
+
+from ..models import GroupingKey
+
+
+class GroupingKeyConverter(UUIDConverter):
+    """An URL converter for GroupingKeys."""
+
+    def to_python(self, value: str) -> GroupingKey:
+        """Convert the already parsed URL string into a GroupingKey."""
+        return GroupingKey(value)
+
 
 def login_required(view):
     """Wrap a view to enforce an user who is logged in."""

@@ -29,8 +29,7 @@ from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import (
-    Grouping, GroupingKey, KeyType, Registration, UserKey, UserPreferences)
+from ..models import Grouping, KeyType, Registration, UserKey, UserPreferences
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
@@ -129,9 +128,9 @@ def grouping_create():
 
 
 @login_required
-def grouping_detail(key):
+def grouping_detail(grouping_key):
     """Show details of a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
+    grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     user_registrations = list(map(
@@ -152,7 +151,7 @@ def grouping_detail(key):
                 get_repository().delete_registration(grouping.key, user_key)
                 count += 1
         flash("{} registered users removed.".format(count), category='info')
-        return redirect(url_for('grouping_detail', key=grouping.key))
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
     can_delete = not user_registrations
     can_start = grouping.can_grouping_start() and user_registrations
     group_list = []
@@ -167,9 +166,9 @@ def grouping_detail(key):
 
 
 @login_required
-def grouping_update(key):
+def grouping_update(grouping_key):
     """Update an existing grouping."""
-    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
+    grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     if request.method == 'POST':
@@ -191,13 +190,13 @@ def shortlink(code: str):
     if g.user.key == grouping.host_key:
         return render_template("grouping_code.html", code=grouping.code)
 
-    return redirect(url_for('grouping_register', key=grouping.key))
+    return redirect(url_for('grouping_register', grouping_key=grouping.key))
 
 
 @login_required
-def grouping_register(key):
+def grouping_register(grouping_key):
     """Register for a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
+    grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key == grouping.host_key:
         abort(403)
     if not grouping.is_registration_open():
@@ -229,9 +228,9 @@ def grouping_register(key):
 
 
 @login_required
-def grouping_start(key):
+def grouping_start(grouping_key):
     """Start the grouping process."""
-    grouping = value_or_404(get_repository().get_grouping(GroupingKey(key=key)))
+    grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     if not grouping.can_grouping_start():
@@ -245,7 +244,7 @@ def grouping_start(key):
     if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),
               category="warning")
-        return redirect(url_for('grouping_detail', key=grouping.key))
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     form = forms.StartGroupingForm()
     if form.validate_on_submit():
@@ -253,7 +252,7 @@ def grouping_start(key):
         policy = get_policy(grouping.policy)
         groups = policy(policy_data, grouping.max_group_size, grouping.member_reserve)
         get_repository().set_groups(grouping.key, groups)
-        return redirect(url_for('grouping_detail', key=grouping.key))
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     return render_template(
         "grouping_start.html",

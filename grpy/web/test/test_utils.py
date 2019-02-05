@@ -21,20 +21,37 @@
 
 import datetime
 
+from flask import url_for
+
 import pytest
 
 from werkzeug.exceptions import NotFound
 
 from ..utils import (
     datetimeformat, login_required, make_model, update_model, value_or_404)
-from ...models import Permission, User, UserKey
+from ...models import GroupingKey, Permission, User, UserKey
 from ...utils import now
+
+
+def test_grouping_key_converter(app, client) -> None:
+    """Make sure that the URL converter 'grouping' works as expected."""
+
+    def just_a_view(grouping_key: GroupingKey) -> bytes:
+        """This view is for testing only."""
+        assert isinstance(grouping_key, GroupingKey)
+        assert grouping_key.int == 1017
+        return b"Done"
+
+    app.add_url_rule('/test<grouping:grouping_key>/', "test_view", just_a_view)
+    response = client.get(url_for("test_view", grouping_key=str(GroupingKey(int=1017))))
+    assert response.status_code == 200
+    assert response.data == b"Done"
 
 
 def test_login_required(app, client, auth) -> None:
     """If no user is logged in, raise 401."""
     @login_required
-    def just_a_view():
+    def just_a_view() -> bytes:
         """This view is for testing only."""
         return b"Done"
 

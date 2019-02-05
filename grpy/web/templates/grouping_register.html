@@ -36,7 +36,7 @@
 </div>
 </div>
 <div class="w3-container">
-<form method="post" action="{{ url_for('grouping_register', key=grouping.key) }}">
+<form method="post" action="{{ url_for('grouping_register', grouping_key=grouping.key) }}">
 {{- form.csrf_token }}
 {{- form.submit_register(class="w3-btn " + color("primary")) }}
 {% if registration %}
