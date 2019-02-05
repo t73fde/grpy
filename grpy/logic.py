@@ -23,7 +23,7 @@ import hashlib
 import os
 from typing import List
 
-from .models import Grouping
+from .models import Grouping, Groups, UserKey
 
 
 def make_code(grouping: Grouping, unique: bool = False) -> str:
@@ -47,3 +47,15 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
         num_value, rem = divmod(num_value, len(encoding))
         result.append(encoding[rem])
     return ''.join(result)
+
+
+def remove_from_groups(groups: Groups, user_key: UserKey) -> Groups:
+    """Remove an user from the builded groups."""
+    group_list = []
+    for group in groups:
+        if user_key in group:
+            if len(group) > 1:
+                group_list.append(group - {user_key})
+        else:
+            group_list.append(group)
+    return tuple(group_list)

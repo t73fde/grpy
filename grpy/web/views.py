@@ -157,6 +157,11 @@ def grouping_detail(grouping_key):
                 continue
             if user_key in user_keys:
                 get_repository().delete_registration(grouping.key, user_key)
+                get_repository().set_groups(
+                    grouping.key,
+                    logic.remove_from_groups(
+                        get_repository().get_groups(grouping.key),
+                        user_key))
                 count += 1
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))

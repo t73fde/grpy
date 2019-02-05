@@ -20,9 +20,9 @@
 """Test the web views."""
 
 import datetime
-from typing import Any, Dict, cast
+from typing import Any, Dict, List, cast
 
-from flask import g, session, url_for
+from flask import Response, g, session, url_for
 from flask.sessions import SecureCookieSessionInterface
 
 import pytest
@@ -31,6 +31,7 @@ from werkzeug.http import parse_cookie
 
 from ... import utils
 from ...models import Grouping, GroupingKey, Registration, User, UserPreferences
+from ...repo.base import Repository
 from ...repo.logic import set_grouping_new_code
 
 
@@ -516,24 +517,38 @@ def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     assert "Member" not in data
 
 
-def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
-    """Test the group building process."""
-    assert app_grouping.key is not None
-    # Create a bunch of users and their registrations
+def create_registered_users(
+        repository: Repository, grouping_key: GroupingKey) -> List[User]:
+    """Create a bunch of users and register them for the grouping."""
     users = []
     for i in range(20):
-        user = app.get_repository().set_user(User(None, "user_%d" % i))
-        app.get_repository().set_registration(
-            Registration(app_grouping.key, user.key, UserPreferences()))
+        user = repository.set_user(User(None, "user_%d" % i))
+        assert user.key is not None
+        repository.set_registration(
+            Registration(grouping_key, user.key, UserPreferences()))
         users.append(user)
+    return users
 
+
+def start_grouping(
+        client, auth, repository: Repository, app_grouping: Grouping) -> Response:
+    """Build the group."""
     url = url_for('grouping_start', grouping_key=app_grouping.key)
-    app.get_repository().set_grouping(app_grouping._replace(
+    repository.set_grouping(app_grouping._replace(
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1),
         max_group_size=6, member_reserve=5))
     auth.login('host')
     response = client.post(url)
+    return response
+
+
+def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
+    """Test the group building process."""
+    assert app_grouping.key is not None
+    users = create_registered_users(app.get_repository(), app_grouping.key)
+
+    response = start_grouping(client, auth, app.get_repository(), app_grouping)
     assert response.status_code == 302
     detail_url = url_for('grouping_detail', grouping_key=app_grouping.key)
     assert response.headers['Location'] == "http://localhost" + detail_url
@@ -553,3 +568,28 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
         data = response.data.decode('utf-8')
         assert data.count(user.ident) > 1
         assert data.count(app_grouping.name) == 1
+
+
+def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) -> None:
+    """User is deleted after groups are formed, it must be removed from group."""
+    assert app_grouping.key is not None
+    users = create_registered_users(app.get_repository(), app_grouping.key)
+    response = start_grouping(client, auth, app.get_repository(), app_grouping)
+    assert response.status_code == 302
+
+    # Now deregister one user
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+    response = client.post(url, data={
+        'u': [users[0].key],
+    })
+    assert response.status_code == 302
+
+    # This user must not be in the freshly formed group
+    other_users = {user.key for user in users if user != users[0]}
+    for group in app.get_repository().get_groups(app_grouping.key):
+        for member in group:
+            assert member != users[0].key
+            assert member in other_users
+            other_users.remove(member)
+    assert users[0].key not in other_users
+    assert other_users == set()

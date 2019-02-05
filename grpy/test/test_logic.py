@@ -21,7 +21,7 @@
 
 from datetime import timedelta
 
-from ..logic import make_code
+from ..logic import make_code, remove_from_groups
 from ..models import Grouping, UserKey
 from ..utils import now
 
@@ -55,3 +55,20 @@ def test_make_code() -> None:
     check_code(code, grouping._replace(final_date=yet + timedelta(days=60)))
     check_code(code, grouping._replace(policy="LK"))
     check_code(None, grouping, unique=True)
+
+
+def test_remove_from_groups() -> None:
+    """Check that user key is remove from group."""
+    user_key_1 = UserKey(int=1)
+    user_key_2 = UserKey(int=2)
+
+    groups_1 = (frozenset({user_key_1, user_key_2}),)
+    assert remove_from_groups(groups_1, user_key_1) == (frozenset({user_key_2}),)
+    assert remove_from_groups(groups_1, user_key_2) == (frozenset({user_key_1}),)
+
+    groups_2 = (frozenset({user_key_1}), frozenset({user_key_2}))
+    assert remove_from_groups(groups_2, user_key_1) == (frozenset({user_key_2}),)
+    assert remove_from_groups(groups_2, user_key_2) == (frozenset({user_key_1}),)
+
+    assert remove_from_groups(groups_1, UserKey(int=0)) == groups_1
+    assert remove_from_groups(groups_2, UserKey(int=0)) == groups_2
