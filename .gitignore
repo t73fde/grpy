@@ -1,3 +1,4 @@
+*.db
 .coverage
 .html_coverage
 .mypy_cache
