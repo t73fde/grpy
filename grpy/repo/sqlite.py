@@ -76,7 +76,7 @@ class SqliteRepositoryFactory(RepositoryFactory):
             try:
                 connection = sqlite3.connect(
                     self._database, detect_types=sqlite3.PARSE_DECLTYPES)
-                connection.execute("PRAGMA foreign_keys = ON")
+                connection.execute("PRAGMA foreign_keys=ON")
                 connection.execute("BEGIN TRANSACTION")
                 return connection
             except Exception:  # pylint: disable=broad-except
