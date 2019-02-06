@@ -145,10 +145,12 @@ def grouping_detail(grouping_key):
         lambda r: r.user,
         get_repository().iter_user_registrations_by_grouping(grouping.key)))
     user_registrations.sort(key=lambda u: u.ident)
+
     form = forms.RemoveRegistrationsForm()
     if request.method == 'POST':
         delete_users = request.form.getlist('u')
         user_keys = {u.key for u in user_registrations}
+        deleted_users = set()
         count = 0
         for user in delete_users:
             try:
@@ -157,14 +159,15 @@ def grouping_detail(grouping_key):
                 continue
             if user_key in user_keys:
                 get_repository().delete_registration(grouping.key, user_key)
-                get_repository().set_groups(
-                    grouping.key,
-                    logic.remove_from_groups(
-                        get_repository().get_groups(grouping.key),
-                        user_key))
+                deleted_users.add(user_key)
                 count += 1
+        get_repository().set_groups(
+            grouping.key,
+            logic.remove_from_groups(
+                get_repository().get_groups(grouping.key), deleted_users))
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
     can_delete = not user_registrations
     can_start = grouping.can_grouping_start() and user_registrations
     group_list = []

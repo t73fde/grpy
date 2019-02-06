@@ -21,7 +21,7 @@
 
 import hashlib
 import os
-from typing import List
+from typing import AbstractSet, List
 
 from .models import Grouping, Groups, UserKey
 
@@ -49,13 +49,17 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
     return ''.join(result)
 
 
-def remove_from_groups(groups: Groups, user_key: UserKey) -> Groups:
+def remove_from_groups(groups: Groups, user_keys: AbstractSet[UserKey]) -> Groups:
     """Remove an user from the builded groups."""
+    user_key_set = set(user_keys)
     group_list = []
     for group in groups:
-        if user_key in group:
-            if len(group) > 1:
-                group_list.append(group - {user_key})
+        both = group.intersection(user_key_set)
+        if both:
+            new_group = group - both
+            if new_group:
+                group_list.append(new_group)
+            user_key_set.difference_update(both)
         else:
             group_list.append(group)
     return tuple(group_list)

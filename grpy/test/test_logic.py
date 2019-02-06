@@ -63,12 +63,17 @@ def test_remove_from_groups() -> None:
     user_key_2 = UserKey(int=2)
 
     groups_1 = (frozenset({user_key_1, user_key_2}),)
-    assert remove_from_groups(groups_1, user_key_1) == (frozenset({user_key_2}),)
-    assert remove_from_groups(groups_1, user_key_2) == (frozenset({user_key_1}),)
+    assert remove_from_groups(groups_1, {user_key_1}) == (frozenset({user_key_2}),)
+    assert remove_from_groups(groups_1, {user_key_2}) == (frozenset({user_key_1}),)
 
     groups_2 = (frozenset({user_key_1}), frozenset({user_key_2}))
-    assert remove_from_groups(groups_2, user_key_1) == (frozenset({user_key_2}),)
-    assert remove_from_groups(groups_2, user_key_2) == (frozenset({user_key_1}),)
+    assert remove_from_groups(groups_2, {user_key_1}) == (frozenset({user_key_2}),)
+    assert remove_from_groups(groups_2, {user_key_2}) == (frozenset({user_key_1}),)
 
-    assert remove_from_groups(groups_1, UserKey(int=0)) == groups_1
-    assert remove_from_groups(groups_2, UserKey(int=0)) == groups_2
+    assert remove_from_groups(groups_1, set()) == groups_1
+    assert remove_from_groups(groups_1, {UserKey(int=0)}) == groups_1
+    assert remove_from_groups(groups_2, set()) == groups_2
+    assert remove_from_groups(groups_2, {UserKey(int=0)}) == groups_2
+
+    assert remove_from_groups(groups_1, {user_key_1, user_key_2}) == ()
+    assert remove_from_groups(groups_2, {user_key_1, user_key_2}) == ()
