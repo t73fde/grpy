@@ -17,18 +17,19 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Proxy repository."""
+"""Base proxy repository."""
+
 
 from typing import Iterator, Optional
 
-from .base import OrderSpec, Repository, RepositoryFactory, WhereSpec
-from .models import UserGroup, UserRegistration
-from ..models import (
-    Grouping, GroupingKey, Groups, Registration, User, UserKey, ValidationFailed)
+from ..base import OrderSpec, Repository, WhereSpec
+from ..models import UserGroup, UserRegistration
+from ...models import (
+    Grouping, GroupingKey, Groups, Registration, User, UserKey)
 
 
-class ProxyRepository(Repository):
-    """A repository that delegates all requests to a real repository."""
+class BaseProxyRepository(Repository):
+    """A repository that delegates all requests to another repository."""
 
     def __init__(self, delegate: Repository):
         """Initialize the proxy repository."""
@@ -40,7 +41,6 @@ class ProxyRepository(Repository):
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
-        user.validate()
         return self._delegate.set_user(user)
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
@@ -60,7 +60,6 @@ class ProxyRepository(Repository):
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
-        grouping.validate()
         return self._delegate.set_grouping(grouping)
 
     def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
@@ -80,7 +79,6 @@ class ProxyRepository(Repository):
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
-        registration.validate()
         return self._delegate.set_registration(registration)
 
     def get_registration(
@@ -116,11 +114,6 @@ class ProxyRepository(Repository):
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
-        for group in groups:
-            for member in group:
-                if not isinstance(member, UserKey):
-                    raise ValidationFailed(
-                        "Group member is not an UserKey: " + repr(member))
         return self._delegate.set_groups(grouping_key, groups)
 
     def get_groups(self, grouping_key: GroupingKey) -> Groups:
@@ -134,24 +127,3 @@ class ProxyRepository(Repository):
             order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
         """Return an iterator of group data of some user."""
         return self._delegate.iter_groups_by_user(user_key, where, order)
-
-
-class ProxyRepositoryFactory(RepositoryFactory):
-    """RepositoryFactory to create ProxRepository."""
-
-    def __init__(self, delegate: RepositoryFactory):
-        """Initialize the factory with the URL."""
-        super().__init__(delegate.url)
-        self._delegate = delegate
-
-    def can_connect(self) -> bool:
-        """Test the connection to the data source."""
-        return self._delegate.can_connect()
-
-    def initialize(self) -> bool:
-        """Initialize the repository, if needed."""
-        return self._delegate.initialize()
-
-    def create(self):
-        """Create and setup a repository."""
-        return ProxyRepository(self._delegate.create())
