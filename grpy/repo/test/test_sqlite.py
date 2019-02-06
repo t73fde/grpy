@@ -75,8 +75,8 @@ def test_memory_always_other_repository() -> None:
     repo_2 = factory.create()
     assert repo_2 is not None
     assert repo_1 != repo_2
-    repo_1.close()
-    repo_2.close()
+    repo_1.close(True)
+    repo_2.close(True)
 
 
 def test_real_always_other_repository() -> None:
@@ -90,8 +90,8 @@ def test_real_always_other_repository() -> None:
         repo_2 = factory.create()
         assert repo_2 is not None
         assert repo_1 != repo_2
-        repo_1.close()
-        repo_2.close()
+        repo_1.close(True)
+        repo_2.close(False)
     finally:
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)

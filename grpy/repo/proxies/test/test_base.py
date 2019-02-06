@@ -48,9 +48,15 @@ def base_proxy() -> MockedBaseProxyRepository:
 # pylint: disable=redefined-outer-name
 
 
+def test_get_messages(base_proxy: MockedBaseProxyRepository) -> None:
+    """Return all repository-related messages."""
+    base_proxy.get_messages()
+    assert base_proxy.mock.get_messages.call_count == 1
+
+
 def test_close(base_proxy: MockedBaseProxyRepository) -> None:
     """Close the repository, store all permanent data."""
-    base_proxy.close()
+    base_proxy.close(True)
     assert base_proxy.mock.close.call_count == 1
 
 

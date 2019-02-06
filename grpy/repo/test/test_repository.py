@@ -26,7 +26,7 @@ from typing import List, Tuple, cast
 import pytest
 
 from .. import create_factory
-from ..base import DuplicateKey, NothingToUpdate, Repository
+from ..base import DuplicateKey, Repository
 from ..ram import RamRepositoryFactory
 from ... import utils
 from ...models import (
@@ -70,15 +70,19 @@ def test_insert_user(repository: Repository) -> None:
     assert new_user.ident == user.ident
     assert new_user.is_host == user.is_host
 
-    with pytest.raises(DuplicateKey):
-        repository.set_user(user)
+    repository.set_user(user)
+    assert "Duplicate key for field 'User.ident' with value 'user'" in \
+        repository.get_messages(delete=True)[0].text
+    assert repository.get_messages() == []
 
 
 def test_update_user(repository: Repository) -> None:
     """Check that updating an existing user works."""
     user = User(UserKey(), "user")
-    with pytest.raises(NothingToUpdate):
-        repository.set_user(user)
+    repository.set_user(user)
+    assert "Missing user: try to update key " in \
+        repository.get_messages(delete=True)[0].text
+    assert repository.get_messages() == []
 
     user = repository.set_user(User(None, "user", Permission.HOST))
     new_user = user._replace(permissions=Permission(0))
@@ -88,8 +92,10 @@ def test_update_user(repository: Repository) -> None:
 
     user_2 = repository.set_user(User(None, "user_2"))
     renamed_user = user_2._replace(ident=user.ident)
-    with pytest.raises(DuplicateKey):
-        repository.set_user(renamed_user)
+    repository.set_user(renamed_user)
+    assert "Duplicate key for field 'User.ident' with value 'user'" in \
+        repository.get_messages(delete=True)[0].text
+    assert repository.get_messages() == []
 
 
 def test_get_user(repository: Repository) -> None:
@@ -230,8 +236,10 @@ def test_insert_grouping(repository: Repository, grouping: Grouping) -> None:
 def test_update_grouping(repository: Repository, grouping: Grouping) -> None:
     """Check that updating an existing grouping works."""
     grouping_1 = grouping._replace(key=GroupingKey())
-    with pytest.raises(NothingToUpdate):
-        repository.set_grouping(grouping_1)
+    repository.set_grouping(grouping_1)
+    assert "Missing grouping: try to update key " + str(grouping_1.key) in \
+        repository.get_messages(delete=True)[0].text
+    assert repository.get_messages() == []
 
     grouping = repository.set_grouping(grouping)
     new_grouping = grouping._replace(name="new name")

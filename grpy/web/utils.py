@@ -20,9 +20,10 @@
 """Some utility functions for the web application."""
 
 from functools import wraps
-from typing import Any
+from typing import Any, Sequence, Tuple, cast
 
-from flask import abort, g, redirect, request, url_for
+from flask import (
+    abort, current_app, g, get_flashed_messages, redirect, request, url_for)
 
 from flask_babel import format_datetime
 
@@ -100,9 +101,18 @@ def colormap(color_description: str, prefix: str = "w3-") -> str:
         'primary': "indigo",
         'secondary': "blue-gray",
         'success': "teal",
+        'critical': "red",
         'danger': "red",
         'error': "red",
         'warning': "yellow",
         'info': "cyan",
         'message': "cyan",
     }.get(color_description, color_description)
+
+
+def get_all_messages() -> Sequence[Tuple[str, str]]:
+    """Return all messages, not just those from the session."""
+    messages = current_app.get_repository().get_messages(delete=False)
+    if messages:
+        return [(m.category, m.text) for m in messages]
+    return cast(Sequence[Tuple[str, str]], get_flashed_messages(with_categories=True))

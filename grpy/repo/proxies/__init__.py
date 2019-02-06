@@ -19,7 +19,7 @@
 
 """Proxy reposities."""
 
-from .check import ValidatingProxyRepository
+from .check import CatchingProxyRepository, ValidatingProxyRepository
 from ..base import Repository, RepositoryFactory
 
 
@@ -41,4 +41,5 @@ class ProxyRepositoryFactory(RepositoryFactory):
 
     def create(self) -> Repository:
         """Create and setup a repository."""
-        return ValidatingProxyRepository(self._delegate.create())
+        return CatchingProxyRepository(
+            ValidatingProxyRepository(self._delegate.create()))

@@ -27,8 +27,8 @@ from urllib.parse import urlparse
 from pytz import utc
 
 from .base import (
-    DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory,
-    WhereSpec)
+    DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
+    RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
     Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
@@ -170,9 +170,14 @@ class SqliteRepository(Repository):
         """Initialize the repository."""
         self._connection = connection
 
-    def close(self):
+    def get_messages(self, _delete: bool = False) -> Sequence[Message]:
+        """Return all repository-related messages."""
+        return []
+
+    def close(self, success: bool):
         """Close the repository."""
-        self._execute("COMMIT")
+        if success:
+            self._execute("COMMIT")
         self._connection.close()
         self._connection = None
 
@@ -471,7 +476,7 @@ class SqliteRepository(Repository):
 class SqliteMemoryRepository(SqliteRepository):
     """SQLite-based and memory-based repository."""
 
-    def close(self):
+    def close(self, _success: bool):
         """Close the repository, but do not close the connection."""
         self._connection = None
 

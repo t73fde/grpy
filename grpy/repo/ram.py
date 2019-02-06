@@ -20,10 +20,11 @@
 """In-memory repository, stored in RAM."""
 
 import random
-from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar, cast
+from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, TypeVar, cast
 
 from .base import (
-    DuplicateKey, NothingToUpdate, OrderSpec, Repository, RepositoryFactory, WhereSpec)
+    DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
+    RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
     Grouping, GroupingKey, Groups, NamedTuple, Registration, User, UserKey)
@@ -79,9 +80,13 @@ class RamRepository(Repository):
         """Initialize the repository."""
         self._state: RamRepositoryState = state
 
-    def close(self):
+    def get_messages(self, _delete: bool = False) -> Sequence[Message]:
+        """Return all repository-related messages."""
+        return []
+
+    def close(self, _success: bool) -> None:
         """Close the repository: nothing to do here."""
-        self._state = None
+        self._state = cast(RamRepositoryState, None)
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""

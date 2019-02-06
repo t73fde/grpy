@@ -64,7 +64,7 @@ class GrpyApp(Flask):
                 continue
             self.config[key] = new_value
 
-    def setup_repository(self):
+    def setup_repository(self) -> None:
         """Add a repository to the application."""
         self._repository_factory = create_factory(self.config['REPOSITORY'])
         self.log_info("Repository URL = '" + self._repository_factory.url + "'")
@@ -75,7 +75,7 @@ class GrpyApp(Flask):
             """Close the repository."""
             repository = g.pop('repository', None)
             if repository:
-                repository.close()
+                repository.close(not repository.get_messages(delete=True))
 
         self.teardown_request(close_repository)
 
@@ -116,6 +116,7 @@ class GrpyApp(Flask):
     def setup_jinja(self):
         """Add some filters / globals for Jinja2."""
         self.jinja_env.globals.update(  # pylint: disable=no-member
+            get_all_messages=utils.get_all_messages,
             color=utils.colormap,
             policy_name=policies.get_policy_name,
         )
@@ -234,4 +235,4 @@ def populate_testdata(repository_factory):
             now + timedelta(days=1), now + timedelta(days=8), None,
             "RD", 5, 3, "Nun wird es spannend"))
     finally:
-        repository.close()
+        repository.close(True)

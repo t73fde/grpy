@@ -20,9 +20,9 @@
 """Base proxy repository."""
 
 
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Sequence
 
-from ..base import OrderSpec, Repository, WhereSpec
+from ..base import Message, OrderSpec, Repository, WhereSpec
 from ..models import UserGroup, UserRegistration
 from ...models import (
     Grouping, GroupingKey, Groups, Registration, User, UserKey)
@@ -35,9 +35,13 @@ class BaseProxyRepository(Repository):
         """Initialize the proxy repository."""
         self._delegate = delegate
 
-    def close(self) -> None:
+    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+        """Return all repository-related messages."""
+        return self._delegate.get_messages(delete)
+
+    def close(self, success: bool) -> None:
         """Close the repository, store all permanent data."""
-        self._delegate.close()
+        self._delegate.close(success)
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""

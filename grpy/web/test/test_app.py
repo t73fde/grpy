@@ -22,11 +22,12 @@
 import os
 import unittest.mock
 
-from flask import g
+from flask import g, url_for
 
 import requests
 
 from ..app import create_app
+from ...repo.proxies.check import ValidatingProxyRepository
 
 
 def test_config() -> None:
@@ -77,3 +78,19 @@ def test_check_password(app, monkeypatch) -> None:
 
     monkeypatch.setattr(requests, 'head', requests_head_raise)
     assert app.authenticate("user", "1") is None
+
+
+def test_flash_repository_messages(client, auth, monkeypatch) -> None:
+    """Ensure that messages of repository are shown as a flash message."""
+
+    def raise_value_error(*args, **kwargs):
+        """Raise a ValueError."""
+        raise ValueError("Test for critical message")
+
+    auth.login("host")
+    monkeypatch.setattr(
+        ValidatingProxyRepository, 'iter_groupings', raise_value_error)
+    response = client.get(url_for('home'))
+    assert response.status_code == 200
+    assert b"Critical error: builtins.ValueError: " \
+        b"Test for critical message" in response.data

@@ -104,7 +104,7 @@ def repository(request):
     repo = factory.create()
     yield repo
 
-    repo.close()
+    repo.close(True)
     if temp_file:
         os.unlink(temp_file.name)
 

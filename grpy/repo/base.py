@@ -19,7 +19,7 @@
 
 """Base definitions for repositories."""
 
-from typing import Any, Dict, Iterator, Optional, Sequence
+from typing import Any, Dict, Iterator, NamedTuple, Optional, Sequence
 
 from .models import UserGroup, UserRegistration
 from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
@@ -27,6 +27,13 @@ from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
 
 WhereSpec = Dict[str, Any]
 OrderSpec = Sequence[str]
+
+
+class Message(NamedTuple):
+    """A message to be delivered to a client."""
+
+    category: str
+    text: str
 
 
 class DuplicateKey(Exception):
@@ -40,7 +47,11 @@ class NothingToUpdate(Exception):
 class Repository:
     """Abstract repository."""
 
-    def close(self) -> None:
+    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+        """Return all repository-related messages."""
+        raise NotImplementedError("Repository.get_messages")
+
+    def close(self, success: bool) -> None:
         """Close the repository, store all permanent data."""
         raise NotImplementedError("Repository.close")
 

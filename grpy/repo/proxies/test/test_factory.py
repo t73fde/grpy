@@ -23,7 +23,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..check import ValidatingProxyRepository
+from ..check import CatchingProxyRepository
 from ... import ProxyRepositoryFactory
 from ...ram import RamRepository, RamRepositoryState
 
@@ -70,5 +70,5 @@ def test_factory_create(proxy_factory) -> None:
     """Create and setup a repository."""
     repository = proxy_factory.create()
     assert proxy_factory.mock.create.call_count == 1
-    assert isinstance(repository, ValidatingProxyRepository)
+    assert isinstance(repository, CatchingProxyRepository)
     assert not isinstance(repository, RamRepository)
