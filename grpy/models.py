@@ -135,7 +135,7 @@ class Grouping(NamedTuple):
             raise ValidationFailed("Policy is empty: {}".format(self))
         if self.max_group_size < 1:
             raise ValidationFailed(
-                "Maximal group size < 1: {}".format(self.max_group_size))
+                "Maximum group size < 1: {}".format(self.max_group_size))
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
 

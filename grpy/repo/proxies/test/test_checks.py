@@ -53,13 +53,21 @@ def validate_proxy() -> MockedValidatingProxyRepository:
 
 def test_validate_set_user(validate_proxy: MockedValidatingProxyRepository) -> None:
     """Add / update the given user."""
-    validate_proxy.set_user(User(None, "ident"))
+    with pytest.raises(ValidationFailed, match="Ident is empty: "):
+        validate_proxy.set_user(User(None, ""))
+    assert validate_proxy.mock.set_user.call_count == 0
+
+    validate_proxy.set_user(User(None, "."))
     assert validate_proxy.mock.set_user.call_count == 1
 
 
 def test_validate_set_grouping(
         validate_proxy: MockedValidatingProxyRepository, grouping: Grouping) -> None:
     """Add / update the given grouping."""
+    with pytest.raises(ValidationFailed, match="Maximum group size < 1: 0"):
+        validate_proxy.set_grouping(grouping._replace(max_group_size=0))
+    assert validate_proxy.mock.set_grouping.call_count == 0
+
     validate_proxy.set_grouping(grouping)
     assert validate_proxy.mock.set_grouping.call_count == 1
 
@@ -67,6 +75,11 @@ def test_validate_set_grouping(
 def test_validate_set_registration(
         validate_proxy: MockedValidatingProxyRepository) -> None:
     """Add / update a grouping registration."""
+    with pytest.raises(ValidationFailed, match="Grouping is not a GroupingKey: 0"):
+        validate_proxy.set_registration(
+            Registration(cast(GroupingKey, 0), UserKey(int=0), UserPreferences()))
+    assert validate_proxy.mock.set_registration.call_count == 0
+
     validate_proxy.set_registration(
         Registration(GroupingKey(int=0), UserKey(int=0), UserPreferences()))
     assert validate_proxy.mock.set_registration.call_count == 1

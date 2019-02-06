@@ -76,39 +76,39 @@ def test_grouping_validation_failed() -> None:
     """An invalid model raises exception."""
     yet = now()
     delta = timedelta(seconds=1)
-    with pytest.raises(ValidationFailed, match="Key is not a GroupingKey:"):
+    with pytest.raises(ValidationFailed, match="Key is not a GroupingKey: "):
         Grouping(
             cast(GroupingKey, "123"), "code", "name", UserKey(int=0), yet,
             yet + delta, None, "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Host is not an UserKey:"):
+    with pytest.raises(ValidationFailed, match="Host is not an UserKey: "):
         Grouping(
             None, "code", "name", cast(UserKey, None), yet, yet + delta, None,
             "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Code is empty:"):
+    with pytest.raises(ValidationFailed, match="Code is empty: "):
         Grouping(
             None, "", "name", UserKey(int=0), yet, yet + delta, None,
             "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Name is empty:"):
+    with pytest.raises(ValidationFailed, match="Name is empty: "):
         Grouping(
             None, "code", "", UserKey(int=0), yet, yet + delta, None,
             "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Begin date after final date:"):
+    with pytest.raises(ValidationFailed, match="Begin date after final date: "):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet, None,
             "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Final date after close date:"):
+    with pytest.raises(ValidationFailed, match="Final date after close date: "):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet + delta, yet + delta,
             "RD", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Policy is empty:"):
+    with pytest.raises(ValidationFailed, match="Policy is empty: "):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet + delta, None,
             "", 2, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Maximal group size < 1:"):
+    with pytest.raises(ValidationFailed, match="Maximum group size < 1: 0"):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet + delta, None,
             "RD", 0, 0, "").validate()
-    with pytest.raises(ValidationFailed, match="Member reserve < 0:"):
+    with pytest.raises(ValidationFailed, match="Member reserve < 0: -1"):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet + delta, None,
             "RD", 2, -1, "").validate()
