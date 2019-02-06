@@ -27,7 +27,7 @@ Provides commands for static and dynamic tests.
 import pathlib
 import re
 import subprocess  # nosec
-from typing import List, Sequence
+from typing import List, Sequence, Tuple
 
 import click
 
@@ -100,7 +100,7 @@ def run_coverage(paths: Sequence[str], test_directory: str, verbose: int) -> boo
 @click.group()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def main(ctx, verbose):  # pylint: disable=unused-argument
+def main(ctx, verbose: int) -> None:
     """Entry point for all sub-commands."""
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
@@ -109,7 +109,7 @@ def main(ctx, verbose):  # pylint: disable=unused-argument
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def types(ctx, verbose):
+def types(ctx, verbose: int) -> None:
     """Perform a type analysis."""
     verbose += ctx.obj['verbose']
     process = exec_subprocess_no_report(
@@ -132,7 +132,7 @@ def types(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def lint(ctx, verbose):
+def lint(ctx, verbose: int) -> None:
     """Perform a static code analysis."""
     verbose += ctx.obj['verbose']
     source_paths = ["grpy", "scripts", "wsgi.py", "manage.py"]
@@ -151,35 +151,49 @@ def lint(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def coverage(ctx, verbose):
+def coverage(ctx, verbose: int) -> None:
     """Perform a full test with coverage measurement."""
     verbose += ctx.obj['verbose']
     if not run_coverage(["grpy"], "grpy", verbose):
         ctx.exit(1)
 
 
-@main.command()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def full_coverage(ctx, verbose):
-    """Perform a full test with coverage measurement, for all packages."""
-    verbose += ctx.obj['verbose']
+def collect_files_and_packages() -> Tuple[List[str], List[str]]:
+    """Scan subdirectores and collect needed files and packages."""
     packages = []
     files = []
-    for path in pathlib.Path("grpy").iterdir():
+    for path in pathlib.Path("grpy").glob('**/*'):
         name = path.parts[-1]
         if name.startswith("."):
             continue
         if path.is_dir():
             if name != "test":
                 packages.append(str(path))
-        elif path.is_file():
-            if path.suffix == ".py":
+        elif len(path.parts) == 2 and path.is_file():
+            if path.suffix == ".py" and name != "__init__.py":
                 files.append(str(path).replace("/", ".")[:-3])
 
+    packages.sort(reverse=True)
+    return files, packages
+
+
+@main.command()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def full_coverage(ctx, verbose: int) -> None:
+    """Perform a full test with coverage measurement, for all packages."""
+    verbose += ctx.obj['verbose']
+    no_python_dir = {
+        "grpy/web/templates",
+        "grpy/web/static",
+    }
+
+    files, packages = collect_files_and_packages()
     if not run_coverage(files, "grpy/test", verbose):
         ctx.exit(1)
     for directory in packages:
+        if directory in no_python_dir:
+            continue
         if not run_coverage([directory], directory, verbose):
             ctx.exit(1)
     ctx.invoke(coverage, verbose=verbose)
@@ -188,7 +202,7 @@ def full_coverage(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def outdated(ctx, verbose):
+def outdated(ctx, verbose: int) -> None:
     """Check for outdated packages."""
     if not run_subprocess(["pipenv", "check"], verbose):
         ctx.exit(1)
@@ -197,7 +211,7 @@ def outdated(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def check(ctx, verbose):
+def check(ctx, verbose: int) -> None:
     """Perform a check: lint and coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(coverage, verbose=verbose)
@@ -207,7 +221,7 @@ def check(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def full_check(ctx, verbose):
+def full_check(ctx, verbose: int) -> None:
     """Perform a full check: lint and full-coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(full_coverage, verbose=verbose)
