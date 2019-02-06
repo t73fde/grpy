@@ -143,9 +143,8 @@ class GrpyApp(Flask):
             response = requests.head(url, auth=(username, password))
             status_code = response.status_code
         except requests.RequestException:
-            # LOGGER.exception(
-            #     "Unable to get authentication from '%s' for user '%s':",
-            #     url, username)
+            self.log_error(
+                "Unable to get authentication from '%s' for user '%s':", url, username)
             status_code = 600
         return 200 <= status_code <= 299
 
@@ -168,6 +167,10 @@ class GrpyApp(Flask):
     def log_info(self, message: str, *args, **kwargs) -> None:
         """Emit a info message."""
         self.logger.info(message, *args, **kwargs)  # pylint: disable=no-member
+
+    def log_error(self, message: str, *args, **kwargs) -> None:
+        """Emit an error message."""
+        self.logger.error(message, *args, **kwargs)  # pylint: disable=no-member
 
 
 def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
