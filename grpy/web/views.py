@@ -19,17 +19,18 @@
 
 """Web views for grpy."""
 
-from typing import NamedTuple, Sequence, cast
+from typing import List, NamedTuple, Sequence, Tuple, cast
 
 from flask import (
-    abort, current_app, flash, g, redirect, render_template, request, url_for)
+    Response, abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
 from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import Grouping, KeyType, Registration, UserKey, UserPreferences
+from ..models import (
+    Grouping, GroupingKey, KeyType, Registration, User, UserKey, UserPreferences)
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Repository
 from ..repo.logic import set_grouping_new_code
@@ -48,9 +49,11 @@ class UserGroup(NamedTuple):
     named_group: Sequence[str]
 
 
-def home():
+def home() -> Response:
     """Show home page."""
-    groupings = registrations = group_list = []
+    grouping_counts: List[Tuple[Grouping, int]] = []
+    registrations: List[Grouping] = []
+    group_list: List[UserGroup] = []
     if g.user:
         if g.user.is_host:
             repository = get_repository()
@@ -60,8 +63,9 @@ def home():
                     "close_date__ge": utils.now()},
                 order=["final_date"]))
             counts = [
-                repository.count_registrations_by_grouping(g.key) for g in groupings]
-            groupings = zip(groupings, counts)
+                repository.count_registrations_by_grouping(
+                    cast(GroupingKey, g.key)) for g in groupings]
+            grouping_counts = list(zip(groupings, counts))
 
         group_list = []
         assigned_groupings = set()
@@ -79,19 +83,19 @@ def home():
             grouping for grouping in grouping_iterator
             if grouping.key not in assigned_groupings]
 
-    show_welcome = not groupings and not registrations and not group_list
+    show_welcome = not grouping_counts and not registrations and not group_list
     return render_template(
         "home.html",
-        show_welcome=show_welcome,
-        groupings=groupings, registrations=registrations, group_list=group_list)
+        show_welcome=show_welcome, groupings=grouping_counts,
+        registrations=registrations, group_list=group_list)
 
 
-def about():
+def about() -> Response:
     """Show about page."""
     return render_template("about.html")
 
 
-def login():
+def login() -> Response:
     """Show login form and authenticate user."""
     if g.user:
         current_app.logout()
@@ -113,14 +117,14 @@ def login():
     return render_template("login.html", form=form)
 
 
-def logout():
+def logout() -> Response:
     """Logout current user."""
     current_app.logout()
     return redirect(url_for("home"))
 
 
 @login_required
-def grouping_create():
+def grouping_create() -> Response:
     """Create a new grouping."""
     if not g.user.is_host:
         abort(403)
@@ -136,7 +140,7 @@ def grouping_create():
 
 
 @login_required
-def grouping_detail(grouping_key):
+def grouping_detail(grouping_key: GroupingKey) -> Response:
     """Show details of a grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
@@ -173,7 +177,9 @@ def grouping_detail(grouping_key):
     group_list = []
     for group in get_repository().get_groups(grouping.key):
         group_list.append(
-            sorted(get_repository().get_user(member).ident for member in group))
+            sorted(
+                cast(User, get_repository().get_user(member)).ident
+                for member in group))
     return render_template(
         "grouping_detail.html",
         grouping=grouping, group_list=group_list,
@@ -182,7 +188,7 @@ def grouping_detail(grouping_key):
 
 
 @login_required
-def grouping_update(grouping_key):
+def grouping_update(grouping_key: GroupingKey) -> Response:
     """Update an existing grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
@@ -200,7 +206,7 @@ def grouping_update(grouping_key):
 
 
 @login_required_redirect
-def shortlink(code: str):
+def shortlink(code: str) -> Response:
     """Show information for short link."""
     grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
     if g.user.key == grouping.host_key:
@@ -210,7 +216,7 @@ def shortlink(code: str):
 
 
 @login_required
-def grouping_register(grouping_key):
+def grouping_register(grouping_key: GroupingKey) -> Response:
     """Register for a grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key == grouping.host_key:
@@ -244,7 +250,7 @@ def grouping_register(grouping_key):
 
 
 @login_required
-def grouping_start(grouping_key):
+def grouping_start(grouping_key: GroupingKey) -> Response:
     """Start the grouping process."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
