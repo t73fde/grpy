@@ -20,7 +20,7 @@
 """In-memory repository, stored in RAM."""
 
 import random
-from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, TypeVar, cast
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar, cast
 
 from .base import (
     DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
@@ -118,9 +118,9 @@ class RamRepository(Repository):
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterable[User]:
         """Return an iterator of all or some users."""
-        return process_where_order(iter(self._state.users.values()), where, order)
+        return process_where_order(self._state.users.values(), where, order)
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -153,9 +153,9 @@ class RamRepository(Repository):
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all or some groupings."""
-        return process_where_order(iter(self._state.groupings.values()), where, order)
+        return process_where_order(self._state.groupings.values(), where, order)
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
@@ -184,7 +184,7 @@ class RamRepository(Repository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         return process_where_order(
             (self._state.groupings[g] for g, p in self._state.registrations
@@ -196,7 +196,7 @@ class RamRepository(Repository):
             self,
             grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
         return process_where_order(
             (UserRegistration(self._state.users[p], r.preferences)
@@ -217,7 +217,7 @@ class RamRepository(Repository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
         result = []
         for grouping, groups in self._state.groups.items():
@@ -227,7 +227,7 @@ class RamRepository(Repository):
                     named_group = frozenset(
                         NamedUser(g, self._state.users[g].ident) for g in group)
                     result.append(UserGroup(grouping, grouping_obj.name, named_group))
-        return process_where_order(iter(result), where, order)
+        return process_where_order(result, where, order)
 
 
 class WherePredicate:
@@ -284,7 +284,7 @@ ModelT = TypeVar('ModelT')
 
 
 def process_where(
-        result: Iterator[ModelT], where: Optional[WhereSpec]) -> Iterator[ModelT]:
+        result: Iterable[ModelT], where: Optional[WhereSpec]) -> Iterable[ModelT]:
     """Filter result according to specification."""
     if where:
         for where_spec, where_val in where.items():
@@ -292,12 +292,12 @@ def process_where(
             where_field = where_spec_split[0]
             where_relop = where_spec_split[1]
             pred = WherePredicate(where_field, where_relop, where_val).pred()
-            result = iter([elem for elem in result if pred(elem)])
+            result = [elem for elem in result if pred(elem)]
     return result
 
 
 def process_order(
-        result: Iterator[ModelT], order: Optional[OrderSpec]) -> Iterator[ModelT]:
+        result: Iterable[ModelT], order: Optional[OrderSpec]) -> Iterable[ModelT]:
     """Sort result with respect to order specifications."""
     list_result = list(result)
     if order:
@@ -316,13 +316,13 @@ def process_order(
                 reverse=reverse)
     else:
         random.shuffle(list_result)
-    return iter(list_result)
+    return list_result
 
 
 def process_where_order(
-        result: Iterator[ModelT],
+        result: Iterable[ModelT],
         where: Optional[WhereSpec],
-        order: Optional[OrderSpec]) -> Iterator[ModelT]:
+        order: Optional[OrderSpec]) -> Iterable[ModelT]:
     """Process the where and order specification."""
     result = process_where(result, where)
     result = process_order(result, order)

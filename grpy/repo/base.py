@@ -19,7 +19,7 @@
 
 """Base definitions for repositories."""
 
-from typing import Any, Dict, Iterator, NamedTuple, Optional, Sequence
+from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence
 
 from .models import UserGroup, UserRegistration
 from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
@@ -70,7 +70,7 @@ class Repository:
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterable[User]:
         """
         Return an iterator of all or some users.
 
@@ -105,7 +105,7 @@ class Repository:
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """
         Return an iterator of all or some groupings.
 
@@ -136,7 +136,7 @@ class Repository:
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         raise NotImplementedError("Repository.iter_groupings_by_user")
 
@@ -144,7 +144,7 @@ class Repository:
             self,
             grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
         raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
 
@@ -160,7 +160,7 @@ class Repository:
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
         raise NotImplementedError("Repository.iter_groups_by_user")
 

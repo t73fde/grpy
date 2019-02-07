@@ -55,14 +55,14 @@ class MockIterator:
 
 def test_lazy_list_bool() -> None:
     """Test the lazy list as a boolean."""
-    lazy: LazyList[int] = LazyList(iter([]))
+    lazy: LazyList[int] = LazyList([])
     assert not lazy
     assert not bool(lazy)
-    assert LazyList(iter([1, 2, 3]))
+    assert LazyList([1, 2, 3])
     assert not LazyList(i for i in [])  # type: ignore
     assert LazyList(i for i in [1])
-    assert not LazyList(iter(()))
-    assert LazyList(iter((1,)))
+    assert not LazyList(())
+    assert LazyList((1,))
     assert not LazyList(MockIterator(0))
 
     mock_iterator = MockIterator(1)
@@ -78,13 +78,13 @@ def test_lazy_list_bool() -> None:
 
 def test_lazy_list_len() -> None:
     """Calculating the length result in consuming the whole iterator."""
-    assert len(LazyList(iter([]))) == 0  # pylint: disable=len-as-condition
-    assert len(LazyList(iter([1, 2, 3]))) == 3
+    assert len(LazyList([])) == 0  # pylint: disable=len-as-condition
+    assert len(LazyList([1, 2, 3])) == 3
     assert len(LazyList(  # pylint: disable=len-as-condition
         i for i in [])) == 0  # type: ignore
     assert len(LazyList(i for i in [1])) == 1
-    assert len(LazyList(iter(()))) == 0  # pylint: disable=len-as-condition
-    assert len(LazyList(iter((1,)))) == 1
+    assert len(LazyList(())) == 0  # pylint: disable=len-as-condition
+    assert len(LazyList((1,))) == 1
 
     for i in range(10):
         mock_iterator = MockIterator(i)
@@ -94,12 +94,12 @@ def test_lazy_list_len() -> None:
 
 def test_lazy_list_iterator() -> None:
     """The lazy list is itself an iterator."""
-    assert list(LazyList(iter([]))) == []
-    assert list(LazyList(iter([1, 2, 3]))) == [1, 2, 3]
+    assert list(LazyList([])) == []
+    assert list(LazyList([1, 2, 3])) == [1, 2, 3]
     assert list(LazyList(i for i in [])) == []  # type: ignore
     assert list(LazyList(i for i in [1])) == [1]
-    assert list(LazyList(iter(()))) == []
-    assert list(LazyList(iter((1,)))) == [1]
+    assert list(LazyList(())) == []
+    assert list(LazyList((1,))) == [1]
 
     for i in range(10):
         mock_iterator = MockIterator(i)

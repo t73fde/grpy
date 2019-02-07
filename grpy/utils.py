@@ -21,7 +21,7 @@
 
 import collections
 from datetime import datetime
-from typing import Deque, Iterator, TypeVar
+from typing import Deque, Iterable, TypeVar
 
 from pytz import utc
 
@@ -34,12 +34,12 @@ def now() -> datetime:
 T = TypeVar("T")  # pylint: disable=invalid-name
 
 
-class LazyList(Iterator[T]):
+class LazyList(Iterable[T]):
     """A list-like structure based on an iterator."""
 
-    def __init__(self, iterator: Iterator[T]):
+    def __init__(self, iterator: Iterable[T]):
         """Initialize lazy list with an iterator."""
-        self._iterator = (iterator)
+        self._iterator = iter(iterator)
         self._front: Deque[T] = collections.deque()
 
     def _consume(self) -> bool:

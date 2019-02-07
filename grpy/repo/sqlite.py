@@ -21,7 +21,7 @@
 
 import sqlite3
 from datetime import datetime
-from typing import AbstractSet, Any, Iterator, List, Optional, Sequence, Tuple, cast
+from typing import AbstractSet, Any, Iterable, List, Optional, Sequence, Tuple, cast
 from urllib.parse import urlparse
 
 from pytz import utc
@@ -235,7 +235,7 @@ class SqliteRepository(Repository):
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterable[User]:
         """Return an iterator of all or some users."""
         where_sql, where_vals = where_clause(where)
         cursor = self._execute(
@@ -245,7 +245,7 @@ class SqliteRepository(Repository):
         for row in cursor.fetchall():
             result.append(User(row[0], row[1], Permission(row[2])))
         cursor.close()
-        return iter(result)
+        return result
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -313,7 +313,7 @@ class SqliteRepository(Repository):
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all or some groupings."""
         where_sql, where_vals = where_clause(where, {"close_date"})
         cursor = self._execute(
@@ -324,7 +324,7 @@ class SqliteRepository(Repository):
         for row in cursor.fetchall():
             result.append(Grouping._make(row))
         cursor.close()
-        return iter(result)
+        return result
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
@@ -375,7 +375,7 @@ class SqliteRepository(Repository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         where_sql, where_vals = where_clause(where, {"close_date"}, no_where=True)
         cursor = self._execute(
@@ -388,13 +388,13 @@ class SqliteRepository(Repository):
         for row in cursor.fetchall():
             result.append(Grouping._make(row))
         cursor.close()
-        return iter(result)
+        return result
 
     def iter_user_registrations_by_grouping(
             self,
             grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
         where_sql, where_vals = where_clause(where, no_where=True)
         cursor = self._execute(
@@ -408,7 +408,7 @@ class SqliteRepository(Repository):
                 User(row[0], row[1], Permission(row[2])),
                 UserPreferences()))
         cursor.close()
-        return iter(result)
+        return result
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
@@ -453,7 +453,7 @@ class SqliteRepository(Repository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
         cursor = self._execute(
             "SELECT grouping_key, name, group_no FROM groups,groupings "
@@ -470,7 +470,7 @@ class SqliteRepository(Repository):
                 frozenset(NamedUser._make(row) for row in cursor_2.fetchall())))
             cursor_2.close()
         cursor.close()
-        return iter(result)
+        return result
 
 
 class SqliteMemoryRepository(SqliteRepository):

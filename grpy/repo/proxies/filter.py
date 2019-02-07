@@ -20,7 +20,7 @@
 """Filter proxy repository."""
 
 from datetime import datetime
-from typing import Callable, Iterator, Optional, Sequence, cast
+from typing import Callable, Iterable, Optional, Sequence, cast
 
 from .base import BaseProxyRepository
 from ..base import Message, OrderSpec, Repository, WhereSpec
@@ -72,10 +72,10 @@ class FilterProxyRepository(BaseProxyRepository):
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[User]:
+            order: Optional[OrderSpec] = None) -> Iterable[User]:
         """Return an iterator of all or some users."""
-        return cast(Iterator[User], self._filter(
-            super().iter_users, iter([]), where, order))
+        return cast(Iterable[User], self._filter(
+            super().iter_users, (), where, order))
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -95,10 +95,10 @@ class FilterProxyRepository(BaseProxyRepository):
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all or some groupings."""
-        return cast(Iterator[Grouping], self._filter(
-            super().iter_groupings, iter([]), where, order))
+        return cast(Iterable[Grouping], self._filter(
+            super().iter_groupings, (), where, order))
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
@@ -125,19 +125,19 @@ class FilterProxyRepository(BaseProxyRepository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[Grouping]:
+            order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
-        return cast(Iterator[Grouping], self._filter(
-            super().iter_groupings_by_user, iter([]), user_key, where, order))
+        return cast(Iterable[Grouping], self._filter(
+            super().iter_groupings_by_user, (), user_key, where, order))
 
     def iter_user_registrations_by_grouping(
             self,
             grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserRegistration]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
-        return cast(Iterator[UserRegistration], self._filter(
-            super().iter_user_registrations_by_grouping, iter([]),
+        return cast(Iterable[UserRegistration], self._filter(
+            super().iter_user_registrations_by_grouping, (),
             grouping_key, where, order))
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
@@ -152,7 +152,7 @@ class FilterProxyRepository(BaseProxyRepository):
             self,
             user_key: UserKey,
             where: Optional[WhereSpec] = None,
-            order: Optional[OrderSpec] = None) -> Iterator[UserGroup]:
+            order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
-        return cast(Iterator[UserGroup], self._filter(
-            super().iter_groups_by_user, iter([]), user_key, where, order))
+        return cast(Iterable[UserGroup], self._filter(
+            super().iter_groups_by_user, (), user_key, where, order))
