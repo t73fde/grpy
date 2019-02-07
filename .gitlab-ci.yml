@@ -12,3 +12,4 @@ check:
   - pipenv install --dev
   - pipenv run python manage.py -v full-check
   - pipenv run python manage.py types -v
+  - tox
