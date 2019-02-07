@@ -22,7 +22,7 @@
 import os
 from typing import Any, Dict, Optional, cast
 
-from flask import Flask, g, session
+from flask import Flask, Response, g, make_response, render_template, session
 
 from flask_babel import Babel
 
@@ -184,6 +184,9 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.setup_werkzeug()
     app.setup_jinja()
 
+    for code in (401, 403, 404):
+        app.register_error_handler(code, handle_client_error)
+
     app.add_url_rule("/", "home", views.home)
     app.add_url_rule("/about", "about", views.about)
     app.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
@@ -206,6 +209,11 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
         views.grouping_start, methods=('GET', 'POST'))
     app.log_debug("Application created.")
     return app
+
+
+def handle_client_error(exc) -> Response:
+    """Display an error page."""
+    return make_response(render_template("%d.html" % exc.code), exc.code)
 
 
 def populate_testdata(repository_factory):
