@@ -135,13 +135,13 @@ def types(ctx, verbose: int) -> None:
 def lint(ctx, verbose: int) -> None:
     """Perform a static code analysis."""
     verbose += ctx.obj['verbose']
-    source_paths = ["grpy", "scripts", "wsgi.py", "manage.py"]
+    source_paths = ["grpy", "scripts", "wsgi.py", "manage.py", "setup.py"]
     formatting_ok = lint_formatting(source_paths, verbose)
     docstyle_ok = run_subprocess(["pydocstyle", "-v", "-e"] + source_paths, verbose)
     flake8_ok = lint_flake8(source_paths, verbose)
     dodgy_ok = run_subprocess(["dodgy"], verbose)
     pylint_ok = run_subprocess(["pylint", "grpy"], verbose)
-    bandit_ok = run_subprocess(["bandit", "-r", "-x", "test", "."], verbose)
+    bandit_ok = run_subprocess(["bandit", "-r", "-x", ".git,.tox,test", "."], verbose)
 
     if not (formatting_ok and docstyle_ok and flake8_ok and dodgy_ok and
             pylint_ok and bandit_ok):
@@ -167,7 +167,7 @@ def collect_files_and_packages() -> Tuple[List[str], List[str]]:
         if name.startswith("."):
             continue
         if path.is_dir():
-            if name != "test":
+            if name not in ("__pycache__", "test"):
                 packages.append(str(path))
         elif len(path.parts) == 2 and path.is_file():
             if path.suffix == ".py" and name != "__init__.py":

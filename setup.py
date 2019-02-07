@@ -18,9 +18,8 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""
-Setup script.
-"""
+"""Setup script."""
+
 import os
 import subprocess  # nosec
 from typing import List
@@ -90,5 +89,5 @@ if __name__ == "__main__":
             "GNU Affero General Public License v3 or later (AGPLv3+)",
             "Programming Language :: Python :: 3.7",
             "Topic :: Education",
-            ],
-        )
+        ],
+    )

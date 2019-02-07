@@ -18,22 +18,23 @@
 ##
 
 [dev-packages]
+PyLint = "*"
 autopep8 = "*"
 bandit = "*"
 coverage = "*"
+dodgy = "*"
 flake8 = "*"
 flake8-bugbear = "*"
 flake8-import-order = "*"
 mccabe = "*"
 mypy = "*"
-PyLint = "*"
 pydocstyle = "*"
-dodgy = "*"
 pytest = "*"
-pytest-flask = "*"
-pytest-testmon = "*"
 pytest-cov = "*"
+pytest-flask = "*"
 pytest-randomly = "*"
+pytest-testmon = "*"
+tox = "*"
 
 [packages]
 Flask = "*"
