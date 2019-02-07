@@ -106,6 +106,9 @@ def test_validate_set_groups(validate_proxy: MockedValidatingProxyRepository) ->
     assert validate_proxy.mock.set_groups.call_count == 1
 
 
+# pylint: enable=redefined-outer-name
+
+
 class MockedCatchProxyRepository(CatchingProxyRepository):
     """A ProxyRepository that can be mocked."""
 
@@ -127,7 +130,7 @@ def catch_proxy() -> MockedCatchProxyRepository:
 # pylint: disable=redefined-outer-name
 
 
-def test_get_messages(catch_proxy: MockedCatchProxyRepository) -> None:
+def test_catch_get_messages(catch_proxy: MockedCatchProxyRepository) -> None:
     """Return all repository-related messages."""
     catch_proxy.mock.set_user.side_effect = ValueError("BOOM!")
     catch_proxy.set_user(User(None, "name"))
@@ -145,135 +148,31 @@ def test_get_messages(catch_proxy: MockedCatchProxyRepository) -> None:
     assert catch_proxy.mock.get_messages.call_count == 4
 
 
-def test_close(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Close the repository, store all permanent data."""
-    catch_proxy.close(True)
-    assert catch_proxy.mock.close.call_count == 1
-
-
-def test_set_user(catch_proxy: MockedCatchProxyRepository) -> None:
+def test_catch_set_user_excs(catch_proxy: MockedCatchProxyRepository) -> None:
     """Add / update the given user."""
-    catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 1
-
     catch_proxy.mock.set_user.side_effect = DuplicateKey("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 2
+    assert catch_proxy.mock.set_user.call_count == 1
     assert catch_proxy.get_messages(delete=True)[0].text == \
         "Duplicate key for field 'User.ident' with value '123'"
 
     catch_proxy.mock.set_user.side_effect = NothingToUpdate("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 3
+    assert catch_proxy.mock.set_user.call_count == 2
     assert catch_proxy.get_messages(delete=True)[0].text == \
         "User.ident: try to update key 123"
 
     catch_proxy.mock.set_user.side_effect = ValidationFailed("User.ident")
     catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 4
+    assert catch_proxy.mock.set_user.call_count == 3
     assert catch_proxy.get_messages(delete=True)[0].text == \
         "Internal validation failed: User.ident"
 
 
-def test_get_user(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return user for given primary key."""
-    catch_proxy.get_user(UserKey(int=0))
-    assert catch_proxy.mock.get_user.call_count == 1
-
-
-def test_get_user_by_ident(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return user for given ident."""
-    catch_proxy.get_user_by_ident("")
-    assert catch_proxy.mock.get_user_by_ident.call_count == 1
-
-
-def test_iter_users(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return an iterator of all or some users."""
-    catch_proxy.iter_users()
-    assert catch_proxy.mock.iter_users.call_count == 1
-
-
-def test_set_grouping(
+def test_catch_set_grouping_duplicate(
         catch_proxy: MockedCatchProxyRepository, grouping: Grouping) -> None:
     """Add / update the given grouping."""
-    catch_proxy.set_grouping(grouping)
-    assert catch_proxy.mock.set_grouping.call_count == 1
-
     catch_proxy.mock.set_grouping.side_effect = DuplicateKey("Grouping.code", "123")
     with pytest.raises(DuplicateKey):
         catch_proxy.set_grouping(grouping)
-
-
-def test_get_grouping(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return grouping with given key."""
-    catch_proxy.get_grouping(GroupingKey(int=0))
-    assert catch_proxy.mock.get_grouping.call_count == 1
-
-
-def test_get_grouping_by_code(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return grouping with given short code."""
-    catch_proxy.get_grouping_by_code("")
-    assert catch_proxy.mock.get_grouping_by_code.call_count == 1
-
-
-def test_iter_groupings(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return an iterator of all or some groupings."""
-    catch_proxy.iter_groupings()
-    assert catch_proxy.mock.iter_groupings.call_count == 1
-
-
-def test_set_registration(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Add / update a grouping registration."""
-    catch_proxy.set_registration(
-        Registration(GroupingKey(int=0), UserKey(int=0), UserPreferences()))
-    assert catch_proxy.mock.set_registration.call_count == 1
-
-
-def test_get_registration(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return registration with given grouping and user."""
-    catch_proxy.get_registration(GroupingKey(int=0), UserKey(int=1))
-    assert catch_proxy.mock.get_registration.call_count == 1
-
-
-def test_count_registrations_by_grouping(
-        catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return number of registration for given grouping."""
-    catch_proxy.count_registrations_by_grouping(GroupingKey(int=0))
-    assert catch_proxy.mock.count_registrations_by_grouping.call_count == 1
-
-
-def test_delete_registration(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Delete the given registration from the repository."""
-    catch_proxy.delete_registration(GroupingKey(int=0), UserKey(int=1))
-    assert catch_proxy.mock.delete_registration.call_count == 1
-
-
-def test_iter_groupings_by_user(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return an iterator of all groupings the user applied to."""
-    catch_proxy.iter_groupings_by_user(UserKey(int=0))
-    assert catch_proxy.mock.iter_groupings_by_user.call_count == 1
-
-
-def test_iter_user_registrations_by_grouping(
-        catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return an iterator of user data of some user."""
-    catch_proxy.iter_user_registrations_by_grouping(GroupingKey(int=0))
-    assert catch_proxy.mock.iter_user_registrations_by_grouping.call_count == 1
-
-
-def test_set_groups(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Set / replace groups builded for grouping."""
-    catch_proxy.set_groups(GroupingKey(int=0), tuple(()))
-    assert catch_proxy.mock.set_groups.call_count == 1
-
-
-def test_get_groups(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Get groups builded for grouping."""
-    catch_proxy.get_groups(GroupingKey(int=0))
-    assert catch_proxy.mock.get_groups.call_count == 1
-
-
-def test_iter_groups_by_user(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return an iterator of group data of some user."""
-    catch_proxy.iter_groups_by_user(UserKey(int=0))
-    assert catch_proxy.mock.iter_groups_by_user.call_count == 1
+    assert catch_proxy.mock.set_grouping.call_count == 1
