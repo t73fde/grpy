@@ -54,6 +54,7 @@ def home() -> Response:
     grouping_counts: List[Tuple[Grouping, int]] = []
     registrations: List[Grouping] = []
     group_list: List[UserGroup] = []
+    show_welcome = True
     if g.user:
         if g.user.is_host:
             repository = get_repository()
@@ -66,6 +67,7 @@ def home() -> Response:
                 repository.count_registrations_by_grouping(
                     cast(GroupingKey, g.key)) for g in groupings]
             grouping_counts = list(zip(groupings, counts))
+            show_welcome = False
 
         group_list = []
         assigned_groupings = set()
@@ -83,7 +85,9 @@ def home() -> Response:
             grouping for grouping in grouping_iterator
             if grouping.key not in assigned_groupings]
 
-    show_welcome = not grouping_counts and not registrations and not group_list
+        show_welcome = show_welcome and not (
+            grouping_counts or registrations or group_list)
+
     return render_template(
         "home.html",
         show_welcome=show_welcome, groupings=grouping_counts,

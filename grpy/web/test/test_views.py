@@ -83,6 +83,7 @@ def test_home_host_without_groupings(client, auth) -> None:
     auth.login("host-0")
     response = client.get(url_for('home'))
     assert b'(None)' in response.data
+    assert b"Welcome" not in response.data
 
 
 def test_home_user(client, auth) -> None:
