@@ -1,6 +1,11 @@
+**/__pycache__/
 *.db
 .coverage
 .html_coverage
 .mypy_cache
 .testmondata
 .tmontmp
+.tox
+dist/
+grpy.egg-info/
+requirements.txt
