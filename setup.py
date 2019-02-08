@@ -41,17 +41,15 @@ def create_requirements_txt() -> None:
         with open_local("Pipfile.lock"):
             pass
     except FileNotFoundError:
-        print("NOLO")
         return
 
     process = subprocess.run(  # nosec
         ["pipenv", "lock", "-r"], stdout=subprocess.PIPE)
     if process.returncode:
-        print("RETC", process.returncode)
         return
     lines = [line for line in process.stdout.decode('utf-8').split("\n")[1:] if line]
-    print("LINE", lines)
     with open_local(REQUIREMENTS_TXT, "w") as req_file:
+        req_file.write("### DO NOT EDIT! This file was generated.\n")
         req_file.write("\n".join(lines))
         req_file.write("\n")
 
@@ -59,7 +57,10 @@ def create_requirements_txt() -> None:
 def read_requires() -> List[str]:
     """Read file 'requirements.txt' and return its lines as a list."""
     with open_local(REQUIREMENTS_TXT) as req_file:
-        return [line.strip() for line in req_file.readlines()]
+        return [
+            line for line in (
+                line.strip() for line in req_file.readlines())
+            if not line.startswith("#")]
 
 
 if __name__ == "__main__":
