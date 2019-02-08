@@ -31,6 +31,8 @@ from typing import List, Sequence, Tuple
 
 import click
 
+import requests
+
 
 def exec_subprocess_no_report(args: Sequence[str], verbose: int):
     """Execute a subprocess with the given args."""
@@ -226,6 +228,22 @@ def full_check(ctx, verbose: int) -> None:
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(full_coverage, verbose=verbose)
     ctx.invoke(outdated, verbose=verbose)
+
+
+@main.command()
+@click.pass_context
+def update_w3css(ctx) -> None:
+    """Update the external CSS stylesheet W3.CSS."""
+    response = requests.get("https://www.w3schools.com/w3css/4/w3.css")
+    if response.status_code != 200:
+        click.echo("Unable to download WS.CSS, HTTP status code: %d" % (
+            response.status_code,))
+        ctx.exit(1)
+    with open("grpy/web/static/w3.css", "wb") as css_file:
+        css_file.write(response.content)
+
+
+# curl -sSL https://www.w3schools.com/w3css/4/w3.css -o grpy/web/static/w3.css
 
 
 if __name__ == '__main__':
