@@ -243,8 +243,5 @@ def update_w3css(ctx) -> None:
         css_file.write(response.content)
 
 
-# curl -sSL https://www.w3schools.com/w3css/4/w3.css -o grpy/web/static/w3.css
-
-
 if __name__ == '__main__':
     main(obj={})  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
