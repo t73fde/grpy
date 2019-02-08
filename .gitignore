@@ -6,6 +6,7 @@
 .testmondata
 .tmontmp
 .tox
+VERSION.txt
 build/
 dist/
 grpy.egg-info/

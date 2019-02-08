@@ -18,6 +18,7 @@
 ##
 
 include COPYING
+include VERSION.txt
 include wsgi.py
 include requirements.txt
 include grpy/web/templates/*

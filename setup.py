@@ -28,11 +28,20 @@ from setuptools import find_packages, setup
 
 HEREDIR = os.path.abspath(os.path.dirname(__file__))
 REQUIREMENTS_TXT = "requirements.txt"
+VERSION_TXT = "VERSION.txt"
 
 
 def open_local(filename: str, mode: str = "r"):
     """Open a file in this directory."""
     return open(os.path.join(HEREDIR, filename), mode)
+
+
+def execute_command(args: List[str]) -> List[str]:
+    """Execute a external command and return stdout as list of strings."""
+    process = subprocess.run(args, stdout=subprocess.PIPE)  # nosec
+    if process.returncode:
+        return []
+    return [line for line in process.stdout.decode('utf-8').split("\n")]
 
 
 def create_requirements_txt() -> None:
@@ -43,11 +52,10 @@ def create_requirements_txt() -> None:
     except FileNotFoundError:
         return
 
-    process = subprocess.run(  # nosec
-        ["pipenv", "lock", "-r"], stdout=subprocess.PIPE)
-    if process.returncode:
+    pipenv_lines = execute_command(["pipenv", "lock", "-r"])
+    if not pipenv_lines:
         return
-    lines = [line for line in process.stdout.decode('utf-8').split("\n")[1:] if line]
+    lines = [line for line in pipenv_lines[1:] if line]
     with open_local(REQUIREMENTS_TXT, "w") as req_file:
         req_file.write("### DO NOT EDIT! This file was generated.\n")
         req_file.write("\n".join(lines))
@@ -63,16 +71,36 @@ def read_requires() -> List[str]:
             if not line.startswith("#")]
 
 
+def create_version_txt() -> None:
+    """Create version file."""
+    try:
+        with open_local(".git/HEAD"):
+            pass
+    except FileNotFoundError:
+        print("HEAD = NO")
+        return
+
+    git_version_lines = execute_command([
+        "git", "describe", "--always", "--dirty", "--long", "--tags", "--abbrev=16"])
+    if not git_version_lines:
+        return
+    with open_local(VERSION_TXT, "w") as version_file:
+        version_file.write(git_version_lines[0])
+        version_file.write("\n")
+
+
 if __name__ == "__main__":
     create_requirements_txt()
+    create_version_txt()
     README = open_local("README.md").read()
     INSTALL_REQUIRES = read_requires()
+    VERSION = open_local(VERSION_TXT).readline().strip()
 
     setup(
         name="grpy",
         description="Web Application to build groups / teams",
         long_description=README,
-        version="0.0.1",
+        version=VERSION,
         packages=find_packages(),
         install_requires=INSTALL_REQUIRES,
         python_requires='>=3.6',
