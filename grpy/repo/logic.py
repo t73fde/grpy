@@ -19,11 +19,14 @@
 
 """Repository logic."""
 
-import dataclasses
+import dataclasses  # pylint: disable=wrong-import-order
+import importlib
+import json
+from typing import Any, Optional, cast
 
 from .base import Connection, DuplicateKey
 from ..logic import make_code
-from ..models import Grouping
+from ..models import Grouping, UserPreferences
 
 
 def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Grouping:
@@ -38,3 +41,38 @@ def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Groupin
                 raise
         counter += 1
     raise OverflowError("grpy.repo.logic.set_grouping_new_code")
+
+
+def encode_preferences(preferences: UserPreferences) -> str:
+    """Translate preferences into some encoding."""
+    value_dict = {
+        'type': [preferences.__class__.__module__, preferences.__class__.__name__],
+        'fields': dataclasses.asdict(preferences),
+    }
+    json_str = json.dumps(value_dict)
+    return json_str
+
+
+def _list_to_tuple(value: Any) -> Any:
+    """Translate a list into a tuple and leave other values unchanged."""
+    if isinstance(value, list):
+        return tuple(value)
+    return value
+
+
+def decode_preferences(encoded: str) -> Optional[UserPreferences]:
+    """Reconstruct user preferences from encoding."""
+    try:
+        value_dict = json.loads(encoded)
+        module_name, class_name = value_dict['type']
+        module = importlib.import_module(module_name)
+        preference_class = module.__dict__[class_name]
+        if not issubclass(preference_class, UserPreferences):
+            return None
+        field_names = [field.name for field in dataclasses.fields(preference_class)]
+        fields = value_dict['fields']
+        values = [_list_to_tuple(fields[name]) for name in field_names]
+        result = preference_class(*values)
+        return cast(UserPreferences, result)
+    except Exception:  # pylint: disable=broad-except
+        return None

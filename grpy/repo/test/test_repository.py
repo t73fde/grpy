@@ -395,6 +395,13 @@ def test_set_registration(connection: Connection, grouping: Grouping) -> None:
     assert registration == connection.set_registration(registration)
 
 
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class Prefs(UserPreferences):
+    """Test-Class to have some other preferences."""
+
+    position: int
+
+
 def test_get_registration(connection: Connection, grouping: Grouping) -> None:
     """An inserted / updated registration can be retrieved."""
     grouping = connection.set_grouping(grouping)
@@ -407,19 +414,13 @@ def test_get_registration(connection: Connection, grouping: Grouping) -> None:
     assert registration == connection.get_registration(
         registration.grouping_key, registration.user_key)
 
-    @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
-    class Prefs(UserPreferences):
-        """Test-Class to have some other preferences."""
-
-        position: int
-
     prefs = Prefs(1)
     new_registration = dataclasses.replace(registration, preferences=prefs)
     connection.set_registration(new_registration)
     newer_registration = connection.get_registration(
         registration.grouping_key, registration.user_key)
     assert newer_registration is not None
-    # TODO assert newer_registration.preferences == prefs
+    assert newer_registration.preferences == prefs
 
     assert connection.get_registration(grouping.key, UserKey(int=2)) is None
 

@@ -25,12 +25,13 @@ import os.path
 import sqlite3
 import tempfile
 from datetime import timedelta
+from typing import cast
 
 import pytest
 
-from ..base import Connection
 from ..sqlite import SqliteConnection, SqliteRepository
-from ...models import Grouping, Permission, User, UserKey
+from ...models import (
+    Grouping, Permission, Registration, User, UserKey, UserPreferences)
 from ...utils import now
 
 
@@ -120,11 +121,11 @@ def test_memory_no_initialize(monkeypatch) -> None:
     assert repository.initialize() is False
 
 
-def get_connection() -> Connection:
+def get_connection() -> SqliteConnection:
     """Create an initialized repository."""
     repository = SqliteRepository("sqlite:")
     repository.initialize()
-    return repository.create()
+    return cast(SqliteConnection, repository.create())
 
 
 class MockCursor:
@@ -179,3 +180,21 @@ def test_set_grouping_exception(monkeypatch) -> None:
         connection.set_grouping(make_grouping("xyz", host.key))
     with pytest.raises(sqlite3.IntegrityError):
         connection.set_grouping(dataclasses.replace(grouping_2, code=grouping_1.code))
+
+
+def test_get_registration() -> None:
+    """An inserted modified registration can't be retrieved."""
+    connection = get_connection()
+    host = connection.set_user(User(None, "host", Permission.HOST))
+    assert host.key is not None
+    grouping = connection.set_grouping(make_grouping("code", host.key))
+    assert grouping.key is not None
+    user = connection.set_user(User(None, "UsER"))
+    assert user.key is not None
+
+    registration = Registration(grouping.key, user.key, UserPreferences())
+    connection.set_registration(registration)
+    assert registration == connection.get_registration(grouping.key, user.key)
+    connection._execute(  # pylint: disable=protected-access
+        "UPDATE registrations SET preferences=''")
+    assert connection.get_registration(grouping.key, user.key) is None

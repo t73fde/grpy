@@ -22,7 +22,8 @@
 import dataclasses  # pylint: disable=wrong-import-order
 import sqlite3
 from datetime import datetime
-from typing import AbstractSet, Any, Iterable, List, Optional, Sequence, Tuple, cast
+from typing import (
+    AbstractSet, Any, Iterable, List, Optional, Sequence, Tuple, cast)
 from urllib.parse import urlparse
 
 from pytz import utc
@@ -30,6 +31,7 @@ from pytz import utc
 from .base import (
     Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
     Repository, WhereSpec)
+from .logic import decode_preferences, encode_preferences
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
     Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
@@ -329,7 +331,7 @@ class SqliteConnection(Connection):
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
-        preferences = ""
+        encoded = encode_preferences(registration.preferences)
         cursor = self._execute(
             "SELECT preferences FROM registrations WHERE grouping_key=? AND user_key=?",
             (registration.grouping_key, registration.user_key))
@@ -339,11 +341,11 @@ class SqliteConnection(Connection):
             self._execute(
                 "UPDATE registrations SET preferences=?"
                 "WHERE grouping_key=? AND user_key=?",
-                (preferences, registration.grouping_key, registration.user_key))
+                (encoded, registration.grouping_key, registration.user_key))
             return registration
         self._execute(
             "INSERT INTO registrations VALUES(?,?,?)",
-            (registration.grouping_key, registration.user_key, preferences))
+            (registration.grouping_key, registration.user_key, encoded))
         return registration
 
     def get_registration(
@@ -355,7 +357,11 @@ class SqliteConnection(Connection):
             (grouping_key, user_key))
         row = cursor.fetchone()
         cursor.close()
-        return Registration(grouping_key, user_key, UserPreferences()) if row else None
+        if row:
+            preferences = decode_preferences(row[0])
+            if preferences:
+                return Registration(grouping_key, user_key, preferences)
+        return None
 
     def count_registrations_by_grouping(self, grouping_key: GroupingKey) -> int:
         """Return number of registration for given grouping."""

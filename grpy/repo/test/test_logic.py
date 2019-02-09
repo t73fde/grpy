@@ -19,13 +19,15 @@
 
 """Tests for the connection logic."""
 
+import dataclasses  # pylint: disable=wrong-import-order
+from typing import Tuple
 from unittest.mock import patch
 
 import pytest
 
 from ..base import Connection, DuplicateKey
-from ..logic import set_grouping_new_code
-from ...models import Grouping
+from ..logic import decode_preferences, encode_preferences, set_grouping_new_code
+from ...models import Grouping, UserPreferences
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:
@@ -52,3 +54,54 @@ def test_set_grouping_new_code_no_random(
         with pytest.raises(
                 OverflowError, match="grpy.repo.logic.set_grouping_new_code"):
             set_grouping_new_code(connection, grouping)
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class RealPreferences(UserPreferences):
+    """Models some real preferences for other users."""
+
+    favor: Tuple[str, ...]
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class PersonalityPreferences(UserPreferences):
+    """Models result of a personality test."""
+
+    openness: int
+    shyness: int
+    introvert: int
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class AnotherPersonalityPreferences(UserPreferences):
+    """Models result of another personality test."""
+
+    personality: Tuple[int, int, int, int]
+
+
+def test_preference_conversion() -> None:
+    """Check that UserPreferences are converted to JSON and back."""
+
+    empty = UserPreferences()
+    real = RealPreferences(("u1", "u2", "u3"))
+    personality = PersonalityPreferences(4, 3, 11)
+    personality_2 = AnotherPersonalityPreferences((2, 3, 5, 8))
+
+    for preference in (empty, real, personality, personality_2):
+        encoded = encode_preferences(preference)
+        assert encoded != ""
+        decoded = decode_preferences(encoded)
+        assert decoded == preference
+
+
+def test_decode_error() -> None:
+    """Check for handle invalid data to be encoded gracefully."""
+    assert decode_preferences("") is None
+    assert decode_preferences("{}") is None
+    assert decode_preferences('{"type": ["grpy.models", "abcxyz"]}') is None
+    assert decode_preferences('{"type": ["grpy.models", "User"]}') is None
+    assert decode_preferences(
+        '{"type": ["grpy.repo.test.test_logic", "RealPreferences"]}') is None
+    assert decode_preferences(
+        '{"type": ["grpy.repo.test.test_logic", "RealPreferences"],'
+        '"fields": {"f": "V"}}') is None
