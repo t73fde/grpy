@@ -198,3 +198,23 @@ def test_get_registration() -> None:
     connection._execute(  # pylint: disable=protected-access
         "UPDATE registrations SET preferences=''")
     assert connection.get_registration(grouping.key, user.key) is None
+
+
+def test_iter_user_registrations_by_grouping() -> None:
+    """Iterate over all user data of registrations in case of decoding errors."""
+    connection = get_connection()
+    host = connection.set_user(User(None, "host", Permissions.HOST))
+    assert host.key is not None
+    grouping = connection.set_grouping(make_grouping("code", host.key))
+    assert grouping.key is not None
+
+    for i in range(7):
+        user = connection.set_user(User(None, "user-%d" % i))
+        assert user.key is not None
+        connection.set_registration(Registration(
+            grouping.key, user.key, UserPreferences()))
+
+    assert len(list(connection.iter_user_registrations_by_grouping(grouping.key))) == 7
+    connection._execute(  # pylint: disable=protected-access
+        "UPDATE registrations SET preferences=''")
+    assert not connection.iter_user_registrations_by_grouping(grouping.key)

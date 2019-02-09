@@ -34,8 +34,7 @@ from .base import (
 from .logic import decode_preferences, encode_preferences
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
-    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey,
-    UserPreferences)
+    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey)
 
 
 sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
@@ -43,6 +42,7 @@ sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))
 sqlite3.register_adapter(GroupingKey, lambda u: u.bytes_le)
 sqlite3.register_converter('GROUPING_KEY', lambda b: GroupingKey(bytes_le=b))
 sqlite3.register_adapter(Permissions, lambda p: int(p.value))
+sqlite3.register_converter('PERMISSIONS', lambda b: Permissions(int(b)))
 sqlite3.register_adapter(
     datetime, lambda d: d.strftime("%Y%m%d-%H%M%S.%f"))
 sqlite3.register_converter(
@@ -115,7 +115,7 @@ class SqliteRepository(Repository):
 CREATE TABLE users(
     key USER_KEY PRIMARY KEY,
     ident TEXT UNIQUE NOT NULL,
-    permissions INT)
+    permissions PERMISSIONS)
 """)
             if "groupings" not in tables:
                 cursor.execute("""
@@ -225,7 +225,7 @@ class SqliteConnection(Connection):
             "SELECT ident, permissions FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
         cursor.close()
-        return User(user_key, row[0], Permissions(row[1])) if row else None
+        return User(user_key, row[0], row[1]) if row else None
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
@@ -233,7 +233,7 @@ class SqliteConnection(Connection):
             "SELECT key, permissions FROM users WHERE ident=?", (ident,))
         row = cursor.fetchone()
         cursor.close()
-        return User(row[0], ident, Permissions(row[1])) if row else None
+        return User(row[0], ident, row[1]) if row else None
 
     def iter_users(
             self,
@@ -244,9 +244,7 @@ class SqliteConnection(Connection):
         cursor = self._execute(
             "SELECT key, ident, permissions FROM users" +  # nosec
             where_sql + order_clause(order), where_vals)
-        result = []
-        for row in cursor.fetchall():
-            result.append(User(row[0], row[1], Permissions(row[2])))
+        result = [User(row[0], row[1], row[2]) for row in cursor.fetchall()]
         cursor.close()
         return result
 
@@ -411,9 +409,10 @@ class SqliteConnection(Connection):
             [grouping_key] + where_vals)
         result = []
         for row in cursor.fetchall():
-            result.append(UserRegistration(
-                User(row[0], row[1], Permissions(row[2])),
-                UserPreferences()))
+            preferences = decode_preferences(row[3])
+            if preferences:
+                result.append(UserRegistration(
+                    User(row[0], row[1], row[2]), preferences))
         cursor.close()
         return result
 

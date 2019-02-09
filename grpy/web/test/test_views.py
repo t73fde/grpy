@@ -152,7 +152,7 @@ def test_login_new_user(app, client) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert session['user_identifier'] == "new_user"
-    assert app.get_connection().get_user_by_ident("new_user")
+    assert app.get_connection().get_user_by_ident("new_user") is not None
 
 
 def test_invalid_login(app, client) -> None:
@@ -197,7 +197,7 @@ def test_login_with_redirect(app, client) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/ABCDEF/"
     assert session['user_identifier'] == "new_user"
-    assert app.get_connection().get_user_by_ident("new_user")
+    assert app.get_connection().get_user_by_ident("new_user") is not None
 
 
 def test_logout(client, auth) -> None:
