@@ -22,7 +22,7 @@
 import os
 from typing import Any, Dict, Optional, cast
 
-from flask import Flask, Response, g, make_response, render_template, session
+from flask import Flask, g, make_response, render_template, session
 
 from flask_babel import Babel
 
@@ -47,15 +47,15 @@ class GrpyApp(Flask):
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
         if config_mapping:
-            self.config.from_mapping(
+            self.config.from_mapping(  # type: ignore
                 SECRET_KEY="dev",
                 REPOSITORY="ram://",
                 WTF_CSRF_ENABLED=False,
             )
-            self.config.from_mapping(config_mapping)
+            self.config.from_mapping(config_mapping)  # type: ignore
         else:
-            self.config.from_pyfile("config.py")
-            self.config.from_envvar("GRPY_CONFIG", silent=True)
+            self.config.from_pyfile("config.py")  # type: ignore
+            self.config.from_envvar("GRPY_CONFIG", silent=True)  # type: ignore
         for key, value in self.config.items():
             new_value = os.environ.get(key, None)
             if new_value is None:
@@ -211,7 +211,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     return app
 
 
-def handle_client_error(exc) -> Response:
+def handle_client_error(exc):
     """Display an error page."""
     return make_response(render_template("%d.html" % exc.code), exc.code)
 

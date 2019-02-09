@@ -23,7 +23,7 @@ import dataclasses  # pylint: disable=wrong-import-order
 import datetime
 from typing import Any, Dict, List, cast
 
-from flask import Response, g, session, url_for
+from flask import g, session, url_for
 from flask.sessions import SecureCookieSessionInterface
 
 import pytest
@@ -535,7 +535,7 @@ def create_registered_users(
 
 
 def start_grouping(
-        client, auth, repository: Repository, app_grouping: Grouping) -> Response:
+        client, auth, repository: Repository, app_grouping: Grouping):
     """Build the group."""
     url = url_for('grouping_start', grouping_key=app_grouping.key)
     repository.set_grouping(dataclasses.replace(

@@ -23,7 +23,7 @@ import dataclasses  # pylint: disable=wrong-import-order
 from typing import List, NamedTuple, Sequence, Tuple, cast
 
 from flask import (
-    Response, abort, current_app, flash, g, redirect, render_template, request, url_for)
+    abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
 from .utils import (
@@ -50,7 +50,7 @@ class UserGroup(NamedTuple):
     named_group: Sequence[str]
 
 
-def home() -> Response:
+def home():
     """Show home page."""
     grouping_counts: List[Tuple[Grouping, int]] = []
     registrations: List[Grouping] = []
@@ -95,12 +95,12 @@ def home() -> Response:
         registrations=registrations, group_list=group_list)
 
 
-def about() -> Response:
+def about():
     """Show about page."""
     return render_template("about.html")
 
 
-def login() -> Response:
+def login():
     """Show login form and authenticate user."""
     if g.user:
         current_app.logout()
@@ -122,14 +122,14 @@ def login() -> Response:
     return render_template("login.html", form=form)
 
 
-def logout() -> Response:
+def logout():
     """Logout current user."""
     current_app.logout()
     return redirect(url_for("home"))
 
 
 @login_required
-def grouping_create() -> Response:
+def grouping_create():
     """Create a new grouping."""
     if not g.user.is_host:
         abort(403)
@@ -146,7 +146,7 @@ def grouping_create() -> Response:
 
 
 @login_required
-def grouping_detail(grouping_key: GroupingKey) -> Response:
+def grouping_detail(grouping_key: GroupingKey):
     """Show details of a grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
@@ -194,7 +194,7 @@ def grouping_detail(grouping_key: GroupingKey) -> Response:
 
 
 @login_required
-def grouping_update(grouping_key: GroupingKey) -> Response:
+def grouping_update(grouping_key: GroupingKey):
     """Update an existing grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
@@ -212,7 +212,7 @@ def grouping_update(grouping_key: GroupingKey) -> Response:
 
 
 @login_required_redirect
-def shortlink(code: str) -> Response:
+def shortlink(code: str):
     """Show information for short link."""
     grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
     if g.user.key == grouping.host_key:
@@ -222,7 +222,7 @@ def shortlink(code: str) -> Response:
 
 
 @login_required
-def grouping_register(grouping_key: GroupingKey) -> Response:
+def grouping_register(grouping_key: GroupingKey):
     """Register for a grouping."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key == grouping.host_key:
@@ -256,7 +256,7 @@ def grouping_register(grouping_key: GroupingKey) -> Response:
 
 
 @login_required
-def grouping_start(grouping_key: GroupingKey) -> Response:
+def grouping_start(grouping_key: GroupingKey):
     """Start the grouping process."""
     grouping = value_or_404(get_repository().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
