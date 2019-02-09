@@ -165,17 +165,17 @@ class Connection:
         raise NotImplementedError("Connection.iter_groups_by_user")
 
 
-class RepositoryFactory:
+class Repository:
     """
-    An abstract factory for repositories.
+    An abstract repository, i.e. a factory for connections.
 
-    Every factory is initialized with a parsed URL that specifies the concrete
-    data source, e.g. a database or a database management system. The type of
-    this parsed URL is `str`.
+    Every repository is initialized with a parsed URL that specifies the
+    concrete data source, e.g. a database or a database management system. The
+    type of this parsed URL is `str`.
     """
 
     def __init__(self, repository_url: str):
-        """Initialize the factory with the URL."""
+        """Initialize the repository with the URL."""
         self._url = repository_url
 
     @property
@@ -184,13 +184,13 @@ class RepositoryFactory:
         return self._url
 
     def can_connect(self) -> bool:
-        """Test the connection to the data source."""
-        raise NotImplementedError("RepositoryFactory.can_connect.")
+        """Test the connection to the data store."""
+        raise NotImplementedError("Repository.can_connect.")
 
     def initialize(self) -> bool:
         """Initialize the repository, if needed."""
-        raise NotImplementedError("RepositoryFactory.initialize.")
+        raise NotImplementedError("Repository.initialize.")
 
     def create(self):
-        """Create and setup a repository."""
-        raise NotImplementedError("RepositoryFactory.create")
+        """Create and setup a connection."""
+        raise NotImplementedError("Repository.create")

@@ -29,7 +29,7 @@ from pytz import utc
 
 from .base import (
     Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
-    RepositoryFactory, WhereSpec)
+    Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
     Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
@@ -49,15 +49,15 @@ sqlite3.register_converter(
         b.decode('utf-8'), "%Y%m%d-%H%M%S.%f").replace(tzinfo=utc))
 
 
-class SqliteRepositoryFactory(RepositoryFactory):
+class SqliteRepository(Repository):
     """Maintain a singleton RAM-based repository."""
 
     def __init__(self, repository_url: str):
-        """Initialize the factory."""
+        """Initialize the repository."""
         parsed_url = urlparse(repository_url)
         if parsed_url.scheme != "sqlite":
             raise ValueError(
-                "SqliteRepositoryFactory cannot handle scheme: {}".format(
+                "SqliteRepository cannot handle scheme: {}".format(
                     parsed_url.scheme))
         parsed_url = parsed_url._replace(
             netloc="", params='', query='', fragment='')

@@ -21,15 +21,15 @@
 
 from typing import Optional
 
-from .base import Connection, RepositoryFactory
+from .base import Connection, Repository
 from .ram import RamConnection, RamRepositoryState
 
 
-class DummyRepositoryFactory(RepositoryFactory):
+class DummyRepository(Repository):
     """Create dummy repositories."""
 
     def __init__(self, repository_url: str, reason: Optional[str] = None):
-        """Initialize the factory."""
+        """Initialize the repository."""
         super().__init__(repository_url)
         self._reason = reason
 

@@ -42,17 +42,17 @@ def test_config() -> None:
         assert not list(connection.iter_groupings())
     with app.test_request_context():
         connection = app.get_connection()
-        g_repo = g.pop('connection', None)
-        assert g_repo == connection
+        g_connection = g.pop('connection', None)
+        assert g_connection == connection
 
 
 # pylint: disable=protected-access
 def test_env_config(monkeypatch) -> None:
     """Test overwriting config by environments vars."""
-    assert "ram:" in create_app()._repository_factory.url
+    assert "ram:" in create_app()._repository.url
     monkeypatch.setitem(os.environ, 'REPOSITORY', "invalid")
     monkeypatch.setitem(os.environ, 'TESTING', "True")
-    assert "dummy:" in create_app()._repository_factory.url
+    assert "dummy:" in create_app()._repository.url
 # pylint: enable=protected-access
 
 

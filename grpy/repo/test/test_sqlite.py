@@ -29,7 +29,7 @@ from datetime import timedelta
 import pytest
 
 from ..base import Connection
-from ..sqlite import SqliteConnection, SqliteRepositoryFactory
+from ..sqlite import SqliteConnection, SqliteRepository
 from ...models import Grouping, Permission, User, UserKey
 from ...utils import now
 
@@ -37,62 +37,62 @@ from ...utils import now
 def test_scheme() -> None:
     """Only sqlite: is a valid URL scheme."""
     with pytest.raises(ValueError):
-        SqliteRepositoryFactory("ram:")
+        SqliteRepository("ram:")
 
 
 def test_url() -> None:
-    """The URL of the Factory is that of the init argument."""
-    assert SqliteRepositoryFactory("sqlite:").url == "sqlite:"
-    assert SqliteRepositoryFactory("sqlite://").url == "sqlite:"
-    assert SqliteRepositoryFactory("sqlite:///").url == "sqlite:/"
+    """The URL of the repository is that of the init argument."""
+    assert SqliteRepository("sqlite:").url == "sqlite:"
+    assert SqliteRepository("sqlite://").url == "sqlite:"
+    assert SqliteRepository("sqlite:///").url == "sqlite:/"
 
 
 def test_connect() -> None:
     """Connecting to an SQLite DB is possible, except for invalid file names."""
-    assert SqliteRepositoryFactory("sqlite:").can_connect() is True
-    assert SqliteRepositoryFactory("sqlite://./\0").can_connect() is False
+    assert SqliteRepository("sqlite:").can_connect() is True
+    assert SqliteRepository("sqlite://./\0").can_connect() is False
 
     temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
     try:
-        assert SqliteRepositoryFactory("sqlite://" + temp_file.name).can_connect()
+        assert SqliteRepository("sqlite://" + temp_file.name).can_connect()
         temp_file.write(b"Hello World!\n")
-        # assert not SqliteRepositoryFactory("sqlite://" + temp_file.name).can_connect()
+        # assert not SqliteRepository("sqlite://" + temp_file.name).can_connect()
     finally:
         temp_file.close()
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)
     try:
-        assert SqliteRepositoryFactory("sqlite://" + temp_file.name).can_connect()
+        assert SqliteRepository("sqlite://" + temp_file.name).can_connect()
     finally:
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)
 
 
 def test_memory_always_other_connection() -> None:
-    """The factory will always return another connection for in-memory SQLite."""
-    factory = SqliteRepositoryFactory("sqlite:")
-    repo_1 = factory.create()
-    assert repo_1 is not None
-    repo_2 = factory.create()
-    assert repo_2 is not None
-    assert repo_1 != repo_2
-    repo_1.close(True)
-    repo_2.close(True)
+    """The repository will always return another connection for in-memory SQLite."""
+    repository = SqliteRepository("sqlite:")
+    connection_1 = repository.create()
+    assert connection_1 is not None
+    connection_2 = repository.create()
+    assert connection_2 is not None
+    assert connection_1 != connection_2
+    connection_1.close(True)
+    connection_2.close(True)
 
 
 def test_real_always_other_connection() -> None:
-    """The factory will always return another connection for real SQLite."""
+    """The repository will always return another connection for real SQLite."""
     temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
     try:
         temp_file.close()
-        factory = SqliteRepositoryFactory("sqlite://" + temp_file.name)
-        repo_1 = factory.create()
-        assert repo_1 is not None
-        repo_2 = factory.create()
-        assert repo_2 is not None
-        assert repo_1 != repo_2
-        repo_1.close(True)
-        repo_2.close(False)
+        repository = SqliteRepository("sqlite://" + temp_file.name)
+        connection_1 = repository.create()
+        assert connection_1 is not None
+        connection_2 = repository.create()
+        assert connection_2 is not None
+        assert connection_1 != connection_2
+        connection_1.close(True)
+        connection_2.close(False)
     finally:
         os.unlink(temp_file.name)
     assert not os.path.exists(temp_file.name)
@@ -100,10 +100,10 @@ def test_real_always_other_connection() -> None:
 
 def test_memory_initialize() -> None:
     """Initialize a memory-based repository."""
-    factory = SqliteRepositoryFactory("sqlite:")
-    assert factory.initialize()
-    assert factory.initialize()  # Doing it twice does not harm
-    connection = factory.create()
+    repository = SqliteRepository("sqlite:")
+    assert repository.initialize()
+    assert repository.initialize()  # Doing it twice does not harm
+    connection = repository.create()
     user = connection.set_user(User(None, "user"))
     assert user.key is not None
     assert user.ident == "user"
@@ -115,16 +115,16 @@ def test_memory_no_initialize(monkeypatch) -> None:
     """Test for error in initializing memory-based repositories."""
     def return_false(_):
         return False
-    monkeypatch.setattr(SqliteRepositoryFactory, "_connect", return_false)
-    factory = SqliteRepositoryFactory("sqlite:")
-    assert factory.initialize() is False
+    monkeypatch.setattr(SqliteRepository, "_connect", return_false)
+    repository = SqliteRepository("sqlite:")
+    assert repository.initialize() is False
 
 
 def get_connection() -> Connection:
     """Create an initialized repository."""
-    factory = SqliteRepositoryFactory("sqlite:")
-    factory.initialize()
-    return factory.create()
+    repository = SqliteRepository("sqlite:")
+    repository.initialize()
+    return repository.create()
 
 
 class MockCursor:

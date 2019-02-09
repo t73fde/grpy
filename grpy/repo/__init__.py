@@ -22,31 +22,31 @@
 from typing import Dict, Type
 from urllib.parse import urlparse
 
-from .base import RepositoryFactory
-from .dummy import DummyRepositoryFactory
-from .proxies import ProxyRepositoryFactory
-from .ram import RamRepositoryFactory
-from .sqlite import SqliteRepositoryFactory
+from .base import Repository
+from .dummy import DummyRepository
+from .proxies import ProxyRepository
+from .ram import RamRepository
+from .sqlite import SqliteRepository
 
 
-FACTORY_DIRECTORY: Dict[str, Type[RepositoryFactory]] = {
-    "ram": RamRepositoryFactory,
-    "sqlite": SqliteRepositoryFactory,
+REPOSITORY_DIRECTORY: Dict[str, Type[Repository]] = {
+    "ram": RamRepository,
+    "sqlite": SqliteRepository,
 }
 
 
-def create_factory(repository_url: str) -> RepositoryFactory:
+def create_repository(repository_url: str) -> Repository:
     """Create a new repository."""
     parsed_url = urlparse(repository_url)
     try:
-        factory = FACTORY_DIRECTORY[parsed_url.scheme](parsed_url.geturl())
+        repository = REPOSITORY_DIRECTORY[parsed_url.scheme](parsed_url.geturl())
     except KeyError:
-        factory = DummyRepositoryFactory(
+        repository = DummyRepository(
             "dummy:", "Unknown repository scheme '{}'".format(parsed_url.scheme))
-    while not factory.can_connect():
-        factory = DummyRepositoryFactory(
-            "dummy:", "Cannot connect to {}".format(factory.url))
-    if not factory.initialize():
-        factory = DummyRepositoryFactory(
-            "dummy:", "Cannot initialize repository {}".format(factory.url))
-    return ProxyRepositoryFactory(factory)
+    while not repository.can_connect():
+        repository = DummyRepository(
+            "dummy:", "Cannot connect to {}".format(repository.url))
+    if not repository.initialize():
+        repository = DummyRepository(
+            "dummy:", "Cannot initialize repository {}".format(repository.url))
+    return ProxyRepository(repository)

@@ -37,7 +37,7 @@ def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> No
 
 def test_set_grouping_new_code_db_error(
         connection: Connection, grouping: Grouping) -> None:
-    """Test the creation of new short codes, some repo error occurs."""
+    """Test the creation of new short codes, some connection error occurs."""
     with patch.object(connection, "set_grouping") as func:
         func.side_effect = DuplicateKey("unknown")
         with pytest.raises(DuplicateKey):

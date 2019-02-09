@@ -31,7 +31,7 @@ import requests
 from . import utils, views
 from .. import policies
 from ..models import Permission, User
-from ..repo import create_factory
+from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
 
 
@@ -41,7 +41,7 @@ class GrpyApp(Flask):
     def __init__(self, import_name):
         """Initialize the application object."""
         super().__init__(import_name)
-        self._repository_factory = None
+        self._repository = None
         self.babel = None
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
@@ -66,10 +66,10 @@ class GrpyApp(Flask):
 
     def setup_repository(self) -> None:
         """Add a repository to the application."""
-        self._repository_factory = create_factory(self.config['REPOSITORY'])
-        self.log_info("Repository URL = '" + self._repository_factory.url + "'")
-        if self._repository_factory.url == "ram:" and not self.testing:
-            populate_testdata(self._repository_factory)
+        self._repository = create_repository(self.config['REPOSITORY'])
+        self.log_info("Repository URL = '" + self._repository.url + "'")
+        if self._repository.url == "ram:" and not self.testing:
+            populate_testdata(self._repository)
 
         def close_connection(_exc: BaseException = None):
             """Close the connection to the repository."""
@@ -82,7 +82,7 @@ class GrpyApp(Flask):
     def get_connection(self):
         """Return an open connection, specific for this request."""
         if 'connection' not in g:
-            g.connection = self._repository_factory.create()
+            g.connection = self._repository.create()
         return g.connection
 
     def setup_user_handling(self):
@@ -216,9 +216,9 @@ def handle_client_error(exc):
     return make_response(render_template("%d.html" % exc.code), exc.code)
 
 
-def populate_testdata(repository_factory):
+def populate_testdata(repository):
     """Add some initial data for testing."""
-    connection = repository_factory.create()
+    connection = repository.create()
     try:
         kreuz = connection.set_user(User(None, "kreuz", Permission.HOST))
         stern = connection.set_user(User(None, "stern", Permission.HOST))

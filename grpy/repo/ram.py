@@ -26,7 +26,7 @@ from typing import (
 
 from .base import (
     Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
-    RepositoryFactory, WhereSpec)
+    Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
     Grouping, GroupingKey, Groups, Model, Registration, User, UserKey)
@@ -51,11 +51,11 @@ class RamRepositoryState:  # pylint: disable=too-few-public-methods
         return self._next_key
 
 
-class RamRepositoryFactory(RepositoryFactory):
+class RamRepository(Repository):
     """Maintain a singleton RAM-based repository."""
 
     def __init__(self, repository_url: str):
-        """Initialize the factory."""
+        """Initialize the repository."""
         super().__init__(repository_url)
         self._repository: Optional[RamConnection] = None
         self._state: Optional[RamRepositoryState] = None

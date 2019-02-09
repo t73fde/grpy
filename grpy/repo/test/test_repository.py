@@ -26,9 +26,9 @@ from typing import List, Tuple, cast
 
 import pytest
 
-from .. import create_factory
+from .. import create_repository
 from ..base import Connection, DuplicateKey
-from ..ram import RamRepositoryFactory
+from ..ram import RamRepository
 from ... import utils
 from ...models import (
     Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
@@ -38,28 +38,28 @@ from ...models import (
 
 
 def test_wrong_repository_url() -> None:
-    """If an illegal URL ist given, a dummy factory must be returned."""
-    factory = create_factory(cast(str, None))
-    assert factory.url == "dummy:"
-    assert create_factory("").url == "dummy:"
+    """If an illegal URL ist given, a dummy repository must be returned."""
+    repository = create_repository(cast(str, None))
+    assert repository.url == "dummy:"
+    assert create_repository("").url == "dummy:"
 
 
 def test_no_connection(monkeypatch) -> None:
-    """If unable to connect to data store, a dummy factory must be returned."""
+    """If unable to connect to data store, a dummy repository must be returned."""
     def return_false(_):
         return False
-    monkeypatch.setattr(RamRepositoryFactory, "can_connect", return_false)
-    factory = create_factory("ram:")
-    assert factory.url == "dummy:"
+    monkeypatch.setattr(RamRepository, "can_connect", return_false)
+    repository = create_repository("ram:")
+    assert repository.url == "dummy:"
 
 
 def test_no_initialize(monkeypatch) -> None:
-    """If unable to initialize data store, a dummy factory must be returned."""
+    """If unable to initialize data store, a dummy repository must be returned."""
     def return_false(_):
         return False
-    monkeypatch.setattr(RamRepositoryFactory, "initialize", return_false)
-    factory = create_factory("ram:")
-    assert factory.url == "dummy:"
+    monkeypatch.setattr(RamRepository, "initialize", return_false)
+    repository = create_repository("ram:")
+    assert repository.url == "dummy:"
 
 
 def test_insert_user(connection: Connection) -> None:

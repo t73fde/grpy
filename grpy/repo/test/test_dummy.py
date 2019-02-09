@@ -19,17 +19,17 @@
 
 """Test the specifics of dummy repositories."""
 
-from ..dummy import DummyRepositoryFactory
+from ..dummy import DummyRepository
 
 
 def test_url() -> None:
-    """The URL of the Factory is that of the init argument."""
-    assert DummyRepositoryFactory("dummy:").url == "dummy:"
+    """The URL of the repository is that of the init argument."""
+    assert DummyRepository("dummy:").url == "dummy:"
 
 
 def test_different_repository() -> None:
-    """The factory will always return different repositories."""
-    factory = DummyRepositoryFactory("")
-    repo_1 = factory.create()
-    repo_2 = factory.create()
-    assert repo_1 is not repo_2
+    """The repository will always return different connections."""
+    repository = DummyRepository("")
+    connection_1 = repository.create()
+    connection_2 = repository.create()
+    assert connection_1 is not connection_2

@@ -20,14 +20,14 @@
 """Proxy reposities."""
 
 from .check import CatchingProxyConnection, ValidatingProxyConnection
-from ..base import Connection, RepositoryFactory
+from ..base import Connection, Repository
 
 
-class ProxyRepositoryFactory(RepositoryFactory):
-    """RepositoryFactory to create ProxyConnection."""
+class ProxyRepository(Repository):
+    """Repository to create ProxyConnection."""
 
-    def __init__(self, delegate: RepositoryFactory):
-        """Initialize the factory with the URL."""
+    def __init__(self, delegate: Repository):
+        """Initialize the repository with the proxied repository."""
         super().__init__(delegate.url)
         self._delegate = delegate
 

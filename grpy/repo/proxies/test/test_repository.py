@@ -17,19 +17,19 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test specific for proxy repository."""
+"""Test specific for proxy repositories."""
 
 from unittest.mock import Mock
 
 import pytest
 
 from ..check import CatchingProxyConnection
-from ... import ProxyRepositoryFactory
+from ... import ProxyRepository
 from ...ram import RamConnection, RamRepositoryState
 
 
-class MockedProxyRepositoryFactory(ProxyRepositoryFactory):
-    """A ProxyRepositoryFactory that can be mocked."""
+class MockedProxyRepository(ProxyRepository):
+    """A ProxyRepository that can be mocked."""
 
     @property
     def mock(self):
@@ -41,34 +41,34 @@ class MockedProxyRepositoryFactory(ProxyRepositoryFactory):
 
 
 @pytest.fixture
-def proxy_factory() -> MockedProxyRepositoryFactory:
-    """Set up a proxy repository factory."""
-    delegate_factory = Mock()
-    delegate_factory.url = "url:"
-    delegate_factory.create.return_value = RamConnection(RamRepositoryState())
-    return MockedProxyRepositoryFactory(delegate_factory)
+def proxy_repository() -> MockedProxyRepository:
+    """Set up a proxy repository."""
+    delegate_repository = Mock()
+    delegate_repository.url = "url:"
+    delegate_repository.create.return_value = RamConnection(RamRepositoryState())
+    return MockedProxyRepository(delegate_repository)
 
 
-def test_factory_url(proxy_factory) -> None:
-    """Test that base URL is transferred to proxy factory."""
-    assert proxy_factory.url == "url:"
+def test_repository_url(proxy_repository) -> None:
+    """Test that base URL is transferred to proxy repository."""
+    assert proxy_repository.url == "url:"
 
 
-def test_factory_can_connect(proxy_factory) -> None:
+def test_repository_can_connect(proxy_repository) -> None:
     """Test the connection to the data source."""
-    proxy_factory.can_connect()
-    assert proxy_factory.mock.can_connect.call_count == 1
+    proxy_repository.can_connect()
+    assert proxy_repository.mock.can_connect.call_count == 1
 
 
-def test_factory_initialize(proxy_factory) -> None:
+def test_repository_initialize(proxy_repository) -> None:
     """Initialize the repository, if needed."""
-    proxy_factory.initialize()
-    assert proxy_factory.mock.initialize.call_count == 1
+    proxy_repository.initialize()
+    assert proxy_repository.mock.initialize.call_count == 1
 
 
-def test_factory_create(proxy_factory) -> None:
+def test_repository_create(proxy_repository) -> None:
     """Create and setup a repository."""
-    connection = proxy_factory.create()
-    assert proxy_factory.mock.create.call_count == 1
+    connection = proxy_repository.create()
+    assert proxy_repository.mock.create.call_count == 1
     assert isinstance(connection, CatchingProxyConnection)
     assert not isinstance(connection, RamConnection)

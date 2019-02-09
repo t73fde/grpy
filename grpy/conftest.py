@@ -28,7 +28,7 @@ from flask import url_for
 import pytest
 
 from .models import Grouping, Permission, User
-from .repo import create_factory
+from .repo import create_repository
 from .repo.logic import set_grouping_new_code
 from .utils import now
 from .web.app import create_app
@@ -94,17 +94,17 @@ def connection(request):
     if request.param == "sqlite:///":
         temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         temp_file.close()
-        factory = create_factory("sqlite://" + temp_file.name)
+        repository = create_repository("sqlite://" + temp_file.name)
     else:
-        factory = create_factory(request.param)
+        repository = create_repository(request.param)
         temp_file = None
-        assert factory.url == request.param
-    factory.initialize()
+        assert repository.url == request.param
+    repository.initialize()
 
-    repo = factory.create()
-    yield repo
+    connection = repository.create()
+    yield connection
 
-    repo.close(True)
+    connection.close(True)
     if temp_file:
         os.unlink(temp_file.name)
 
