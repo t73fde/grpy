@@ -19,15 +19,17 @@
 
 """In-memory repository, stored in RAM."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import random
-from typing import Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar, cast
+from typing import (
+    Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar, cast)
 
 from .base import (
     DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
     RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
-    Grouping, GroupingKey, Groups, NamedTuple, Registration, User, UserKey)
+    Grouping, GroupingKey, Groups, Model, Registration, User, UserKey)
 
 
 class RamRepositoryState:  # pylint: disable=too-few-public-methods
@@ -98,7 +100,7 @@ class RamRepository(Repository):
             if previous_user.ident != user.ident:
                 del self._state.users_ident[previous_user.ident]
         else:
-            user = user._replace(key=UserKey(int=self._state.next_int()))
+            user = dataclasses.replace(user, key=UserKey(int=self._state.next_int()))
 
         other_user = self._state.users_ident.get(user.ident)
         if other_user and user.key != other_user.key:
@@ -132,7 +134,8 @@ class RamRepository(Repository):
             if previous_grouping.code != grouping.code:
                 del self._state.groupings_code[previous_grouping.code]
         else:
-            grouping = grouping._replace(key=GroupingKey(int=self._state.next_int()))
+            grouping = dataclasses.replace(
+                grouping, key=GroupingKey(int=self._state.next_int()))
 
         other_grouping = self._state.groupings_code.get(grouping.code)
         if other_grouping and grouping.key != other_grouping.key:
@@ -243,36 +246,36 @@ class WherePredicate:
         """Return the appropriate filter predicate."""
         return getattr(self, self.relop + "_pred")
 
-    def eq_pred(self, data: NamedTuple) -> bool:
+    def eq_pred(self, data: Model) -> bool:
         """Return True if data[self.name] == self.value."""
         return cast(bool, getattr(data, self.name) == self.value)
 
-    def ne_pred(self, data: NamedTuple) -> bool:
+    def ne_pred(self, data: Model) -> bool:
         """Return True if data[self.name] != self.value."""
         return cast(bool, getattr(data, self.name) != self.value)
 
-    def lt_pred(self, data: NamedTuple) -> bool:
+    def lt_pred(self, data: Model) -> bool:
         """Return True if data[self.name] < self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return cast(bool, data_value < self.value)
 
-    def le_pred(self, data: NamedTuple) -> bool:
+    def le_pred(self, data: Model) -> bool:
         """Return True if data[self.name] <= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return cast(bool, data_value <= self.value)
 
-    def ge_pred(self, data: NamedTuple) -> bool:
+    def ge_pred(self, data: Model) -> bool:
         """Return True if data[self.name] >= self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:
             return True
         return cast(bool, data_value >= self.value)
 
-    def gt_pred(self, data: NamedTuple) -> bool:
+    def gt_pred(self, data: Model) -> bool:
         """Return True if data[self.name] > self.value."""
         data_value = getattr(data, self.name)
         if data_value is None:

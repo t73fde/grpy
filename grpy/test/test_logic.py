@@ -19,6 +19,7 @@
 
 """Tests for the business logic."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 from datetime import timedelta
 
 from ..logic import make_code, remove_from_groups
@@ -50,10 +51,10 @@ def test_make_code() -> None:
     check_code(None, grouping)
     code = make_code(grouping)
 
-    check_code(code, grouping._replace(name="Xname"))
-    check_code(code, grouping._replace(begin_date=yet + timedelta(days=1)))
-    check_code(code, grouping._replace(final_date=yet + timedelta(days=60)))
-    check_code(code, grouping._replace(policy="LK"))
+    check_code(code, dataclasses.replace(grouping, name="Xname"))
+    check_code(code, dataclasses.replace(grouping, begin_date=yet + timedelta(days=1)))
+    check_code(code, dataclasses.replace(grouping, final_date=yet + timedelta(days=60)))
+    check_code(code, dataclasses.replace(grouping, policy="LK"))
     check_code(None, grouping, unique=True)
 
 

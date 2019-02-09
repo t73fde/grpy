@@ -19,6 +19,7 @@
 
 """Test the web views."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import datetime
 from typing import Any, Dict, List, cast
 
@@ -113,7 +114,8 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     assert client.get(register_url).status_code == 200
 
     # Now change the final_date
-    app.get_repository().set_grouping(app_grouping._replace(
+    app.get_repository().set_grouping(dataclasses.replace(
+        app_grouping,
         final_date=app_grouping.begin_date + datetime.timedelta(seconds=60)))
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -177,7 +179,7 @@ def test_name_change_after_login(app, client, auth) -> None:
     auth.login("host")
     repository = app.get_repository()
     user = repository.get_user_by_ident("host")
-    repository.set_user(user._replace(ident="tsoh"))
+    repository.set_user(dataclasses.replace(user, ident="tsoh"))
     client.get("/")
     assert g.user is None
 
@@ -417,8 +419,8 @@ def test_grouping_register_out_of_time(
     auth.login('student')
 
     now = utils.now()
-    app.get_repository().set_grouping(
-        app_grouping._replace(begin_date=now + datetime.timedelta(seconds=3600)))
+    app.get_repository().set_grouping(dataclasses.replace(
+        app_grouping, begin_date=now + datetime.timedelta(seconds=3600)))
     response = client.post(url, data={})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
@@ -428,10 +430,10 @@ def test_grouping_register_out_of_time(
 
     client.get(url_for('home'))  # Clean flash messages
 
-    app.get_repository().set_grouping(
-        app_grouping._replace(
-            begin_date=now - datetime.timedelta(seconds=3600),
-            final_date=now - datetime.timedelta(seconds=1800)))
+    app.get_repository().set_grouping(dataclasses.replace(
+        app_grouping,
+        begin_date=now - datetime.timedelta(seconds=3600),
+        final_date=now - datetime.timedelta(seconds=1800)))
     response = client.post(url, data={})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
@@ -485,7 +487,8 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
             app_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
 
-    new_grouping = app.get_repository().set_grouping(app_grouping._replace(
+    new_grouping = app.get_repository().set_grouping(dataclasses.replace(
+        app_grouping,
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1)))
     response = client.get(url)
@@ -535,7 +538,8 @@ def start_grouping(
         client, auth, repository: Repository, app_grouping: Grouping) -> Response:
     """Build the group."""
     url = url_for('grouping_start', grouping_key=app_grouping.key)
-    repository.set_grouping(app_grouping._replace(
+    repository.set_grouping(dataclasses.replace(
+        app_grouping,
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1),
         max_group_size=6, member_reserve=5))

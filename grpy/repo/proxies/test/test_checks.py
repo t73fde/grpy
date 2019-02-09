@@ -19,6 +19,7 @@
 
 """Test specific for checking proxy repository."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import uuid
 from typing import cast
 from unittest.mock import Mock
@@ -66,7 +67,7 @@ def test_validate_set_grouping(
         validate_proxy: MockedValidatingProxyRepository, grouping: Grouping) -> None:
     """Add / update the given grouping."""
     with pytest.raises(ValidationFailed, match="Maximum group size < 1: 0"):
-        validate_proxy.set_grouping(grouping._replace(max_group_size=0))
+        validate_proxy.set_grouping(dataclasses.replace(grouping, max_group_size=0))
     assert validate_proxy.mock.set_grouping.call_count == 0
 
     validate_proxy.set_grouping(grouping)

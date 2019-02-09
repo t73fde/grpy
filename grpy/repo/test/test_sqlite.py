@@ -19,6 +19,7 @@
 
 """Test the specifics of SQLite-based repositories."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import os
 import os.path
 import sqlite3
@@ -154,7 +155,7 @@ def test_insert_user(monkeypatch) -> None:
     with pytest.raises(sqlite3.IntegrityError):
         repository.set_user(User(None, "admin"))
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_user(user_2._replace(ident=user_1.ident))
+        repository.set_user(dataclasses.replace(user_2, ident=user_1.ident))
 
 
 def make_grouping(code: str, host_key: UserKey) -> Grouping:
@@ -177,4 +178,4 @@ def test_set_grouping_exception(monkeypatch) -> None:
     with pytest.raises(sqlite3.IntegrityError):
         repository.set_grouping(make_grouping("xyz", host.key))
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_grouping(grouping_2._replace(code=grouping_1.code))
+        repository.set_grouping(dataclasses.replace(grouping_2, code=grouping_1.code))

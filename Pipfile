@@ -41,6 +41,7 @@ Flask = "*"
 Flask-Babel = "*"
 Flask-WTF = "*"
 WTForms = "*"
+dataclasses = {version="*", markers="python_version < 3.7"}
 pytz = "*"
 gunicorn = "*"
 requests = "*"

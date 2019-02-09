@@ -19,9 +19,10 @@
 
 """Data models."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import datetime
 import enum
-from typing import Dict, FrozenSet, NamedTuple, Optional, Tuple
+from typing import Dict, FrozenSet, Optional, Tuple
 from uuid import UUID, uuid4
 
 from .utils import now
@@ -64,6 +65,11 @@ class ValidationFailed(Exception):
     """Model validation failed."""
 
 
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class Model:
+    """Base model for all model classes."""
+
+
 class UserKey(KeyType):
     """Key to identify an user."""
 
@@ -74,7 +80,8 @@ class Permission(enum.Flag):
     HOST = 2
 
 
-class User(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class User(Model):
     """User data."""
 
     key: Optional[UserKey]
@@ -98,7 +105,8 @@ class GroupingKey(KeyType):
     """Key to identify a grouping."""
 
 
-class Grouping(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class Grouping(Model):
     """Grouping data."""
 
     key: Optional[GroupingKey]
@@ -148,11 +156,13 @@ class Grouping(NamedTuple):
         return self.final_date < now()
 
 
-class UserPreferences(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class UserPreferences:
     """Base class for user preferences for a given policy."""
 
 
-class Registration(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class Registration(Model):
     """Data for an registration for a grouping by a participant."""
 
     grouping_key: GroupingKey

@@ -19,6 +19,8 @@
 
 """Repository logic."""
 
+import dataclasses
+
 from .base import DuplicateKey, Repository
 from ..logic import make_code
 from ..models import Grouping
@@ -30,7 +32,7 @@ def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Groupin
     while counter < 100:
         try:
             return repository.set_grouping(
-                grouping._replace(code=make_code(grouping, bool(counter))))
+                dataclasses.replace(grouping, code=make_code(grouping, bool(counter))))
         except DuplicateKey as exc:
             if exc.args[0] != "Grouping.code":
                 raise

@@ -19,6 +19,7 @@
 
 """Web views for grpy."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 from typing import List, NamedTuple, Sequence, Tuple, cast
 
 from flask import (
@@ -138,7 +139,8 @@ def grouping_create() -> Response:
         grouping = make_model(
             Grouping, form.data, {"code": ".", "host_key": g.user.key})
         set_grouping_new_code(
-            get_repository(), grouping._replace(code=logic.make_code(grouping)))
+            get_repository(),
+            dataclasses.replace(grouping, code=logic.make_code(grouping)))
         return redirect(url_for("home"))
     return render_template("grouping_create.html", form=form)
 

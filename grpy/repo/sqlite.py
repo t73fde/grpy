@@ -19,6 +19,7 @@
 
 """SQLite-based repository."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 import sqlite3
 from datetime import datetime
 from typing import AbstractSet, Any, Iterable, List, Optional, Sequence, Tuple, cast
@@ -214,7 +215,7 @@ class SqliteRepository(Repository):
             if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                 raise DuplicateKey("User.ident", user.ident)
             raise
-        return user._replace(key=user_key)
+        return dataclasses.replace(user, key=user_key)
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
@@ -284,7 +285,7 @@ class SqliteRepository(Repository):
             if exc.args[0] == 'UNIQUE constraint failed: groupings.code':
                 raise DuplicateKey("Grouping.code", grouping.code)
             raise
-        return grouping._replace(key=grouping_key)
+        return dataclasses.replace(grouping, key=grouping_key)
 
     def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""
@@ -322,7 +323,7 @@ class SqliteRepository(Repository):
             "FROM groupings" + where_sql + order_clause(order), where_vals)
         result = []
         for row in cursor.fetchall():
-            result.append(Grouping._make(row))
+            result.append(Grouping(*row))
         cursor.close()
         return result
 
@@ -386,7 +387,7 @@ class SqliteRepository(Repository):
             [user_key] + where_vals)
         result = []
         for row in cursor.fetchall():
-            result.append(Grouping._make(row))
+            result.append(Grouping(*row))
         cursor.close()
         return result
 

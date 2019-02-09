@@ -19,6 +19,7 @@
 
 """Test the models module."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 from datetime import timedelta
 from typing import cast
 
@@ -121,8 +122,9 @@ def test_is_registration_open() -> None:
         None, ".", "name", UserKey(int=0), yet + timedelta(seconds=1),
         yet + timedelta(days=7), None, "RD", 7, 7, "Note")
     assert not grouping.is_registration_open()
-    assert grouping._replace(begin_date=yet).is_registration_open()
-    assert not grouping._replace(
+    assert dataclasses.replace(grouping, begin_date=yet).is_registration_open()
+    assert not dataclasses.replace(
+        grouping,
         begin_date=yet - timedelta(seconds=2),
         final_date=yet - timedelta(seconds=1)).is_registration_open()
 
@@ -134,7 +136,7 @@ def test_can_grouping_start() -> None:
         None, ".", "name", UserKey(int=0), yet - timedelta(days=6),
         yet + timedelta(days=1), None, "RD", 7, 7, "Note")
     assert not grouping.can_grouping_start()
-    assert grouping._replace(final_date=yet).can_grouping_start()
+    assert dataclasses.replace(grouping, final_date=yet).can_grouping_start()
 
 
 def test_registration_validation() -> None:

@@ -19,6 +19,7 @@
 
 """Some utility functions for the web application."""
 
+import dataclasses  # pylint: disable=wrong-import-order
 from functools import wraps
 from typing import Any, Sequence, Tuple, cast
 
@@ -71,13 +72,16 @@ def make_model(model_class, form_data, additional_values):
     """Create a new model based on form data."""
     data = dict(form_data)
     data.update(additional_values)
-    return model_class._make(map(lambda f: data.get(f, None), model_class._fields))
+    return model_class(*tuple(map(
+        lambda f: data.get(f, None),
+        (field.name for field in dataclasses.fields(model_class)))))
 
 
 def update_model(model, form_data):
     """Update a given model with data from a form."""
-    fields = set(model._fields)
-    return model._replace(**{k: v for k, v in form_data.items() if k in fields})
+    fields = set(field.name for field in dataclasses.fields(model))
+    return dataclasses.replace(
+        model, **{k: v for k, v in form_data.items() if k in fields})
 
 
 def datetimeformat(datetime=None, dt_format=None, rebase=True):
