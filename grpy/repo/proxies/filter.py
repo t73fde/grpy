@@ -17,23 +17,23 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Filter proxy repository."""
+"""Filter proxy connection."""
 
 from datetime import datetime
 from typing import Callable, Iterable, Optional, Sequence, cast
 
-from .base import BaseProxyRepository
-from ..base import Message, OrderSpec, Repository, WhereSpec
+from .base import BaseProxyConnection
+from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 from ...models import (
     Grouping, GroupingKey, Groups, Registration, User, UserKey, UserPreferences)
 
 
-class FilterProxyRepository(BaseProxyRepository):
-    """A repository that delegates all requests to another repository."""
+class FilterProxyConnection(BaseProxyConnection):
+    """A connection that delegates all requests to another connection."""
 
-    def __init__(self, delegate: Repository):
-        """Initialize the proxy repository."""
+    def __init__(self, delegate: Connection):
+        """Initialize the proxy connection."""
         super().__init__(delegate)
         self._user = User(UserKey(int=0), "*error*")
         self._grouping = Grouping(
@@ -49,11 +49,11 @@ class FilterProxyRepository(BaseProxyRepository):
         return function(*args)
 
     def get_messages(self, delete: bool = False) -> Sequence[Message]:
-        """Return all repository-related messages."""
+        """Return all connection-related messages."""
         return cast(Sequence[Message], self._filter(super().get_messages, (), delete))
 
     def close(self, success: bool) -> None:
-        """Close the repository, store all permanent data."""
+        """Close the connection, store all permanent data."""
         self._filter(super().close, None, success)
 
     def set_user(self, user: User) -> User:

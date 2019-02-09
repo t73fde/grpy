@@ -27,7 +27,7 @@ from flask import g, url_for
 import requests
 
 from ..app import create_app
-from ...repo.proxies.check import ValidatingProxyRepository
+from ...repo.proxies.check import ValidatingProxyConnection
 
 
 def test_config() -> None:
@@ -36,14 +36,14 @@ def test_config() -> None:
     app = create_app(config_mapping={'TESTING': True})
     assert app.testing
     with app.test_request_context():
-        repository = app.get_repository()
-        assert repository is app.get_repository()
-        assert not list(repository.iter_users())
-        assert not list(repository.iter_groupings())
+        connection = app.get_connection()
+        assert connection is app.get_connection()
+        assert not list(connection.iter_users())
+        assert not list(connection.iter_groupings())
     with app.test_request_context():
-        repository = app.get_repository()
-        g_repo = g.pop('repository', None)
-        assert g_repo == repository
+        connection = app.get_connection()
+        g_repo = g.pop('connection', None)
+        assert g_repo == connection
 
 
 # pylint: disable=protected-access
@@ -80,8 +80,8 @@ def test_check_password(app, monkeypatch) -> None:
     assert app.authenticate("user", "1") is None
 
 
-def test_flash_repository_messages(client, auth, monkeypatch) -> None:
-    """Ensure that messages of repository are shown as a flash message."""
+def test_flash_connection_messages(client, auth, monkeypatch) -> None:
+    """Ensure that messages of connection are shown as a flash message."""
 
     def raise_value_error(*args, **kwargs):
         """Raise a ValueError."""
@@ -89,7 +89,7 @@ def test_flash_repository_messages(client, auth, monkeypatch) -> None:
 
     auth.login("host")
     monkeypatch.setattr(
-        ValidatingProxyRepository, 'iter_groupings', raise_value_error)
+        ValidatingProxyConnection, 'iter_groupings', raise_value_error)
     response = client.get(url_for('home'))
     assert response.status_code == 200
     assert b"Critical error: builtins.ValueError: " \

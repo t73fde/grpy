@@ -44,28 +44,28 @@ class NothingToUpdate(Exception):
     """Signal a missing data element, so that an update is not possible."""
 
 
-class Repository:
-    """Abstract repository."""
+class Connection:
+    """Abstract connection to a reposity."""
 
     def get_messages(self, delete: bool = False) -> Sequence[Message]:
-        """Return all repository-related messages."""
-        raise NotImplementedError("Repository.get_messages")
+        """Return all connection-related messages."""
+        raise NotImplementedError("Connection.get_messages")
 
     def close(self, success: bool) -> None:
-        """Close the repository, store all permanent data."""
-        raise NotImplementedError("Repository.close")
+        """Close the connection, store all permanent data."""
+        raise NotImplementedError("Connection.close")
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
-        raise NotImplementedError("Repository.set_user")
+        raise NotImplementedError("Connection.set_user")
 
     def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user for given primary key."""
-        raise NotImplementedError("Repository.get_user")
+        raise NotImplementedError("Connection.get_user")
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user for given ident."""
-        raise NotImplementedError("Repository.get_user_by_ident")
+        raise NotImplementedError("Connection.get_user_by_ident")
 
     def iter_users(
             self,
@@ -88,19 +88,19 @@ class Repository:
         "+".  If the prefix "-" is given, sorting is descending, else it is
         ascending. Examples: "ident", "-ident".
         """
-        raise NotImplementedError("Repository.iter_users")
+        raise NotImplementedError("Connection.iter_users")
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
-        raise NotImplementedError("Repository.set_grouping")
+        raise NotImplementedError("Connection.set_grouping")
 
     def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""
-        raise NotImplementedError("Repository.get_grouping")
+        raise NotImplementedError("Connection.get_grouping")
 
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
-        raise NotImplementedError("Repository.get_grouping_by_code")
+        raise NotImplementedError("Connection.get_grouping_by_code")
 
     def iter_groupings(
             self,
@@ -112,25 +112,25 @@ class Repository:
         See method `iter_users` for a detailed description of `where` and
         `order`.
         """
-        raise NotImplementedError("Repository.iter_groupings")
+        raise NotImplementedError("Connection.iter_groupings")
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
-        raise NotImplementedError("Repository.add_registration")
+        raise NotImplementedError("Connection.add_registration")
 
     def get_registration(
             self,
             grouping_key: GroupingKey, user_key: UserKey) -> Optional[Registration]:
         """Return registration with given grouping and user."""
-        raise NotImplementedError("Repository.get_registration")
+        raise NotImplementedError("Connection.get_registration")
 
     def count_registrations_by_grouping(self, grouping_key: GroupingKey) -> int:
         """Return number of registration for given grouping."""
-        raise NotImplementedError("Repository.count_registrations_by_grouping")
+        raise NotImplementedError("Connection.count_registrations_by_grouping")
 
     def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
-        raise NotImplementedError("Repository.delete_registration")
+        raise NotImplementedError("Connection.delete_registration")
 
     def iter_groupings_by_user(
             self,
@@ -138,7 +138,7 @@ class Repository:
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
-        raise NotImplementedError("Repository.iter_groupings_by_user")
+        raise NotImplementedError("Connection.iter_groupings_by_user")
 
     def iter_user_registrations_by_grouping(
             self,
@@ -146,15 +146,15 @@ class Repository:
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
-        raise NotImplementedError("Repository.iter_user_registrations_by_grouping")
+        raise NotImplementedError("Connection.iter_user_registrations_by_grouping")
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
-        raise NotImplementedError("Repository.set_groups")
+        raise NotImplementedError("Connection.set_groups")
 
     def get_groups(self, grouping_key: GroupingKey) -> Groups:
         """Get groups builded for grouping."""
-        raise NotImplementedError("Repository.get_groups")
+        raise NotImplementedError("Connection.get_groups")
 
     def iter_groups_by_user(
             self,
@@ -162,7 +162,7 @@ class Repository:
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
-        raise NotImplementedError("Repository.iter_groups_by_user")
+        raise NotImplementedError("Connection.iter_groups_by_user")
 
 
 class RepositoryFactory:

@@ -25,7 +25,7 @@ from typing import (
     Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar, cast)
 
 from .base import (
-    DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
+    Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
     RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
@@ -57,7 +57,7 @@ class RamRepositoryFactory(RepositoryFactory):
     def __init__(self, repository_url: str):
         """Initialize the factory."""
         super().__init__(repository_url)
-        self._repository: Optional[RamRepository] = None
+        self._repository: Optional[RamConnection] = None
         self._state: Optional[RamRepositoryState] = None
 
     def can_connect(self) -> bool:
@@ -68,14 +68,14 @@ class RamRepositoryFactory(RepositoryFactory):
         """Initialize the repository, if needed."""
         return True
 
-    def create(self) -> Repository:
+    def create(self) -> Connection:
         """Create and setup a repository."""
         if not self._state:
             self._state = RamRepositoryState()
-        return RamRepository(self._state)
+        return RamConnection(self._state)
 
 
-class RamRepository(Repository):
+class RamConnection(Connection):
     """RAM repository."""
 
     def __init__(self, state):

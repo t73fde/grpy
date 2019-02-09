@@ -116,7 +116,7 @@ def colormap(color_description: str, prefix: str = "w3-") -> str:
 
 def get_all_messages() -> Sequence[Tuple[str, str]]:
     """Return all messages, not just those from the session."""
-    messages = current_app.get_repository().get_messages(delete=False)
+    messages = current_app.get_connection().get_messages(delete=False)
     if messages:
         return [(m.category, m.text) for m in messages]
     return cast(Sequence[Tuple[str, str]], get_flashed_messages(with_categories=True))

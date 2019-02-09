@@ -27,7 +27,7 @@ from typing import List, Tuple, cast
 import pytest
 
 from .. import create_factory
-from ..base import DuplicateKey, Repository
+from ..base import Connection, DuplicateKey
 from ..ram import RamRepositoryFactory
 from ... import utils
 from ...models import (
@@ -62,162 +62,162 @@ def test_no_initialize(monkeypatch) -> None:
     assert factory.url == "dummy:"
 
 
-def test_insert_user(repository: Repository) -> None:
+def test_insert_user(connection: Connection) -> None:
     """Check that inserting a new user works."""
     user = User(None, "user", Permission.HOST)
-    new_user = repository.set_user(user)
+    new_user = connection.set_user(user)
     assert not user.key
     assert new_user.key
     assert new_user.ident == user.ident
     assert new_user.is_host == user.is_host
 
-    repository.set_user(user)
+    connection.set_user(user)
     assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        repository.get_messages(delete=True)[0].text
-    assert repository.get_messages() == []
+        connection.get_messages(delete=True)[0].text
+    assert connection.get_messages() == []
 
 
-def test_update_user(repository: Repository) -> None:
+def test_update_user(connection: Connection) -> None:
     """Check that updating an existing user works."""
     user = User(UserKey(), "user")
-    repository.set_user(user)
+    connection.set_user(user)
     assert "Missing user: try to update key " in \
-        repository.get_messages(delete=True)[0].text
-    assert repository.get_messages() == []
+        connection.get_messages(delete=True)[0].text
+    assert connection.get_messages() == []
 
-    user = repository.set_user(User(None, "user", Permission.HOST))
+    user = connection.set_user(User(None, "user", Permission.HOST))
     new_user = dataclasses.replace(user, permissions=Permission(0))
     assert user.key == new_user.key
-    newer_user = repository.set_user(new_user)
+    newer_user = connection.set_user(new_user)
     assert new_user == newer_user
 
-    user_2 = repository.set_user(User(None, "user_2"))
+    user_2 = connection.set_user(User(None, "user_2"))
     renamed_user = dataclasses.replace(user_2, ident=user.ident)
-    repository.set_user(renamed_user)
+    connection.set_user(renamed_user)
     assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        repository.get_messages(delete=True)[0].text
-    assert repository.get_messages() == []
+        connection.get_messages(delete=True)[0].text
+    assert connection.get_messages() == []
 
 
-def test_get_user(repository: Repository) -> None:
+def test_get_user(connection: Connection) -> None:
     """An inserted or updated user can be retrieved."""
-    user = repository.set_user(User(None, "user", Permission.HOST))
+    user = connection.set_user(User(None, "user", Permission.HOST))
     assert user.key is not None
-    new_user = repository.get_user(user.key)
+    new_user = connection.get_user(user.key)
     assert new_user == user
 
     newer_user = dataclasses.replace(user, permissions=Permission(0))
-    repository.set_user(newer_user)
-    last_user = repository.get_user(user.key)
+    connection.set_user(newer_user)
+    last_user = connection.get_user(user.key)
     assert last_user is not None
     assert last_user.is_host != user.is_host
 
-    assert repository.get_user(UserKey()) is None
+    assert connection.get_user(UserKey()) is None
 
 
-def test_get_user_by_ident(repository: Repository) -> None:
+def test_get_user_by_ident(connection: Connection) -> None:
     """Retrieve an user by its ident."""
-    user = repository.set_user(User(None, "user", Permission.HOST))
-    new_user = repository.get_user_by_ident(user.ident)
+    user = connection.set_user(User(None, "user", Permission.HOST))
+    new_user = connection.get_user_by_ident(user.ident)
     assert new_user == user
 
     newer_user = dataclasses.replace(user, permissions=Permission(0))
-    repository.set_user(newer_user)
-    last_user = repository.get_user_by_ident(user.ident)
+    connection.set_user(newer_user)
+    last_user = connection.get_user_by_ident(user.ident)
     assert last_user is not None
     assert last_user.is_host != user.is_host
 
     for ident in ("", "invalid"):
-        not_found = repository.get_user_by_ident(ident)
+        not_found = connection.get_user_by_ident(ident)
         assert not_found is None
 
 
-def test_get_user_by_ident_change(repository: Repository) -> None:
+def test_get_user_by_ident_change(connection: Connection) -> None:
     """After a change to an ident, the old name must not be accessible."""
     ident = "user"
-    repository.set_user(User(None, ident))
-    user = repository.get_user_by_ident(ident)
+    connection.set_user(User(None, ident))
+    user = connection.get_user_by_ident(ident)
     assert user is not None
     user = dataclasses.replace(user, ident="resu")
-    repository.set_user(user)
-    assert repository.get_user_by_ident(ident) is None
+    connection.set_user(user)
+    assert connection.get_user_by_ident(ident) is None
 
 
-def setup_users(repository: Repository, count: int) -> List[User]:
+def setup_users(connection: Connection, count: int) -> List[User]:
     """Insert some users into repository."""
     result = []
     permissions = Permission(0)
     for i in range(count):
-        user = repository.set_user(User(None, "user-%d" % i, permissions))
+        user = connection.set_user(User(None, "user-%d" % i, permissions))
         result.append(user)
         permissions = Permission(0) if permissions else Permission.HOST
     return result
 
 
-def test_iter_users(repository: Repository) -> None:
+def test_iter_users(connection: Connection) -> None:
     """List all users."""
-    all_users = setup_users(repository, 17)
-    iter_users = utils.LazyList(repository.iter_users())
+    all_users = setup_users(connection, 17)
+    iter_users = utils.LazyList(connection.iter_users())
     assert len(iter_users) == len(all_users)
     assert set(iter_users) == set(all_users)
 
 
-def test_iter_users_where(repository: Repository) -> None:
+def test_iter_users_where(connection: Connection) -> None:
     """Select some user from list of all users."""
-    all_users = setup_users(repository, 13)
-    users = list(repository.iter_users(where={'permissions__eq': Permission.HOST}))
-    non_users = list(repository.iter_users(where={'permissions__ne': Permission.HOST}))
+    all_users = setup_users(connection, 13)
+    users = list(connection.iter_users(where={'permissions__eq': Permission.HOST}))
+    non_users = list(connection.iter_users(where={'permissions__ne': Permission.HOST}))
     assert len(users) + len(non_users) == len(all_users)
     assert set(users + non_users) == set(all_users)
 
     for field in dataclasses.fields(User):
         field_name = field.name
         where = {field_name + "__eq": None}
-        lazy_users = utils.LazyList(repository.iter_users(where=where))
+        lazy_users = utils.LazyList(connection.iter_users(where=where))
         assert not lazy_users
         where = {field_name + "__ne": None}
-        lazy_users = utils.LazyList(repository.iter_users(where=where))
+        lazy_users = utils.LazyList(connection.iter_users(where=where))
         assert set(lazy_users) == set(all_users)
 
     for _ in range(len(all_users)):
         user = random.choice(all_users)
-        users = list(repository.iter_users(where={'ident__eq': user.ident}))
+        users = list(connection.iter_users(where={'ident__eq': user.ident}))
         assert len(users) == 1
         assert users[0] == user
 
-        other_users = list(repository.iter_users(where={'ident__ne': user.ident}))
+        other_users = list(connection.iter_users(where={'ident__ne': user.ident}))
         assert len(other_users) + 1 == len(all_users)
         assert set(other_users + users) == set(all_users)
 
-        users = list(repository.iter_users(where={'ident__lt': user.ident}))
-        non_users = list(repository.iter_users(where={'ident__ge': user.ident}))
+        users = list(connection.iter_users(where={'ident__lt': user.ident}))
+        non_users = list(connection.iter_users(where={'ident__ge': user.ident}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        users = list(repository.iter_users(where={'ident__gt': user.ident}))
-        non_users = list(repository.iter_users(where={'ident__le': user.ident}))
+        users = list(connection.iter_users(where={'ident__gt': user.ident}))
+        non_users = list(connection.iter_users(where={'ident__le': user.ident}))
         assert len(users) + len(non_users) == len(all_users)
         assert set(users + non_users) == set(all_users)
 
-        no_users = utils.LazyList(repository.iter_users(
+        no_users = utils.LazyList(connection.iter_users(
             where={'key__eq': UserKey()}))
         assert not no_users
 
 
-def test_iter_users_order(repository: Repository) -> None:
+def test_iter_users_order(connection: Connection) -> None:
     """Order the list of users."""
-    all_users = setup_users(repository, 7)  # Must be less than 10
-    users = list(repository.iter_users(order=["ident"]))
+    all_users = setup_users(connection, 7)  # Must be less than 10
+    users = list(connection.iter_users(order=["ident"]))
     assert users == all_users
-    users = list(repository.iter_users(order=["+ident"]))
+    users = list(connection.iter_users(order=["+ident"]))
     assert users == all_users
-    users = list(repository.iter_users(order=["-ident"]))
+    users = list(connection.iter_users(order=["-ident"]))
     assert users == list(reversed(all_users))
 
 
-def test_insert_grouping(repository: Repository, grouping: Grouping) -> None:
+def test_insert_grouping(connection: Connection, grouping: Grouping) -> None:
     """Check that inserting a new grouping works."""
-    new_grouping = repository.set_grouping(grouping)
+    new_grouping = connection.set_grouping(grouping)
     assert not grouping.key
     assert new_grouping.key
     assert new_grouping.code == grouping.code
@@ -232,80 +232,80 @@ def test_insert_grouping(repository: Repository, grouping: Grouping) -> None:
     assert new_grouping.note == grouping.note
 
     with pytest.raises(DuplicateKey):
-        repository.set_grouping(grouping)
+        connection.set_grouping(grouping)
 
 
-def test_update_grouping(repository: Repository, grouping: Grouping) -> None:
+def test_update_grouping(connection: Connection, grouping: Grouping) -> None:
     """Check that updating an existing grouping works."""
     grouping_1 = dataclasses.replace(grouping, key=GroupingKey())
-    repository.set_grouping(grouping_1)
+    connection.set_grouping(grouping_1)
     assert "Missing grouping: try to update key " + str(grouping_1.key) in \
-        repository.get_messages(delete=True)[0].text
-    assert repository.get_messages() == []
+        connection.get_messages(delete=True)[0].text
+    assert connection.get_messages() == []
 
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     new_grouping = dataclasses.replace(grouping, name="new name")
     assert grouping.key == new_grouping.key
-    newer_grouping = repository.set_grouping(new_grouping)
+    newer_grouping = connection.set_grouping(new_grouping)
     assert new_grouping == newer_grouping
 
 
-def test_update_grouping_duplicate(repository: Repository, grouping: Grouping) -> None:
+def test_update_grouping_duplicate(connection: Connection, grouping: Grouping) -> None:
     """Updating an existing grouping with duplicate code raises exception."""
-    grouping = repository.set_grouping(grouping)
-    grouping_2 = repository.set_grouping(
+    grouping = connection.set_grouping(grouping)
+    grouping_2 = connection.set_grouping(
         dataclasses.replace(grouping, key=None, code=grouping.code[::-1]))
     with pytest.raises(DuplicateKey):
-        repository.set_grouping(dataclasses.replace(grouping_2, code=grouping.code))
+        connection.set_grouping(dataclasses.replace(grouping_2, code=grouping.code))
 
 
-def test_get_grouping(repository: Repository, grouping: Grouping) -> None:
+def test_get_grouping(connection: Connection, grouping: Grouping) -> None:
     """An inserted or updated grouping can be retrieved."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    new_grouping = repository.get_grouping(grouping.key)
+    new_grouping = connection.get_grouping(grouping.key)
     assert new_grouping == grouping
 
     newer_grouping = dataclasses.replace(grouping, name="new name")
-    repository.set_grouping(newer_grouping)
-    last_grouping = repository.get_grouping(grouping.key)
+    connection.set_grouping(newer_grouping)
+    last_grouping = connection.get_grouping(grouping.key)
     assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
-    assert repository.get_grouping(GroupingKey()) is None
+    assert connection.get_grouping(GroupingKey()) is None
 
 
-def test_get_grouping_by_code(repository: Repository, grouping: Grouping) -> None:
+def test_get_grouping_by_code(connection: Connection, grouping: Grouping) -> None:
     """An inserted or updated grouping can be retrieved by short code."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    new_grouping = repository.get_grouping_by_code(grouping.code)
+    new_grouping = connection.get_grouping_by_code(grouping.code)
     assert new_grouping == grouping
 
     newer_grouping = dataclasses.replace(grouping, name="new name")
-    repository.set_grouping(newer_grouping)
-    last_grouping = repository.get_grouping(grouping.key)
+    connection.set_grouping(newer_grouping)
+    last_grouping = connection.get_grouping(grouping.key)
     assert last_grouping is not None
     assert last_grouping.name != grouping.name
 
     for ident in ("", "invalid"):
-        not_found = repository.get_user_by_ident(ident)
+        not_found = connection.get_user_by_ident(ident)
         assert not_found is None
 
 
 def test_get_grouping_by_code_after_change(
-        repository: Repository, grouping: Grouping) -> None:
+        connection: Connection, grouping: Grouping) -> None:
     """After a change to a code, the old code must not be accessible."""
-    grouping = repository.set_grouping(grouping)
-    repository.set_grouping(dataclasses.replace(grouping, code="0000"))
-    assert repository.get_grouping_by_code(grouping.code) is None
+    grouping = connection.set_grouping(grouping)
+    connection.set_grouping(dataclasses.replace(grouping, code="0000"))
+    assert connection.get_grouping_by_code(grouping.code) is None
 
 
-def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
+def setup_groupings(connection: Connection, count: int) -> List[Grouping]:
     """Insert some groupings into repository."""
     hosts = [
-        repository.set_user(User(None, "host-1", Permission.HOST)),
-        repository.set_user(User(None, "host-2", Permission.HOST)),
+        connection.set_user(User(None, "host-1", Permission.HOST)),
+        connection.set_user(User(None, "host-2", Permission.HOST)),
     ]
     for host in hosts:
         assert host.key is not None
@@ -314,7 +314,7 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     days = 0
     result = []
     for i in range(count):
-        grouping = repository.set_grouping(Grouping(
+        grouping = connection.set_grouping(Grouping(
             None, "cd%d" % i, "grouping-%d" % i,
             cast(UserKey, hosts[days % len(hosts)].key),
             now + timedelta(days=days), now + timedelta(days=days + 7), None,
@@ -324,87 +324,87 @@ def setup_groupings(repository: Repository, count: int) -> List[Grouping]:
     return result
 
 
-def test_iter_groupings(repository: Repository) -> None:
+def test_iter_groupings(connection: Connection) -> None:
     """List all groupings."""
-    all_groupings = setup_groupings(repository, 17)
-    iter_groupings = utils.LazyList(repository.iter_groupings())
+    all_groupings = setup_groupings(connection, 17)
+    iter_groupings = utils.LazyList(connection.iter_groupings())
     assert len(iter_groupings) == len(all_groupings)
     assert set(iter_groupings) == set(all_groupings)
 
 
-def test_iter_groupings_where(repository: Repository) -> None:
+def test_iter_groupings_where(connection: Connection) -> None:
     """Select some grouping from list of all groupings."""
-    all_groupings = setup_groupings(repository, 13)
-    groupings = list(repository.iter_groupings(where={'close_date__eq': None}))
-    non_groupings = list(repository.iter_groupings(where={'close_date__ne': None}))
+    all_groupings = setup_groupings(connection, 13)
+    groupings = list(connection.iter_groupings(where={'close_date__eq': None}))
+    non_groupings = list(connection.iter_groupings(where={'close_date__ne': None}))
     assert len(groupings) + len(non_groupings) == len(all_groupings)
     assert set(groupings + non_groupings) == set(all_groupings)
 
-    groupings = list(repository.iter_groupings(where={'close_date__lt': utils.now()}))
+    groupings = list(connection.iter_groupings(where={'close_date__lt': utils.now()}))
     assert set(groupings) == set(all_groupings)
-    groupings = list(repository.iter_groupings(where={'close_date__le': utils.now()}))
+    groupings = list(connection.iter_groupings(where={'close_date__le': utils.now()}))
     assert set(groupings) == set(all_groupings)
 
     for _ in range(len(all_groupings)):
         grouping = random.choice(all_groupings)
-        groupings = list(repository.iter_groupings(where={'name__eq': grouping.name}))
+        groupings = list(connection.iter_groupings(where={'name__eq': grouping.name}))
         assert len(groupings) == 1
         assert groupings[0] == grouping
 
         other_groupings = list(
-            repository.iter_groupings(where={'name__ne': grouping.name}))
+            connection.iter_groupings(where={'name__ne': grouping.name}))
         assert len(other_groupings) + 1 == len(all_groupings)
         assert set(other_groupings + groupings) == set(all_groupings)
 
-        groupings = list(repository.iter_groupings(where={
+        groupings = list(connection.iter_groupings(where={
             'close_date__lt': None, 'close_date__ne': None}))
-        non_groupings = list(repository.iter_groupings(where={'close_date__ge': None}))
+        non_groupings = list(connection.iter_groupings(where={'close_date__ge': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
-        groupings = list(repository.iter_groupings(where={'close_date__gt': None}))
-        non_groupings = list(repository.iter_groupings(where={
+        groupings = list(connection.iter_groupings(where={'close_date__gt': None}))
+        non_groupings = list(connection.iter_groupings(where={
             'close_date__le': None, 'close_date__ne': None}))
         assert len(groupings) + len(non_groupings) == len(all_groupings)
         assert set(groupings + non_groupings) == set(all_groupings)
 
-        no_groupings = utils.LazyList(repository.iter_groupings(
+        no_groupings = utils.LazyList(connection.iter_groupings(
             where={'key__eq': GroupingKey()}))
         assert not no_groupings
 
 
-def test_iter_groupings_order(repository: Repository) -> None:
+def test_iter_groupings_order(connection: Connection) -> None:
     """Order the list of groupings."""
-    all_groupings = setup_groupings(repository, 7)  # Must be less than 10
-    groupings = list(repository.iter_groupings(order=["name"]))
+    all_groupings = setup_groupings(connection, 7)  # Must be less than 10
+    groupings = list(connection.iter_groupings(order=["name"]))
     assert groupings == all_groupings
-    groupings = list(repository.iter_groupings(order=["+name"]))
+    groupings = list(connection.iter_groupings(order=["+name"]))
     assert groupings == all_groupings
-    groupings = list(repository.iter_groupings(order=["-name"]))
+    groupings = list(connection.iter_groupings(order=["-name"]))
     assert groupings == list(reversed(all_groupings))
 
 
-def test_set_registration(repository: Repository, grouping: Grouping) -> None:
+def test_set_registration(connection: Connection, grouping: Grouping) -> None:
     """Test add / update of an registration."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    user = repository.set_user(User(None, "UsER"))
+    user = connection.set_user(User(None, "UsER"))
     assert user.key is not None
 
     registration = Registration(grouping.key, user.key, UserPreferences())
-    assert registration == repository.set_registration(registration)
+    assert registration == connection.set_registration(registration)
 
 
-def test_get_registration(repository: Repository, grouping: Grouping) -> None:
+def test_get_registration(connection: Connection, grouping: Grouping) -> None:
     """An inserted / updated registration can be retrieved."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    user = repository.set_user(User(None, "UsER"))
+    user = connection.set_user(User(None, "UsER"))
     assert user.key is not None
 
     registration = Registration(grouping.key, user.key, UserPreferences())
-    repository.set_registration(registration)
-    assert registration == repository.get_registration(
+    connection.set_registration(registration)
+    assert registration == connection.get_registration(
         registration.grouping_key, registration.user_key)
 
     @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
@@ -415,88 +415,88 @@ def test_get_registration(repository: Repository, grouping: Grouping) -> None:
 
     prefs = Prefs(1)
     new_registration = dataclasses.replace(registration, preferences=prefs)
-    repository.set_registration(new_registration)
-    newer_registration = repository.get_registration(
+    connection.set_registration(new_registration)
+    newer_registration = connection.get_registration(
         registration.grouping_key, registration.user_key)
     assert newer_registration is not None
     # TODO assert newer_registration.preferences == prefs
 
-    assert repository.get_registration(grouping.key, UserKey(int=2)) is None
+    assert connection.get_registration(grouping.key, UserKey(int=2)) is None
 
 
 def test_count_registrations_by_grouping(
-        repository: Repository, grouping: Grouping) -> None:
+        connection: Connection, grouping: Grouping) -> None:
     """Test the count calculation for a grouping."""
 
     # An non-existing grouping has no registrations
-    assert repository.count_registrations_by_grouping(GroupingKey()) == 0
+    assert connection.count_registrations_by_grouping(GroupingKey()) == 0
 
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    assert repository.count_registrations_by_grouping(grouping.key) == 0
+    assert connection.count_registrations_by_grouping(grouping.key) == 0
 
     for i in range(10):
-        user = repository.set_user(User(None, "USeR" + str(i)))
+        user = connection.set_user(User(None, "USeR" + str(i)))
         assert user.key is not None
-        repository.set_registration(Registration(
+        connection.set_registration(Registration(
             grouping.key, user.key, UserPreferences()))
-        assert repository.count_registrations_by_grouping(grouping.key) == i + 1
+        assert connection.count_registrations_by_grouping(grouping.key) == i + 1
 
 
-def test_delete_registration(repository: Repository, grouping: Grouping) -> None:
+def test_delete_registration(connection: Connection, grouping: Grouping) -> None:
     """A deleted registration cannot be retrieved."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    user = repository.set_user(User(None, "UseR"))
+    user = connection.set_user(User(None, "UseR"))
     assert user.key is not None
 
     registration = Registration(grouping.key, user.key, UserPreferences())
-    repository.set_registration(registration)
+    connection.set_registration(registration)
 
-    repository.delete_registration(grouping.key, user.key)
-    assert repository.get_registration(grouping.key, user.key) is None
-    repository.delete_registration(grouping.key, user.key)
-    assert repository.get_registration(grouping.key, user.key) is None
+    connection.delete_registration(grouping.key, user.key)
+    assert connection.get_registration(grouping.key, user.key) is None
+    connection.delete_registration(grouping.key, user.key)
+    assert connection.get_registration(grouping.key, user.key) is None
 
 
-def test_iter_groupings_by_user(repository: Repository, grouping: Grouping) -> None:
+def test_iter_groupings_by_user(connection: Connection, grouping: Grouping) -> None:
     """List only applied groupings."""
     other_grouping = dataclasses.replace(grouping, code="newcode", name="Another name")
     assert grouping != other_grouping
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    other_grouping = repository.set_grouping(other_grouping)
+    other_grouping = connection.set_grouping(other_grouping)
     assert other_grouping.key != grouping.key
     for uid in range(5):
-        user = repository.set_user(User(None, "USER" + str(uid)))
+        user = connection.set_user(User(None, "USER" + str(uid)))
         assert user.key is not None
-        repository.set_registration(Registration(
+        connection.set_registration(Registration(
             grouping.key, user.key, UserPreferences()))
-        assert [grouping] == list(repository.iter_groupings_by_user(user.key))
-        assert list(repository.iter_groupings_by_user(
+        assert [grouping] == list(connection.iter_groupings_by_user(user.key))
+        assert list(connection.iter_groupings_by_user(
             user.key, where={'name__ne': grouping.name})) == []
 
 
 def test_iter_user_registrations_by_grouping(
-        repository: Repository, grouping: Grouping) -> None:
+        connection: Connection, grouping: Grouping) -> None:
     """Iterate over all user data of registrations."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
     for i in range(7):
-        user = repository.set_user(User(None, "user-%d" % i))
+        user = connection.set_user(User(None, "user-%d" % i))
         assert user.key is not None
-        repository.set_registration(Registration(
+        connection.set_registration(Registration(
             grouping.key, user.key, UserPreferences()))
-        assert len(utils.LazyList(repository.iter_user_registrations_by_grouping(
+        assert len(utils.LazyList(connection.iter_user_registrations_by_grouping(
             grouping.key))) == i + 1
-    assert not utils.LazyList(repository.iter_user_registrations_by_grouping(
+    assert not utils.LazyList(connection.iter_user_registrations_by_grouping(
         GroupingKey(int=111)))
 
 
 def insert_groups(
-        repository: Repository, grouping: Grouping) -> Tuple[List[User], Groups]:
+        connection: Connection, grouping: Grouping) -> Tuple[List[User], Groups]:
     """Create a tuple of result groups for a grouping."""
-    users = [repository.set_user(User(None, "user=%03d" % i)) for i in range(20)]
+    users = [connection.set_user(User(None, "user=%03d" % i)) for i in range(20)]
     user_list = list(users)
     group_list = []
     while user_list:
@@ -507,34 +507,34 @@ def insert_groups(
     groups = tuple(group_list)
 
     assert grouping.key is not None
-    repository.set_groups(grouping.key, groups)
+    connection.set_groups(grouping.key, groups)
     assert users
     assert groups
     return (users, groups)
 
 
-def test_set_get_groups(repository: Repository, grouping: Grouping) -> None:
+def test_set_get_groups(connection: Connection, grouping: Grouping) -> None:
     """Setting / replacing a group works."""
-    grouping = repository.set_grouping(grouping)
+    grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
-    assert repository.get_groups(grouping.key) == ()
-    _, groups = insert_groups(repository, grouping)
-    assert repository.get_groups(grouping.key) == groups
+    assert connection.get_groups(grouping.key) == ()
+    _, groups = insert_groups(connection, grouping)
+    assert connection.get_groups(grouping.key) == groups
 
     smaller_groups = groups[1:]
-    repository.set_groups(grouping.key, smaller_groups)
-    assert repository.get_groups(grouping.key) == smaller_groups
-    repository.set_groups(grouping.key, groups)
-    assert repository.get_groups(grouping.key) == groups
+    connection.set_groups(grouping.key, smaller_groups)
+    assert connection.get_groups(grouping.key) == smaller_groups
+    connection.set_groups(grouping.key, groups)
+    assert connection.get_groups(grouping.key) == groups
 
 
-def test_iter_groups_by_user(repository: Repository, grouping: Grouping) -> None:
+def test_iter_groups_by_user(connection: Connection, grouping: Grouping) -> None:
     """Is a user belongs to some groups, return that groups."""
-    grouping = repository.set_grouping(grouping)
-    users, groups = insert_groups(repository, grouping)
+    grouping = connection.set_grouping(grouping)
+    users, groups = insert_groups(connection, grouping)
     for user in users:
         assert user.key is not None
-        named_user_groups = list(repository.iter_groups_by_user(user.key))
+        named_user_groups = list(connection.iter_groups_by_user(user.key))
         assert named_user_groups
         for named_user_group in named_user_groups:
             assert named_user_group.grouping_key == grouping.key

@@ -32,7 +32,7 @@ from werkzeug.http import parse_cookie
 
 from ... import utils
 from ...models import Grouping, GroupingKey, Registration, User, UserPreferences
-from ...repo.base import Repository
+from ...repo.base import Connection
 from ...repo.logic import set_grouping_new_code
 
 
@@ -62,8 +62,8 @@ def test_home_anonymous(client) -> None:
 def grouping(app) -> Grouping:
     """Insert a grouping into the repository."""
     now = utils.now()
-    host = app.get_repository().get_user_by_ident("host")
-    return set_grouping_new_code(app.get_repository(), Grouping(
+    host = app.get_connection().get_user_by_ident("host")
+    return set_grouping_new_code(app.get_connection(), Grouping(
         None, ".", "Name", host.key, now, now + datetime.timedelta(days=1),
         None, "RD", 17, 7, "Notizie"))
 
@@ -100,12 +100,12 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     """Home view shows registration."""
     assert app_grouping.key is not None
     auth.login("user")
-    user = app.get_repository().get_user_by_ident("user")
+    user = app.get_connection().get_user_by_ident("user")
     assert user
     register_url = url_for('grouping_register', grouping_key=app_grouping.key)
     assert client.get(register_url).status_code == 200
 
-    app.get_repository().set_registration(Registration(
+    app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
@@ -114,7 +114,7 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     assert client.get(register_url).status_code == 200
 
     # Now change the final_date
-    app.get_repository().set_grouping(dataclasses.replace(
+    app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         final_date=app_grouping.begin_date + datetime.timedelta(seconds=60)))
     response = client.get(url_for('home'))
@@ -152,7 +152,7 @@ def test_login_new_user(app, client) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert session['user_identifier'] == "new_user"
-    assert app.get_repository().get_user_by_ident("new_user")
+    assert app.get_connection().get_user_by_ident("new_user")
 
 
 def test_invalid_login(app, client) -> None:
@@ -177,9 +177,9 @@ def test_double_login(client, auth) -> None:
 def test_name_change_after_login(app, client, auth) -> None:
     """Username is changed after login."""
     auth.login("host")
-    repository = app.get_repository()
-    user = repository.get_user_by_ident("host")
-    repository.set_user(dataclasses.replace(user, ident="tsoh"))
+    connection = app.get_connection()
+    user = connection.get_user_by_ident("host")
+    connection.set_user(dataclasses.replace(user, ident="tsoh"))
     client.get("/")
     assert g.user is None
 
@@ -197,7 +197,7 @@ def test_login_with_redirect(app, client) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/ABCDEF/"
     assert session['user_identifier'] == "new_user"
-    assert app.get_repository().get_user_by_ident("new_user")
+    assert app.get_connection().get_user_by_ident("new_user")
 
 
 def test_logout(client, auth) -> None:
@@ -243,7 +243,7 @@ def test_grouping_create(app, client, auth) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
-    groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
+    groupings = app.get_connection().iter_groupings(where={"name__eq": "name"})
     assert len(list(groupings)) == 1
 
     response = client.post(url, data={
@@ -253,7 +253,7 @@ def test_grouping_create(app, client, auth) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
-    groupings = app.get_repository().iter_groupings(where={"name__eq": "name"})
+    groupings = app.get_connection().iter_groupings(where={"name__eq": "name"})
     assert len(list(groupings)) == 2
 
 
@@ -283,8 +283,8 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> No
     url = url_for('grouping_detail', grouping_key=app_grouping.key)
     users = []
     for i in range(12):
-        user = app.get_repository().set_user(User(None, "user%d" % i))
-        app.get_repository().set_registration(Registration(
+        user = app.get_connection().set_user(User(None, "user%d" % i))
+        app.get_connection().set_registration(Registration(
             app_grouping.key, user.key, UserPreferences()))
         users.append(user)
     auth.login("host")
@@ -351,7 +351,7 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
 
-    groupings = list(app.get_repository().iter_groupings())
+    groupings = list(app.get_connection().iter_groupings())
     assert len(groupings) == 1
     assert groupings[0].key == app_grouping.key
 
@@ -419,7 +419,7 @@ def test_grouping_register_out_of_time(
     auth.login('student')
 
     now = utils.now()
-    app.get_repository().set_grouping(dataclasses.replace(
+    app.get_connection().set_grouping(dataclasses.replace(
         app_grouping, begin_date=now + datetime.timedelta(seconds=3600)))
     response = client.post(url, data={})
     assert response.status_code == 302
@@ -430,7 +430,7 @@ def test_grouping_register_out_of_time(
 
     client.get(url_for('home'))  # Clean flash messages
 
-    app.get_repository().set_grouping(dataclasses.replace(
+    app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         begin_date=now - datetime.timedelta(seconds=3600),
         final_date=now - datetime.timedelta(seconds=1800)))
@@ -453,9 +453,9 @@ def test_grouping_deregister(app, client, auth, app_grouping: Grouping) -> None:
     assert response.headers['Location'] == "http://localhost/"
     assert '_flashes' not in get_session_data(app, response)
 
-    app.get_repository().set_registration(Registration(
+    app.get_connection().set_registration(Registration(
         app_grouping.key,
-        app.get_repository().get_user_by_ident('student').key,
+        app.get_connection().get_user_by_ident('student').key,
         UserPreferences()))
     response = client.post(url, data={'submit_deregister': "submit_deregister"})
     assert response.status_code == 302
@@ -487,7 +487,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
             app_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
 
-    new_grouping = app.get_repository().set_grouping(dataclasses.replace(
+    new_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1)))
@@ -499,8 +499,8 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
         [('warning', "No registrations for '{}' found.".format(new_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
 
-    user = app.get_repository().get_user_by_ident("user")
-    app.get_repository().set_registration(
+    user = app.get_connection().get_user_by_ident("user")
+    app.get_connection().set_registration(
         Registration(new_grouping.key, user.key, UserPreferences()))
 
     response = client.get(url)
@@ -522,23 +522,23 @@ def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
 
 
 def create_registered_users(
-        repository: Repository, grouping_key: GroupingKey) -> List[User]:
+        connection: Connection, grouping_key: GroupingKey) -> List[User]:
     """Create a bunch of users and register them for the grouping."""
     users = []
     for i in range(20):
-        user = repository.set_user(User(None, "user_%d" % i))
+        user = connection.set_user(User(None, "user_%d" % i))
         assert user.key is not None
-        repository.set_registration(
+        connection.set_registration(
             Registration(grouping_key, user.key, UserPreferences()))
         users.append(user)
     return users
 
 
 def start_grouping(
-        client, auth, repository: Repository, app_grouping: Grouping):
+        client, auth, connection: Connection, app_grouping: Grouping):
     """Build the group."""
     url = url_for('grouping_start', grouping_key=app_grouping.key)
-    repository.set_grouping(dataclasses.replace(
+    connection.set_grouping(dataclasses.replace(
         app_grouping,
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1),
@@ -551,9 +551,9 @@ def start_grouping(
 def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     """Test the group building process."""
     assert app_grouping.key is not None
-    users = create_registered_users(app.get_repository(), app_grouping.key)
+    users = create_registered_users(app.get_connection(), app_grouping.key)
 
-    response = start_grouping(client, auth, app.get_repository(), app_grouping)
+    response = start_grouping(client, auth, app.get_connection(), app_grouping)
     assert response.status_code == 302
     detail_url = url_for('grouping_detail', grouping_key=app_grouping.key)
     assert response.headers['Location'] == "http://localhost" + detail_url
@@ -578,8 +578,8 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
 def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) -> None:
     """User is deleted after groups are formed, it must be removed from group."""
     assert app_grouping.key is not None
-    users = create_registered_users(app.get_repository(), app_grouping.key)
-    response = start_grouping(client, auth, app.get_repository(), app_grouping)
+    users = create_registered_users(app.get_connection(), app_grouping.key)
+    response = start_grouping(client, auth, app.get_connection(), app_grouping)
     assert response.status_code == 302
 
     # Now deregister one user
@@ -591,7 +591,7 @@ def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) 
 
     # This user must not be in the freshly formed group
     other_users = {user.key for user in users if user != users[0]}
-    for group in app.get_repository().get_groups(app_grouping.key):
+    for group in app.get_connection().get_groups(app_grouping.key):
         for member in group:
             assert member != users[0].key
             assert member in other_users

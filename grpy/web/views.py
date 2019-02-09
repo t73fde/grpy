@@ -33,13 +33,13 @@ from .. import logic, utils
 from ..models import (
     Grouping, GroupingKey, KeyType, Registration, User, UserKey, UserPreferences)
 from ..policies import get_policy, get_policy_names
-from ..repo.base import Repository
+from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
 
 
-def get_repository() -> Repository:
-    """Return an open repository, specific for this request."""
-    return cast(Repository, current_app.get_repository())
+def get_connection() -> Connection:
+    """Return an open connection, specific for this request."""
+    return cast(Connection, current_app.get_connection())
 
 
 class UserGroup(NamedTuple):
@@ -58,27 +58,27 @@ def home():
     show_welcome = True
     if g.user:
         if g.user.is_host:
-            repository = get_repository()
-            groupings = list(repository.iter_groupings(
+            connection = get_connection()
+            groupings = list(connection.iter_groupings(
                 where={
                     "host_key__eq": g.user.key,
                     "close_date__ge": utils.now()},
                 order=["final_date"]))
             counts = [
-                repository.count_registrations_by_grouping(
+                connection.count_registrations_by_grouping(
                     cast(GroupingKey, g.key)) for g in groupings]
             grouping_counts = list(zip(groupings, counts))
             show_welcome = False
 
         group_list = []
         assigned_groupings = set()
-        for group in get_repository().iter_groups_by_user(g.user.key):
+        for group in get_connection().iter_groups_by_user(g.user.key):
             group_list.append(UserGroup(
                 group.grouping_key,
                 group.grouping_name,
                 sorted(m.user_ident for m in group.group)))
             assigned_groupings.add(group.grouping_key)
-        grouping_iterator = get_repository().iter_groupings_by_user(
+        grouping_iterator = get_connection().iter_groupings_by_user(
             g.user.key,
             where={"close_date__ge": utils.now()},
             order=["final_date"])
@@ -139,7 +139,7 @@ def grouping_create():
         grouping = make_model(
             Grouping, form.data, {"code": ".", "host_key": g.user.key})
         set_grouping_new_code(
-            get_repository(),
+            get_connection(),
             dataclasses.replace(grouping, code=logic.make_code(grouping)))
         return redirect(url_for("home"))
     return render_template("grouping_create.html", form=form)
@@ -148,12 +148,12 @@ def grouping_create():
 @login_required
 def grouping_detail(grouping_key: GroupingKey):
     """Show details of a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(grouping_key))
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     user_registrations = list(map(
         lambda r: r.user,
-        get_repository().iter_user_registrations_by_grouping(grouping.key)))
+        get_connection().iter_user_registrations_by_grouping(grouping.key)))
     user_registrations.sort(key=lambda u: u.ident)
 
     form = forms.RemoveRegistrationsForm()
@@ -168,23 +168,23 @@ def grouping_detail(grouping_key: GroupingKey):
             except ValueError:
                 continue
             if user_key in user_keys:
-                get_repository().delete_registration(grouping.key, user_key)
+                get_connection().delete_registration(grouping.key, user_key)
                 deleted_users.add(user_key)
                 count += 1
-        get_repository().set_groups(
+        get_connection().set_groups(
             grouping.key,
             logic.remove_from_groups(
-                get_repository().get_groups(grouping.key), deleted_users))
+                get_connection().get_groups(grouping.key), deleted_users))
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     can_delete = not user_registrations
     can_start = grouping.can_grouping_start() and user_registrations
     group_list = []
-    for group in get_repository().get_groups(grouping.key):
+    for group in get_connection().get_groups(grouping.key):
         group_list.append(
             sorted(
-                cast(User, get_repository().get_user(member)).ident
+                cast(User, get_connection().get_user(member)).ident
                 for member in group))
     return render_template(
         "grouping_detail.html",
@@ -196,7 +196,7 @@ def grouping_detail(grouping_key: GroupingKey):
 @login_required
 def grouping_update(grouping_key: GroupingKey):
     """Update an existing grouping."""
-    grouping = value_or_404(get_repository().get_grouping(grouping_key))
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     if request.method == 'POST':
@@ -206,7 +206,7 @@ def grouping_update(grouping_key: GroupingKey):
     form.policy.choices = get_policy_names()
     if form.validate_on_submit():
         grouping = update_model(grouping, form.data)
-        get_repository().set_grouping(grouping)
+        get_connection().set_grouping(grouping)
         return redirect(url_for("home"))
     return render_template("grouping_update.html", form=form)
 
@@ -214,7 +214,7 @@ def grouping_update(grouping_key: GroupingKey):
 @login_required_redirect
 def shortlink(code: str):
     """Show information for short link."""
-    grouping = value_or_404(get_repository().get_grouping_by_code(code.upper()))
+    grouping = value_or_404(get_connection().get_grouping_by_code(code.upper()))
     if g.user.key == grouping.host_key:
         return render_template("grouping_code.html", code=grouping.code)
 
@@ -224,19 +224,19 @@ def shortlink(code: str):
 @login_required
 def grouping_register(grouping_key: GroupingKey):
     """Register for a grouping."""
-    grouping = value_or_404(get_repository().get_grouping(grouping_key))
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key == grouping.host_key:
         abort(403)
     if not grouping.is_registration_open():
         flash("Not within the registration period for '{}'.".format(grouping.name),
               category="warning")
         return redirect(url_for('home'))
-    registration = get_repository().get_registration(grouping.key, g.user.key)
+    registration = get_connection().get_registration(grouping.key, g.user.key)
 
     form = forms.RegistrationForm()
     if form.validate_on_submit():
         if form.submit_register.data:
-            get_repository().set_registration(
+            get_connection().set_registration(
                 Registration(grouping.key, g.user.key, UserPreferences()))
             if registration:
                 flash("Registration for '{}' is updated.".format(grouping.name),
@@ -245,7 +245,7 @@ def grouping_register(grouping_key: GroupingKey):
                 flash("Registration for '{}' is stored.".format(grouping.name),
                       category="info")
         elif registration and form.submit_deregister.data:
-            get_repository().delete_registration(
+            get_connection().delete_registration(
                 registration.grouping_key, registration.user_key)
             flash("Registration for '{}' is removed.".format(grouping.name),
                   category="info")
@@ -258,7 +258,7 @@ def grouping_register(grouping_key: GroupingKey):
 @login_required
 def grouping_start(grouping_key: GroupingKey):
     """Start the grouping process."""
-    grouping = value_or_404(get_repository().get_grouping(grouping_key))
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
     if not grouping.can_grouping_start():
@@ -268,7 +268,7 @@ def grouping_start(grouping_key: GroupingKey):
             category="warning")
         return redirect(url_for('home'))
     user_registrations = utils.LazyList(
-        get_repository().iter_user_registrations_by_grouping(grouping.key))
+        get_connection().iter_user_registrations_by_grouping(grouping.key))
     if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),
               category="warning")
@@ -279,7 +279,7 @@ def grouping_start(grouping_key: GroupingKey):
         policy_data = {u: p for (u, p) in user_registrations}
         policy = get_policy(grouping.policy)
         groups = policy(policy_data, grouping.max_group_size, grouping.member_reserve)
-        get_repository().set_groups(grouping.key, groups)
+        get_connection().set_groups(grouping.key, groups)
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     return render_template(

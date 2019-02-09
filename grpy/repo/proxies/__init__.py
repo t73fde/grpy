@@ -19,12 +19,12 @@
 
 """Proxy reposities."""
 
-from .check import CatchingProxyRepository, ValidatingProxyRepository
-from ..base import Repository, RepositoryFactory
+from .check import CatchingProxyConnection, ValidatingProxyConnection
+from ..base import Connection, RepositoryFactory
 
 
 class ProxyRepositoryFactory(RepositoryFactory):
-    """RepositoryFactory to create ProxRepository."""
+    """RepositoryFactory to create ProxyConnection."""
 
     def __init__(self, delegate: RepositoryFactory):
         """Initialize the factory with the URL."""
@@ -39,7 +39,7 @@ class ProxyRepositoryFactory(RepositoryFactory):
         """Initialize the repository, if needed."""
         return self._delegate.initialize()
 
-    def create(self) -> Repository:
-        """Create and setup a repository."""
-        return CatchingProxyRepository(
-            ValidatingProxyRepository(self._delegate.create()))
+    def create(self) -> Connection:
+        """Create and setup a connection."""
+        return CatchingProxyConnection(
+            ValidatingProxyConnection(self._delegate.create()))

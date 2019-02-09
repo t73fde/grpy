@@ -28,8 +28,8 @@ from datetime import timedelta
 
 import pytest
 
-from ..base import Repository
-from ..sqlite import SqliteRepository, SqliteRepositoryFactory
+from ..base import Connection
+from ..sqlite import SqliteConnection, SqliteRepositoryFactory
 from ...models import Grouping, Permission, User, UserKey
 from ...utils import now
 
@@ -68,8 +68,8 @@ def test_connect() -> None:
     assert not os.path.exists(temp_file.name)
 
 
-def test_memory_always_other_repository() -> None:
-    """The factory will always return another repository for in-memory SQLite."""
+def test_memory_always_other_connection() -> None:
+    """The factory will always return another connection for in-memory SQLite."""
     factory = SqliteRepositoryFactory("sqlite:")
     repo_1 = factory.create()
     assert repo_1 is not None
@@ -80,8 +80,8 @@ def test_memory_always_other_repository() -> None:
     repo_2.close(True)
 
 
-def test_real_always_other_repository() -> None:
-    """The factory will always return another repository for real SQLite."""
+def test_real_always_other_connection() -> None:
+    """The factory will always return another connection for real SQLite."""
     temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
     try:
         temp_file.close()
@@ -103,11 +103,11 @@ def test_memory_initialize() -> None:
     factory = SqliteRepositoryFactory("sqlite:")
     assert factory.initialize()
     assert factory.initialize()  # Doing it twice does not harm
-    repository = factory.create()
-    user = repository.set_user(User(None, "user"))
+    connection = factory.create()
+    user = connection.set_user(User(None, "user"))
     assert user.key is not None
     assert user.ident == "user"
-    user_2 = repository.get_user(user.key)
+    user_2 = connection.get_user(user.key)
     assert user == user_2
 
 
@@ -120,7 +120,7 @@ def test_memory_no_initialize(monkeypatch) -> None:
     assert factory.initialize() is False
 
 
-def get_repository() -> Repository:
+def get_connection() -> Connection:
     """Create an initialized repository."""
     factory = SqliteRepositoryFactory("sqlite:")
     factory.initialize()
@@ -139,7 +139,7 @@ class MockCursor:
 
 
 def raise_exception(_self, sql: str, _values):
-    """Mock method that substitutes SqliteRepository._execute."""
+    """Mock method that substitutes SqliteConnection._execute."""
     if sql.startswith("SELECT "):
         return MockCursor()
     raise sqlite3.IntegrityError("Unknown")
@@ -147,15 +147,15 @@ def raise_exception(_self, sql: str, _values):
 
 def test_insert_user(monkeypatch) -> None:
     """Check that inserting a user can raise an exception."""
-    repository = get_repository()
-    user_1 = repository.set_user(User(None, "user_1"))
-    user_2 = repository.set_user(User(None, "user_2"))
+    connection = get_connection()
+    user_1 = connection.set_user(User(None, "user_1"))
+    user_2 = connection.set_user(User(None, "user_2"))
 
-    monkeypatch.setattr(SqliteRepository, "_execute", raise_exception)
+    monkeypatch.setattr(SqliteConnection, "_execute", raise_exception)
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_user(User(None, "admin"))
+        connection.set_user(User(None, "admin"))
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_user(dataclasses.replace(user_2, ident=user_1.ident))
+        connection.set_user(dataclasses.replace(user_2, ident=user_1.ident))
 
 
 def make_grouping(code: str, host_key: UserKey) -> Grouping:
@@ -168,14 +168,14 @@ def make_grouping(code: str, host_key: UserKey) -> Grouping:
 
 def test_set_grouping_exception(monkeypatch) -> None:
     """Check that setting a grouping will raise an exception."""
-    repository = get_repository()
-    host = repository.set_user(User(None, "host", Permission.HOST))
+    connection = get_connection()
+    host = connection.set_user(User(None, "host", Permission.HOST))
     assert host.key is not None
-    grouping_1 = repository.set_grouping(make_grouping("code", host.key))
-    grouping_2 = repository.set_grouping(make_grouping("abcd", host.key))
+    grouping_1 = connection.set_grouping(make_grouping("code", host.key))
+    grouping_2 = connection.set_grouping(make_grouping("abcd", host.key))
 
-    monkeypatch.setattr(SqliteRepository, "_execute", raise_exception)
+    monkeypatch.setattr(SqliteConnection, "_execute", raise_exception)
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_grouping(make_grouping("xyz", host.key))
+        connection.set_grouping(make_grouping("xyz", host.key))
     with pytest.raises(sqlite3.IntegrityError):
-        repository.set_grouping(dataclasses.replace(grouping_2, code=grouping_1.code))
+        connection.set_grouping(dataclasses.replace(grouping_2, code=grouping_1.code))

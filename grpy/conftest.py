@@ -55,9 +55,9 @@ def app(request):
     })
 
     with grpy_app.test_request_context():
-        repository = grpy_app.get_repository()
-        repository.set_user(User(None, "host", Permission.HOST))
-        repository.set_user(User(None, "host-0", Permission.HOST))
+        connection = grpy_app.get_connection()
+        connection.set_user(User(None, "host", Permission.HOST))
+        connection.set_user(User(None, "host-0", Permission.HOST))
 
     yield grpy_app
     if temp_file:
@@ -89,8 +89,8 @@ def auth(client) -> AuthenticationActions:
 
 
 @pytest.fixture(params=["dummy:", "ram:", "sqlite:", "sqlite:///"])
-def repository(request):
-    """Provide an open repository."""
+def connection(request):
+    """Provide an open connection."""
     if request.param == "sqlite:///":
         temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         temp_file.close()
@@ -110,11 +110,11 @@ def repository(request):
 
 
 @pytest.fixture
-def grouping(repository) -> Grouping:
+def grouping(connection) -> Grouping:
     """Build a simple grouping object."""
-    host = repository.get_user_by_ident("host")
+    host = connection.get_user_by_ident("host")
     if not host:
-        host = repository.set_user(User(None, "host", Permission.HOST))
+        host = connection.set_user(User(None, "host", Permission.HOST))
 
     yet = now()
     return Grouping(
@@ -126,7 +126,7 @@ def grouping(repository) -> Grouping:
 def app_grouping(app):
     """Insert a grouping into the repository."""
     yet = now()
-    host = app.get_repository().get_user_by_ident("host")
-    return set_grouping_new_code(app.get_repository(), Grouping(
+    host = app.get_connection().get_user_by_ident("host")
+    return set_grouping_new_code(app.get_connection(), Grouping(
         None, ".code", "g-Name", host.key, yet - timedelta(days=1),
         yet + timedelta(days=1), None, "RD", 17, 7, "Notizie"))

@@ -21,8 +21,8 @@
 
 from typing import Optional
 
-from .base import Repository, RepositoryFactory
-from .ram import RamRepository, RamRepositoryState
+from .base import Connection, RepositoryFactory
+from .ram import RamConnection, RamRepositoryState
 
 
 class DummyRepositoryFactory(RepositoryFactory):
@@ -41,6 +41,6 @@ class DummyRepositoryFactory(RepositoryFactory):
         """Initialize the repository, if needed."""
         return True
 
-    def create(self) -> Repository:
+    def create(self) -> Connection:
         """Create a new dummy repository."""
-        return RamRepository(RamRepositoryState())
+        return RamConnection(RamRepositoryState())

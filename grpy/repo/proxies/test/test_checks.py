@@ -17,7 +17,7 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test specific for checking proxy repository."""
+"""Test specific for checking proxy connection."""
 
 import dataclasses  # pylint: disable=wrong-import-order
 import uuid
@@ -26,15 +26,15 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..check import CatchingProxyRepository, ValidatingProxyRepository
+from ..check import CatchingProxyConnection, ValidatingProxyConnection
 from ...base import DuplicateKey, Message, NothingToUpdate
 from ....models import (
     Grouping, GroupingKey, Registration, User, UserKey, UserPreferences,
     ValidationFailed)
 
 
-class MockedValidatingProxyRepository(ValidatingProxyRepository):
-    """A ProxyRepository that can be mocked."""
+class MockedValidatingProxyConnection(ValidatingProxyConnection):
+    """A ProxyConnection that can be mocked."""
 
     @property
     def mock(self):
@@ -43,17 +43,17 @@ class MockedValidatingProxyRepository(ValidatingProxyRepository):
 
 
 @pytest.fixture
-def validate_proxy() -> MockedValidatingProxyRepository:
-    """Set up a validating proxy repository."""
+def validate_proxy() -> MockedValidatingProxyConnection:
+    """Set up a validating proxy connection."""
     delegate = Mock()
     delegate.return_value = 1017
-    return MockedValidatingProxyRepository(delegate)
+    return MockedValidatingProxyConnection(delegate)
 
 
 # pylint: disable=redefined-outer-name
 
 
-def test_validate_set_user(validate_proxy: MockedValidatingProxyRepository) -> None:
+def test_validate_set_user(validate_proxy: MockedValidatingProxyConnection) -> None:
     """Add / update the given user."""
     with pytest.raises(ValidationFailed, match="Ident is empty: "):
         validate_proxy.set_user(User(None, ""))
@@ -64,7 +64,7 @@ def test_validate_set_user(validate_proxy: MockedValidatingProxyRepository) -> N
 
 
 def test_validate_set_grouping(
-        validate_proxy: MockedValidatingProxyRepository, grouping: Grouping) -> None:
+        validate_proxy: MockedValidatingProxyConnection, grouping: Grouping) -> None:
     """Add / update the given grouping."""
     with pytest.raises(ValidationFailed, match="Maximum group size < 1: 0"):
         validate_proxy.set_grouping(dataclasses.replace(grouping, max_group_size=0))
@@ -75,7 +75,7 @@ def test_validate_set_grouping(
 
 
 def test_validate_set_registration(
-        validate_proxy: MockedValidatingProxyRepository) -> None:
+        validate_proxy: MockedValidatingProxyConnection) -> None:
     """Add / update a grouping registration."""
     with pytest.raises(ValidationFailed, match="Grouping is not a GroupingKey: 0"):
         validate_proxy.set_registration(
@@ -87,7 +87,7 @@ def test_validate_set_registration(
     assert validate_proxy.mock.set_registration.call_count == 1
 
 
-def test_validate_set_groups(validate_proxy: MockedValidatingProxyRepository) -> None:
+def test_validate_set_groups(validate_proxy: MockedValidatingProxyConnection) -> None:
     """Set / replace groups builded for grouping."""
     with pytest.raises(ValidationFailed, match="Group member is not an UserKey: None"):
         validate_proxy.set_groups(
@@ -110,8 +110,8 @@ def test_validate_set_groups(validate_proxy: MockedValidatingProxyRepository) ->
 # pylint: enable=redefined-outer-name
 
 
-class MockedCatchProxyRepository(CatchingProxyRepository):
-    """A ProxyRepository that can be mocked."""
+class MockedCatchProxyConnection(CatchingProxyConnection):
+    """A ProxyConnection that can be mocked."""
 
     @property
     def mock(self):
@@ -120,19 +120,19 @@ class MockedCatchProxyRepository(CatchingProxyRepository):
 
 
 @pytest.fixture
-def catch_proxy() -> MockedCatchProxyRepository:
-    """Set up a validating proxy repository."""
+def catch_proxy() -> MockedCatchProxyConnection:
+    """Set up a validating proxy connection."""
     delegate = Mock()
     delegate.return_value = 1017
     delegate.get_messages.return_value = [Message("test", "1017")]
-    return MockedCatchProxyRepository(delegate)
+    return MockedCatchProxyConnection(delegate)
 
 
 # pylint: disable=redefined-outer-name
 
 
-def test_catch_get_messages(catch_proxy: MockedCatchProxyRepository) -> None:
-    """Return all repository-related messages."""
+def test_catch_get_messages(catch_proxy: MockedCatchProxyConnection) -> None:
+    """Return all connection-related messages."""
     catch_proxy.mock.set_user.side_effect = ValueError("BOOM!")
     catch_proxy.set_user(User(None, "name"))
     assert catch_proxy.get_messages()[0].text == \
@@ -149,7 +149,7 @@ def test_catch_get_messages(catch_proxy: MockedCatchProxyRepository) -> None:
     assert catch_proxy.mock.get_messages.call_count == 4
 
 
-def test_catch_set_user_excs(catch_proxy: MockedCatchProxyRepository) -> None:
+def test_catch_set_user_excs(catch_proxy: MockedCatchProxyConnection) -> None:
     """Add / update the given user."""
     catch_proxy.mock.set_user.side_effect = DuplicateKey("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
@@ -171,7 +171,7 @@ def test_catch_set_user_excs(catch_proxy: MockedCatchProxyRepository) -> None:
 
 
 def test_catch_set_grouping_duplicate(
-        catch_proxy: MockedCatchProxyRepository, grouping: Grouping) -> None:
+        catch_proxy: MockedCatchProxyConnection, grouping: Grouping) -> None:
     """Add / update the given grouping."""
     catch_proxy.mock.set_grouping.side_effect = DuplicateKey("Grouping.code", "123")
     with pytest.raises(DuplicateKey):

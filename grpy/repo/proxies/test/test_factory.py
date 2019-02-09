@@ -23,9 +23,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..check import CatchingProxyRepository
+from ..check import CatchingProxyConnection
 from ... import ProxyRepositoryFactory
-from ...ram import RamRepository, RamRepositoryState
+from ...ram import RamConnection, RamRepositoryState
 
 
 class MockedProxyRepositoryFactory(ProxyRepositoryFactory):
@@ -45,7 +45,7 @@ def proxy_factory() -> MockedProxyRepositoryFactory:
     """Set up a proxy repository factory."""
     delegate_factory = Mock()
     delegate_factory.url = "url:"
-    delegate_factory.create.return_value = RamRepository(RamRepositoryState())
+    delegate_factory.create.return_value = RamConnection(RamRepositoryState())
     return MockedProxyRepositoryFactory(delegate_factory)
 
 
@@ -68,7 +68,7 @@ def test_factory_initialize(proxy_factory) -> None:
 
 def test_factory_create(proxy_factory) -> None:
     """Create and setup a repository."""
-    repository = proxy_factory.create()
+    connection = proxy_factory.create()
     assert proxy_factory.mock.create.call_count == 1
-    assert isinstance(repository, CatchingProxyRepository)
-    assert not isinstance(repository, RamRepository)
+    assert isinstance(connection, CatchingProxyConnection)
+    assert not isinstance(connection, RamConnection)

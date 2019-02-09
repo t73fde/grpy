@@ -22,15 +22,15 @@
 from datetime import datetime
 from typing import Callable, List, Sequence
 
-from .base import BaseProxyRepository
-from .filter import FilterProxyRepository
-from ..base import DuplicateKey, Message, NothingToUpdate, Repository
+from .base import BaseProxyConnection
+from .filter import FilterProxyConnection
+from ..base import Connection, DuplicateKey, Message, NothingToUpdate
 from ...models import (
     Grouping, GroupingKey, Groups, Registration, User, UserKey,
     UserPreferences, ValidationFailed)
 
 
-class ValidatingProxyRepository(BaseProxyRepository):
+class ValidatingProxyConnection(BaseProxyConnection):
     """A repository that validates input data before delegating calls."""
 
     def set_user(self, user: User) -> User:
@@ -58,10 +58,10 @@ class ValidatingProxyRepository(BaseProxyRepository):
         return super().set_groups(grouping_key, groups)
 
 
-class CatchingProxyRepository(FilterProxyRepository):
+class CatchingProxyConnection(FilterProxyConnection):
     """A repository that catches all exceptions by the delegated repository."""
 
-    def __init__(self, delegate: Repository):
+    def __init__(self, delegate: Connection):
         """Initialize the proxy repository."""
         super().__init__(delegate)
         self._user = User(UserKey(int=0), "*error*")

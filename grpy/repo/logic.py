@@ -21,17 +21,17 @@
 
 import dataclasses
 
-from .base import DuplicateKey, Repository
+from .base import Connection, DuplicateKey
 from ..logic import make_code
 from ..models import Grouping
 
 
-def set_grouping_new_code(repository: Repository, grouping: Grouping) -> Grouping:
+def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Grouping:
     """Set the short code of a grouping an store it in the repository."""
     counter = 0
     while counter < 100:
         try:
-            return repository.set_grouping(
+            return connection.set_grouping(
                 dataclasses.replace(grouping, code=make_code(grouping, bool(counter))))
         except DuplicateKey as exc:
             if exc.args[0] != "Grouping.code":

@@ -22,16 +22,16 @@
 
 from typing import Iterable, Optional, Sequence
 
-from ..base import Message, OrderSpec, Repository, WhereSpec
+from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 from ...models import (
     Grouping, GroupingKey, Groups, Registration, User, UserKey)
 
 
-class BaseProxyRepository(Repository):
+class BaseProxyConnection(Connection):
     """A repository that delegates all requests to another repository."""
 
-    def __init__(self, delegate: Repository):
+    def __init__(self, delegate: Connection):
         """Initialize the proxy repository."""
         self._delegate = delegate
 

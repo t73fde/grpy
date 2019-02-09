@@ -17,38 +17,38 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Tests for the repository logic."""
+"""Tests for the connection logic."""
 
 from unittest.mock import patch
 
 import pytest
 
-from ..base import DuplicateKey, Repository
+from ..base import Connection, DuplicateKey
 from ..logic import set_grouping_new_code
 from ...models import Grouping
 
 
-def test_set_grouping_new_code(repository: Repository, grouping: Grouping) -> None:
+def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:
     """Test the creation of new short code."""
-    grouping_1 = set_grouping_new_code(repository, grouping)
-    grouping_2 = set_grouping_new_code(repository, grouping)
+    grouping_1 = set_grouping_new_code(connection, grouping)
+    grouping_2 = set_grouping_new_code(connection, grouping)
     assert grouping_1.code != grouping_2.code
 
 
 def test_set_grouping_new_code_db_error(
-        repository: Repository, grouping: Grouping) -> None:
+        connection: Connection, grouping: Grouping) -> None:
     """Test the creation of new short codes, some repo error occurs."""
-    with patch.object(repository, "set_grouping") as func:
+    with patch.object(connection, "set_grouping") as func:
         func.side_effect = DuplicateKey("unknown")
         with pytest.raises(DuplicateKey):
-            set_grouping_new_code(repository, grouping)
+            set_grouping_new_code(connection, grouping)
 
 
 def test_set_grouping_new_code_no_random(
-        repository: Repository, grouping: Grouping) -> None:
+        connection: Connection, grouping: Grouping) -> None:
     """Test the creation of new short codes, if always the same code is made."""
-    with patch.object(repository, "set_grouping") as func:
+    with patch.object(connection, "set_grouping") as func:
         func.side_effect = DuplicateKey("Grouping.code")
         with pytest.raises(
                 OverflowError, match="grpy.repo.logic.set_grouping_new_code"):
-            set_grouping_new_code(repository, grouping)
+            set_grouping_new_code(connection, grouping)

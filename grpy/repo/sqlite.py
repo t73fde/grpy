@@ -28,7 +28,7 @@ from urllib.parse import urlparse
 from pytz import utc
 
 from .base import (
-    DuplicateKey, Message, NothingToUpdate, OrderSpec, Repository,
+    Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
     RepositoryFactory, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
@@ -65,10 +65,10 @@ class SqliteRepositoryFactory(RepositoryFactory):
 
         if parsed_url.path:
             self._database: Optional[str] = parsed_url.path
-            self._repository_class = SqliteRepository
+            self._connection_class = SqliteConnection
         else:
             self._database = None
-            self._repository_class = SqliteMemoryRepository
+            self._connection_class = SqliteMemoryConnection
         self._connection: Optional[sqlite3.Connection] = None
 
     def _connect(self) -> Optional[sqlite3.Connection]:
@@ -159,24 +159,24 @@ CREATE INDEX idx_groups ON groups(grouping_key)
             cursor.close()
         return True
 
-    def create(self) -> Repository:
-        """Create and setup a repository."""
-        return self._repository_class(self._connect())
+    def create(self) -> Connection:
+        """Create and setup a connection."""
+        return self._connection_class(self._connect())
 
 
-class SqliteRepository(Repository):
-    """SQLite-based repository."""
+class SqliteConnection(Connection):
+    """SQLite-based connection."""
 
     def __init__(self, connection):
-        """Initialize the repository."""
+        """Initialize the connection."""
         self._connection = connection
 
     def get_messages(self, _delete: bool = False) -> Sequence[Message]:
-        """Return all repository-related messages."""
+        """Return all connection-related messages."""
         return []
 
     def close(self, success: bool):
-        """Close the repository."""
+        """Close the connection."""
         if success:
             self._execute("COMMIT")
         self._connection.close()
@@ -474,11 +474,11 @@ class SqliteRepository(Repository):
         return result
 
 
-class SqliteMemoryRepository(SqliteRepository):
-    """SQLite-based and memory-based repository."""
+class SqliteMemoryConnection(SqliteConnection):
+    """SQLite-based and memory-based connection."""
 
     def close(self, _success: bool):
-        """Close the repository, but do not close the connection."""
+        """Close the connection, but do not close the connection."""
         self._connection = None
 
 

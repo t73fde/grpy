@@ -71,19 +71,19 @@ class GrpyApp(Flask):
         if self._repository_factory.url == "ram:" and not self.testing:
             populate_testdata(self._repository_factory)
 
-        def close_repository(_exc: BaseException = None):
-            """Close the repository."""
-            repository = g.pop('repository', None)
-            if repository:
-                repository.close(not repository.get_messages(delete=True))
+        def close_connection(_exc: BaseException = None):
+            """Close the connection to the repository."""
+            connection = g.pop('connection', None)
+            if connection:
+                connection.close(not connection.get_messages(delete=True))
 
-        self.teardown_request(close_repository)
+        self.teardown_request(close_connection)
 
-    def get_repository(self):
-        """Return an open repository, specific for this request."""
-        if 'repository' not in g:
-            g.repository = self._repository_factory.create()
-        return g.repository
+    def get_connection(self):
+        """Return an open connection, specific for this request."""
+        if 'connection' not in g:
+            g.connection = self._repository_factory.create()
+        return g.connection
 
     def setup_user_handling(self):
         """Prepare application to work with user data."""
@@ -92,7 +92,7 @@ class GrpyApp(Flask):
             """Set user attribute pased on session data."""
             ident = session.get('user_identifier', None)
             if ident:
-                user = self.get_repository().get_user_by_ident(ident)
+                user = self.get_connection().get_user_by_ident(ident)
                 if user:
                     g.user = user
                     return None
@@ -153,10 +153,10 @@ class GrpyApp(Flask):
         """Authenticate by user name and password, and return user found."""
         username = username.lower()
         if self._check_pw(username, password):
-            repository = self.get_repository()
-            user = repository.get_user_by_ident(username)
+            connection = self.get_connection()
+            user = connection.get_user_by_ident(username)
             if not user:
-                user = repository.set_user(User(None, username))
+                user = connection.set_user(User(None, username))
             self.login(user)
             return cast(User, user)
         return None
@@ -218,29 +218,29 @@ def handle_client_error(exc):
 
 def populate_testdata(repository_factory):
     """Add some initial data for testing."""
-    repository = repository_factory.create()
+    connection = repository_factory.create()
     try:
-        kreuz = repository.set_user(User(None, "kreuz", Permission.HOST))
-        stern = repository.set_user(User(None, "stern", Permission.HOST))
-        repository.set_user(User(None, "student"))
-        repository.set_user(User(None, "xnologin"))
+        kreuz = connection.set_user(User(None, "kreuz", Permission.HOST))
+        stern = connection.set_user(User(None, "stern", Permission.HOST))
+        connection.set_user(User(None, "student"))
+        connection.set_user(User(None, "xnologin"))
 
         from datetime import timedelta
         from ..utils import now as utils_now
         from ..models import Grouping
         now = utils_now()
         for user in (kreuz, stern):
-            set_grouping_new_code(repository, Grouping(
+            set_grouping_new_code(connection, Grouping(
                 None, ".", "PM", user.key,
                 now, now + timedelta(days=14), None,
                 "RD", 7, 7, "Note: not"))
-            set_grouping_new_code(repository, Grouping(
+            set_grouping_new_code(connection, Grouping(
                 None, ".", "SWE", user.key,
                 now, now + timedelta(days=7), now + timedelta(days=14),
                 "RD", 7, 7, "Was?"))
-        set_grouping_new_code(repository, Grouping(
+        set_grouping_new_code(connection, Grouping(
             None, ".", "PSITS", kreuz.key,
             now + timedelta(days=1), now + timedelta(days=8), None,
             "RD", 5, 3, "Nun wird es spannend"))
     finally:
-        repository.close(True)
+        connection.close(True)
