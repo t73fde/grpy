@@ -31,7 +31,7 @@ from ..base import Connection, DuplicateKey
 from ..ram import RamRepository
 from ... import utils
 from ...models import (
-    Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
+    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey,
     UserPreferences)
 
 # pylint: disable=redefined-outer-name
@@ -64,7 +64,7 @@ def test_no_initialize(monkeypatch) -> None:
 
 def test_insert_user(connection: Connection) -> None:
     """Check that inserting a new user works."""
-    user = User(None, "user", Permission.HOST)
+    user = User(None, "user", Permissions.HOST)
     new_user = connection.set_user(user)
     assert not user.key
     assert new_user.key
@@ -85,8 +85,8 @@ def test_update_user(connection: Connection) -> None:
         connection.get_messages(delete=True)[0].text
     assert connection.get_messages() == []
 
-    user = connection.set_user(User(None, "user", Permission.HOST))
-    new_user = dataclasses.replace(user, permissions=Permission(0))
+    user = connection.set_user(User(None, "user", Permissions.HOST))
+    new_user = dataclasses.replace(user, permissions=Permissions(0))
     assert user.key == new_user.key
     newer_user = connection.set_user(new_user)
     assert new_user == newer_user
@@ -101,12 +101,12 @@ def test_update_user(connection: Connection) -> None:
 
 def test_get_user(connection: Connection) -> None:
     """An inserted or updated user can be retrieved."""
-    user = connection.set_user(User(None, "user", Permission.HOST))
+    user = connection.set_user(User(None, "user", Permissions.HOST))
     assert user.key is not None
     new_user = connection.get_user(user.key)
     assert new_user == user
 
-    newer_user = dataclasses.replace(user, permissions=Permission(0))
+    newer_user = dataclasses.replace(user, permissions=Permissions(0))
     connection.set_user(newer_user)
     last_user = connection.get_user(user.key)
     assert last_user is not None
@@ -117,11 +117,11 @@ def test_get_user(connection: Connection) -> None:
 
 def test_get_user_by_ident(connection: Connection) -> None:
     """Retrieve an user by its ident."""
-    user = connection.set_user(User(None, "user", Permission.HOST))
+    user = connection.set_user(User(None, "user", Permissions.HOST))
     new_user = connection.get_user_by_ident(user.ident)
     assert new_user == user
 
-    newer_user = dataclasses.replace(user, permissions=Permission(0))
+    newer_user = dataclasses.replace(user, permissions=Permissions(0))
     connection.set_user(newer_user)
     last_user = connection.get_user_by_ident(user.ident)
     assert last_user is not None
@@ -146,11 +146,11 @@ def test_get_user_by_ident_change(connection: Connection) -> None:
 def setup_users(connection: Connection, count: int) -> List[User]:
     """Insert some users into repository."""
     result = []
-    permissions = Permission(0)
+    permissions = Permissions(0)
     for i in range(count):
         user = connection.set_user(User(None, "user-%d" % i, permissions))
         result.append(user)
-        permissions = Permission(0) if permissions else Permission.HOST
+        permissions = Permissions(0) if permissions else Permissions.HOST
     return result
 
 
@@ -165,8 +165,8 @@ def test_iter_users(connection: Connection) -> None:
 def test_iter_users_where(connection: Connection) -> None:
     """Select some user from list of all users."""
     all_users = setup_users(connection, 13)
-    users = list(connection.iter_users(where={'permissions__eq': Permission.HOST}))
-    non_users = list(connection.iter_users(where={'permissions__ne': Permission.HOST}))
+    users = list(connection.iter_users(where={'permissions__eq': Permissions.HOST}))
+    non_users = list(connection.iter_users(where={'permissions__ne': Permissions.HOST}))
     assert len(users) + len(non_users) == len(all_users)
     assert set(users + non_users) == set(all_users)
 
@@ -304,8 +304,8 @@ def test_get_grouping_by_code_after_change(
 def setup_groupings(connection: Connection, count: int) -> List[Grouping]:
     """Insert some groupings into repository."""
     hosts = [
-        connection.set_user(User(None, "host-1", Permission.HOST)),
-        connection.set_user(User(None, "host-2", Permission.HOST)),
+        connection.set_user(User(None, "host-1", Permissions.HOST)),
+        connection.set_user(User(None, "host-2", Permissions.HOST)),
     ]
     for host in hosts:
         assert host.key is not None

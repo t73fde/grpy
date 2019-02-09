@@ -34,7 +34,7 @@ from .base import (
 from .logic import decode_preferences, encode_preferences
 from .models import NamedUser, UserGroup, UserRegistration
 from ..models import (
-    Grouping, GroupingKey, Groups, Permission, Registration, User, UserKey,
+    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey,
     UserPreferences)
 
 
@@ -42,7 +42,7 @@ sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
 sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))
 sqlite3.register_adapter(GroupingKey, lambda u: u.bytes_le)
 sqlite3.register_converter('GROUPING_KEY', lambda b: GroupingKey(bytes_le=b))
-sqlite3.register_adapter(Permission, lambda p: int(p.value))
+sqlite3.register_adapter(Permissions, lambda p: int(p.value))
 sqlite3.register_adapter(
     datetime, lambda d: d.strftime("%Y%m%d-%H%M%S.%f"))
 sqlite3.register_converter(
@@ -225,7 +225,7 @@ class SqliteConnection(Connection):
             "SELECT ident, permissions FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
         cursor.close()
-        return User(user_key, row[0], Permission(row[1])) if row else None
+        return User(user_key, row[0], Permissions(row[1])) if row else None
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
@@ -233,7 +233,7 @@ class SqliteConnection(Connection):
             "SELECT key, permissions FROM users WHERE ident=?", (ident,))
         row = cursor.fetchone()
         cursor.close()
-        return User(row[0], ident, Permission(row[1])) if row else None
+        return User(row[0], ident, Permissions(row[1])) if row else None
 
     def iter_users(
             self,
@@ -246,7 +246,7 @@ class SqliteConnection(Connection):
             where_sql + order_clause(order), where_vals)
         result = []
         for row in cursor.fetchall():
-            result.append(User(row[0], row[1], Permission(row[2])))
+            result.append(User(row[0], row[1], Permissions(row[2])))
         cursor.close()
         return result
 
@@ -412,7 +412,7 @@ class SqliteConnection(Connection):
         result = []
         for row in cursor.fetchall():
             result.append(UserRegistration(
-                User(row[0], row[1], Permission(row[2])),
+                User(row[0], row[1], Permissions(row[2])),
                 UserPreferences()))
         cursor.close()
         return result

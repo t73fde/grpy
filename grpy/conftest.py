@@ -27,7 +27,7 @@ from flask import url_for
 
 import pytest
 
-from .models import Grouping, Permission, User
+from .models import Grouping, Permissions, User
 from .repo import create_repository
 from .repo.logic import set_grouping_new_code
 from .utils import now
@@ -56,8 +56,8 @@ def app(request):
 
     with grpy_app.test_request_context():
         connection = grpy_app.get_connection()
-        connection.set_user(User(None, "host", Permission.HOST))
-        connection.set_user(User(None, "host-0", Permission.HOST))
+        connection.set_user(User(None, "host", Permissions.HOST))
+        connection.set_user(User(None, "host-0", Permissions.HOST))
 
     yield grpy_app
     if temp_file:
@@ -114,7 +114,7 @@ def grouping(connection) -> Grouping:
     """Build a simple grouping object."""
     host = connection.get_user_by_ident("host")
     if not host:
-        host = connection.set_user(User(None, "host", Permission.HOST))
+        host = connection.set_user(User(None, "host", Permissions.HOST))
 
     yet = now()
     return Grouping(

@@ -29,7 +29,7 @@ from werkzeug.exceptions import NotFound
 
 from ..utils import (
     datetimeformat, login_required, make_model, update_model, value_or_404)
-from ...models import GroupingKey, Permission, User, UserKey
+from ...models import GroupingKey, Permissions, User, UserKey
 from ...utils import now
 
 
@@ -79,7 +79,7 @@ def test_value_or_404_none() -> None:
 
 def test_make_model() -> None:
     """A User model can be created from dict."""
-    user = make_model(User, {"ident": "uid"}, {"permissions": Permission(0)})
+    user = make_model(User, {"ident": "uid"}, {"permissions": Permissions(0)})
     assert user == User(None, "uid")
 
 

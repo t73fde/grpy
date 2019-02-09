@@ -74,7 +74,7 @@ class UserKey(KeyType):
     """Key to identify an user."""
 
 
-class Permission(enum.Flag):
+class Permissions(enum.Flag):
     """User permissions."""
 
     HOST = 2
@@ -86,12 +86,12 @@ class User(Model):
 
     key: Optional[UserKey]
     ident: str
-    permissions: Permission = Permission(0)
+    permissions: Permissions = Permissions(0)
 
     @property
     def is_host(self) -> bool:
         """Return True if user is a host."""
-        return bool(self.permissions & Permission.HOST)
+        return bool(self.permissions & Permissions.HOST)
 
     def validate(self) -> None:
         """Check model for consistency."""

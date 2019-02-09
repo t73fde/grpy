@@ -26,7 +26,7 @@ from typing import cast
 import pytest
 
 from ..models import (
-    Grouping, GroupingKey, Permission, Registration, User, UserKey,
+    Grouping, GroupingKey, Permissions, Registration, User, UserKey,
     UserPreferences, ValidationFailed)
 from ..utils import now
 
@@ -44,7 +44,7 @@ def test_keytype_operations() -> None:
 
 def test_user_is_host() -> None:
     """Test method .is_host."""
-    assert User(None, "name", Permission.HOST).is_host
+    assert User(None, "name", Permissions.HOST).is_host
     assert not User(None, "name").is_host
 
 

@@ -30,7 +30,7 @@ import requests
 
 from . import utils, views
 from .. import policies
-from ..models import Permission, User
+from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
 
@@ -220,8 +220,8 @@ def populate_testdata(repository):
     """Add some initial data for testing."""
     connection = repository.create()
     try:
-        kreuz = connection.set_user(User(None, "kreuz", Permission.HOST))
-        stern = connection.set_user(User(None, "stern", Permission.HOST))
+        kreuz = connection.set_user(User(None, "kreuz", Permissions.HOST))
+        stern = connection.set_user(User(None, "stern", Permissions.HOST))
         connection.set_user(User(None, "student"))
         connection.set_user(User(None, "xnologin"))
 

@@ -31,7 +31,7 @@ import pytest
 
 from ..sqlite import SqliteConnection, SqliteRepository
 from ...models import (
-    Grouping, Permission, Registration, User, UserKey, UserPreferences)
+    Grouping, Permissions, Registration, User, UserKey, UserPreferences)
 from ...utils import now
 
 
@@ -170,7 +170,7 @@ def make_grouping(code: str, host_key: UserKey) -> Grouping:
 def test_set_grouping_exception(monkeypatch) -> None:
     """Check that setting a grouping will raise an exception."""
     connection = get_connection()
-    host = connection.set_user(User(None, "host", Permission.HOST))
+    host = connection.set_user(User(None, "host", Permissions.HOST))
     assert host.key is not None
     grouping_1 = connection.set_grouping(make_grouping("code", host.key))
     grouping_2 = connection.set_grouping(make_grouping("abcd", host.key))
@@ -185,7 +185,7 @@ def test_set_grouping_exception(monkeypatch) -> None:
 def test_get_registration() -> None:
     """An inserted modified registration can't be retrieved."""
     connection = get_connection()
-    host = connection.set_user(User(None, "host", Permission.HOST))
+    host = connection.set_user(User(None, "host", Permissions.HOST))
     assert host.key is not None
     grouping = connection.set_grouping(make_grouping("code", host.key))
     assert grouping.key is not None
