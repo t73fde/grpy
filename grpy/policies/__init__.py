@@ -22,7 +22,7 @@
 import random
 from typing import Callable, List, Sequence, Tuple, cast
 
-from .models import Groups, PolicyData, UserKey
+from ..models import Groups, PolicyData, UserKey
 
 
 def group_sizes(
