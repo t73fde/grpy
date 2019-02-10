@@ -22,7 +22,7 @@
 import random
 from typing import Callable, List, Sequence, Tuple, cast
 
-from ..models import Groups, PolicyData, UserKey
+from ..models import Groups, PolicyData, User, UserKey
 
 
 def group_sizes(
@@ -55,27 +55,28 @@ def group_sizes(
     return groups + [0] * empty_groups
 
 
-def no_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
-    """Build groups by name."""
-    users = sorted((user for user in data), key=lambda u: u.ident, reverse=True)
+def _build_groups(
+        users: List[User], max_group_size: int, member_reserve: int) -> Groups:
+    """Assign users to groups."""
     sizes = group_sizes(len(users), max_group_size, member_reserve)
     groups = []
     for size in sizes:
         groups.append(frozenset(cast(UserKey, user.key) for user in users[-size:]))
         users = users[:-size]
     return tuple(groups)
+
+
+def no_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
+    """Build groups by name."""
+    users = sorted((user for user in data), key=lambda u: u.ident, reverse=True)
+    return _build_groups(users, max_group_size, member_reserve)
 
 
 def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
     """Build groups randomly."""
     users = [user for user in data]
     random.shuffle(users)
-    sizes = group_sizes(len(users), max_group_size, member_reserve)
-    groups = []
-    for size in sizes:
-        groups.append(frozenset(cast(UserKey, user.key) for user in users[-size:]))
-        users = users[:-size]
-    return tuple(groups)
+    return _build_groups(users, max_group_size, member_reserve)
 
 
 POLICY = Callable[[PolicyData, int, int], Groups]
