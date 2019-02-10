@@ -473,7 +473,7 @@ class SqliteConnection(Connection):
                 (grouping_key, group_no))
             result.append(UserGroup(
                 grouping_key, grouping_name,
-                frozenset(NamedUser._make(row) for row in cursor_2.fetchall())))
+                frozenset(NamedUser(*row) for row in cursor_2.fetchall())))
             cursor_2.close()
         cursor.close()
         return result

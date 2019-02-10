@@ -19,26 +19,30 @@
 
 """Repository related data models."""
 
-from typing import FrozenSet, NamedTuple
+import dataclasses  # pylint: disable=wrong-import-order
+from typing import FrozenSet
 
 from ..models import GroupingKey, User, UserKey, UserPreferences
 
 
-class UserRegistration(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class UserRegistration:
     """Data for grouping policies: user data, registration data."""
 
     user: User
     preferences: UserPreferences
 
 
-class NamedUser(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class NamedUser:
     """The identifying data of an user."""
 
     user_key: UserKey
     user_ident: str
 
 
-class UserGroup(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class UserGroup:
     """Group data for a given user."""
 
     grouping_key: GroupingKey

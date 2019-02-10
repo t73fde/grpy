@@ -276,7 +276,7 @@ def grouping_start(grouping_key: GroupingKey):
 
     form = forms.StartGroupingForm()
     if form.validate_on_submit():
-        policy_data = {u: p for (u, p) in user_registrations}
+        policy_data = {r.user: r.preferences for r in user_registrations}
         policy = get_policy(grouping.policy)
         groups = policy(policy_data, grouping.max_group_size, grouping.member_reserve)
         get_connection().set_groups(grouping.key, groups)
