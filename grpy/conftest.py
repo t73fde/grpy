@@ -104,6 +104,7 @@ def connection(request):
     connection = repository.create()
     yield connection
 
+    assert not connection.get_messages()
     connection.close(True)
     if temp_file:
         os.unlink(temp_file.name)
