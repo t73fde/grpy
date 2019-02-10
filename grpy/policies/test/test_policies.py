@@ -23,10 +23,10 @@ from typing import Set, cast
 
 import pytest
 
-from ..models import Groups, User, UserKey, UserPreferences
-from ..policies import (
+from .. import (
     get_policy, get_policy_name, get_policy_names, group_sizes, no_policy,
     random_policy)
+from ...models import Groups, User, UserKey, UserPreferences
 
 
 def test_group_sizes() -> None:
