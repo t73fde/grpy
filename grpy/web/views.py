@@ -20,7 +20,7 @@
 """Web views for grpy."""
 
 import dataclasses  # pylint: disable=wrong-import-order
-from typing import List, NamedTuple, Sequence, Tuple, cast
+from typing import List, Sequence, Tuple, cast
 
 from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
@@ -31,7 +31,7 @@ from .utils import (
     value_or_404)
 from .. import logic, utils
 from ..models import (
-    Grouping, GroupingKey, KeyType, Registration, User, UserKey, UserPreferences)
+    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
 from ..policies import get_policy, get_policy_names
 from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
@@ -42,10 +42,11 @@ def get_connection() -> Connection:
     return cast(Connection, current_app.get_connection())
 
 
-class UserGroup(NamedTuple):
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class UserGroup:
     """A group for a given user, prepared for view."""
 
-    grouping_key: KeyType  # --> models.grouping
+    grouping_key: GroupingKey
     grouping_name: str
     named_group: Sequence[str]
 
