@@ -19,12 +19,11 @@
 
 """Calculate group sizes."""
 
-from typing import Sequence
+from typing import List
 
 
 def group_sizes(
-        num_participants: int,
-        max_group_size: int, member_reserve: int) -> Sequence[int]:
+        num_participants: int, max_group_size: int, member_reserve: int) -> List[int]:
     """Return a vector of group sizes."""
     if num_participants < 0:
         raise ValueError("num_participants < 0: %d" % num_participants)
