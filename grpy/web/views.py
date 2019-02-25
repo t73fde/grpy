@@ -26,6 +26,7 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
+from .policies import get_registration_form_class
 from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
@@ -234,7 +235,8 @@ def grouping_register(grouping_key: GroupingKey):
         return redirect(url_for('home'))
     registration = get_connection().get_registration(grouping.key, g.user.key)
 
-    form = forms.RegistrationForm()
+    form_class = get_registration_form_class(grouping.policy)
+    form = form_class()
     if form.validate_on_submit():
         if form.submit_register.data:
             get_connection().set_registration(
