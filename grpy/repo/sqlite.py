@@ -41,8 +41,6 @@ sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
 sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))
 sqlite3.register_adapter(GroupingKey, lambda u: u.bytes_le)
 sqlite3.register_converter('GROUPING_KEY', lambda b: GroupingKey(bytes_le=b))
-sqlite3.register_adapter(Permissions, lambda p: int(p.value))
-sqlite3.register_converter('PERMISSIONS', lambda b: Permissions(int(b)))
 sqlite3.register_adapter(
     datetime, lambda d: d.strftime("%Y%m%d-%H%M%S.%f"))
 sqlite3.register_converter(
@@ -115,7 +113,7 @@ class SqliteRepository(Repository):
 CREATE TABLE users(
     key USER_KEY PRIMARY KEY,
     ident TEXT UNIQUE NOT NULL,
-    permissions PERMISSIONS)
+    permissions INT)
 """)
             if "groupings" not in tables:
                 cursor.execute("""
@@ -201,7 +199,7 @@ class SqliteConnection(Connection):
             try:
                 self._execute(
                     "UPDATE users SET ident=?, permissions=? WHERE key=?",
-                    (user.ident, user.permissions, user.key))
+                    (user.ident, user.permissions.value, user.key))
             except sqlite3.IntegrityError as exc:
                 if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                     raise DuplicateKey("User.ident", user.ident)
@@ -212,7 +210,7 @@ class SqliteConnection(Connection):
         try:
             self._execute(
                 "INSERT INTO users VALUES(?,?,?)",
-                (user_key, user.ident, user.permissions))
+                (user_key, user.ident, user.permissions.value))
         except sqlite3.IntegrityError as exc:
             if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                 raise DuplicateKey("User.ident", user.ident)
@@ -225,7 +223,7 @@ class SqliteConnection(Connection):
             "SELECT ident, permissions FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
         cursor.close()
-        return User(user_key, row[0], row[1]) if row else None
+        return User(user_key, row[0], Permissions(row[1])) if row else None
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
@@ -233,7 +231,7 @@ class SqliteConnection(Connection):
             "SELECT key, permissions FROM users WHERE ident=?", (ident,))
         row = cursor.fetchone()
         cursor.close()
-        return User(row[0], ident, row[1]) if row else None
+        return User(row[0], ident, Permissions(row[1])) if row else None
 
     def iter_users(
             self,
@@ -244,7 +242,8 @@ class SqliteConnection(Connection):
         cursor = self._execute(
             "SELECT key, ident, permissions FROM users" +  # nosec
             where_sql + order_clause(order), where_vals)
-        result = [User(row[0], row[1], row[2]) for row in cursor.fetchall()]
+        result = [
+            User(row[0], row[1], Permissions(row[2])) for row in cursor.fetchall()]
         cursor.close()
         return result
 
@@ -412,7 +411,7 @@ class SqliteConnection(Connection):
             preferences = decode_preferences(row[3])
             if preferences:
                 result.append(UserRegistration(
-                    User(row[0], row[1], row[2]), preferences))
+                    User(row[0], row[1], Permissions(row[2])), preferences))
         cursor.close()
         return result
 
@@ -520,6 +519,8 @@ def where_clause(
     where_parts = []
     bindings = []
     for where_spec, where_val in where.items():
+        if isinstance(where_val, Permissions):
+            where_val = where_val.value
         where_field, where_relop = where_spec.split("__")
         relop, bind_val = relop_clause(
             where_field,
