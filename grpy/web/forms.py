@@ -30,6 +30,8 @@ from wtforms.validators import (
     DataRequired, InputRequired, NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
 
+from ..models import UserPreferences
+
 
 class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     """Login data."""
@@ -90,6 +92,15 @@ class RegistrationForm(FlaskForm):
 
     submit_register = SubmitField("Register")
     submit_deregister = SubmitField("De-Register")
+
+    @classmethod
+    def create(cls, preferences) -> 'RegistrationForm':
+        """Create a filled form."""
+        raise NotImplementedError("RegistrationForm.create")
+
+    def get_user_preferences(self) -> UserPreferences:
+        """Read user preferences from form."""
+        raise NotImplementedError("RegistrationForm.get_user_preferences")
 
 
 class RemoveRegistrationsForm(FlaskForm):

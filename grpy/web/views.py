@@ -26,13 +26,12 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
-from .policies import get_policy_names, get_registration_form_class
+from .policies import get_policy_names, get_registration_form
 from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
-from ..models import (
-    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
+from ..models import Grouping, GroupingKey, Registration, User, UserKey
 from ..policies import get_policy
 from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
@@ -235,12 +234,12 @@ def grouping_register(grouping_key: GroupingKey):
         return redirect(url_for('home'))
     registration = get_connection().get_registration(grouping.key, g.user.key)
 
-    form_class = get_registration_form_class(grouping.policy)
-    form = form_class()
+    form = get_registration_form(grouping.policy, registration)
     if form.validate_on_submit():
         if form.submit_register.data:
+            user_preferences = form.get_user_preferences()
             get_connection().set_registration(
-                Registration(grouping.key, g.user.key, UserPreferences()))
+                Registration(grouping.key, g.user.key, user_preferences))
             if registration:
                 flash("Registration for '{}' is updated.".format(grouping.name),
                       category="info")

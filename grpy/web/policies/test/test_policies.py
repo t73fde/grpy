@@ -20,8 +20,9 @@
 """Tests for the grouping policies."""
 
 from .. import (
-    EmptyPolicyForm, get_policy_name, get_policy_names,
-    get_registration_form_class)
+    EmptyPolicyForm, PreferredPreferences, SinglePreferredPolicyForm,
+    get_policy_name, get_policy_names, get_registration_form)
+from ....models import GroupingKey, Registration, UserKey, UserPreferences
 
 
 def test_get_policies() -> None:
@@ -37,11 +38,64 @@ def test_get_policy_name() -> None:
     assert get_policy_name("") == ""
 
 
-def test_get_registration_form_class() -> None:
+def test_get_registration_form(app) -> None:  # pylint: disable=unused-argument
     """The right form class must be delivered."""
+    empty_policies = {'RD', 'ID'}
     for code, _ in get_policy_names():
-        form_class = get_registration_form_class(code)
-        assert form_class is not None
-        if code not in ('RD', 'ID'):
-            assert form_class is not EmptyPolicyForm
-    assert get_registration_form_class('RD') is EmptyPolicyForm
+        form = get_registration_form(code, None)
+        assert form is not None
+        if code not in empty_policies:
+            assert not isinstance(form, EmptyPolicyForm)
+    for code in empty_policies:
+        assert isinstance(get_registration_form(code, None), EmptyPolicyForm)
+
+    registration = Registration(GroupingKey(int=1), UserKey(int=2), UserPreferences())
+    assert isinstance(get_registration_form('RD', registration), EmptyPolicyForm)
+
+
+def test_empty_policy_form(app) -> None:  # pylint: disable=unused-argument
+    """The empty policy form does nothing, mostly."""
+    assert isinstance(EmptyPolicyForm().get_user_preferences(), UserPreferences)
+    assert isinstance(EmptyPolicyForm.create(UserPreferences()), EmptyPolicyForm)
+
+
+def test_single_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
+    """The single preferred policy form communicates via PreferredPreferences."""
+    preferences = SinglePreferredPolicyForm().get_user_preferences()
+    assert isinstance(preferences, PreferredPreferences)
+    assert preferences.preferred == []
+    preferences = SinglePreferredPolicyForm(ident="user").get_user_preferences()
+    assert isinstance(preferences, PreferredPreferences)
+    assert preferences.preferred == ["user"]
+
+    form = SinglePreferredPolicyForm.create(preferences)
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "user"
+
+    form = SinglePreferredPolicyForm.create(UserPreferences())
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data is None
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences([]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data is None
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences(["5"]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "5"
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences(["", "7"]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "7"
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences(["9", "7"]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "9"
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences(["3", ""]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "3"
+
+    form = SinglePreferredPolicyForm.create(PreferredPreferences(["", "1", "", "3"]))
+    assert isinstance(form, SinglePreferredPolicyForm)
+    assert form.ident.data == "1"

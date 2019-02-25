@@ -19,29 +19,64 @@
 
 """Web part of policies for group forming."""
 
-from typing import List, Tuple, Type
+import dataclasses  # pylint: disable=wrong-import-order
+from typing import List, Optional, Tuple, Type, cast
 
 from wtforms.fields import StringField
 
 from ..forms import RegistrationForm
+from ...models import Registration, UserPreferences
 
 
 class EmptyPolicyForm(RegistrationForm):
     """Form for random grouping."""
 
+    @classmethod
+    def create(cls, preferences) -> RegistrationForm:
+        """Create a filled form."""
+        return cls()
 
-class SinglePreferencePolicyForm(RegistrationForm):
-    """Form for a single preference."""
+    def get_user_preferences(self) -> UserPreferences:
+        """Read user preferences from form."""
+        return UserPreferences()
 
-    TEMPLATE = "policies/single_preference.html"
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class PreferredPreferences(UserPreferences):
+    """Perference for preferred users."""
+
+    preferred: List[str]
+
+
+class SinglePreferredPolicyForm(RegistrationForm):
+    """Form for a single preferred user."""
+
+    TEMPLATE = "policies/single_preferred.html"
 
     ident = StringField("Ident", filters=[lambda s: s.strip() if s else None])
+
+    @classmethod
+    def create(cls, preferences) -> RegistrationForm:
+        """Create a filled form."""
+        if not isinstance(preferences, PreferredPreferences):
+            return cls()
+        preferred = list(filter(
+            None, cast(PreferredPreferences, preferences).preferred))
+        if not preferred:
+            return cls()
+        return cls(ident=preferred[0])
+
+    def get_user_preferences(self) -> UserPreferences:
+        """Read user preferences from form."""
+        if self.ident.data:
+            return PreferredPreferences([self.ident.data])
+        return PreferredPreferences([])
 
 
 POLICIES: Tuple[Tuple[str, str, Type[RegistrationForm]], ...] = (
     ('RD', "Random", EmptyPolicyForm),
     ('ID', "Identity", EmptyPolicyForm),
-    ('P1', "Single Preference", SinglePreferencePolicyForm),
+    ('P1', "Single Preference", SinglePreferredPolicyForm),
 )
 POLICY_META = [(code, name) for (code, name, _) in POLICIES]
 POLICY_NAMES = dict(POLICY_META)
@@ -58,6 +93,10 @@ def get_policy_name(code: str) -> str:
     return POLICY_NAMES.get(code, "")
 
 
-def get_registration_form_class(code: str) -> Type[RegistrationForm]:
+def get_registration_form(
+        code: str, registration: Optional[Registration]) -> RegistrationForm:
     """Return the web form for the given policy code."""
-    return POLICY_FORMS.get(code, EmptyPolicyForm)
+    form_class = POLICY_FORMS.get(code, EmptyPolicyForm)
+    if registration is None:
+        return form_class()
+    return form_class.create(registration.preferences)
