@@ -192,33 +192,34 @@ def best_groups(population: Population, num_groups: int) -> Groups:
     return tuple(result)
 
 
-class StopStrategy:
+class StopStrategy:  # pylint: disable=too-many-instance-attributes
     """Encapsulate the descision when to stop the algorithm."""
 
     def __init__(
-            self, initial_rating: int,
+            self, initial_rating: float,
             max_rounds: int, max_best_rounds: int, max_seconds: float):
         """Initialize the object."""
-        self.max_rounds = max_rounds
-        self.max_best_rounds = max_best_rounds
-        self.best_rating = initial_rating
-        self.best_rounds = 0
-        self.max_seconds = max_seconds
+        self.initial_rating: float = initial_rating
+        self.max_rounds: int = max_rounds
+        self.max_best_rounds: int = max_best_rounds
+        self.max_seconds: float = max_seconds
         self.start()
 
     def start(self):
         """Signal that algorithm starts."""
-        self.rounds = 0
-        self.time_start = time.monotonic()
+        self.best_rating: float = self.initial_rating
+        self.best_rounds: int = 0
+        self.rounds: int = 0
+        self.time_start: float = time.monotonic()
 
-    def should_continue(self, rating: int) -> bool:
+    def should_continue(self, rating: float) -> bool:
         """Return True if algorithm should continue its work."""
         self.rounds += 1
         if self.max_rounds <= self.rounds:
             return False
         if rating < self.best_rating:
-            self.best_rating = rating
-            self.best_rounds = 0
+            self.best_rating = rating  # pylint: disable=attribute-defined-outside-init
+            self.best_rounds = 0  # pylint: disable=attribute-defined-outside-init
         else:
             self.best_rounds += 1
             if self.max_best_rounds < self.best_rounds:
