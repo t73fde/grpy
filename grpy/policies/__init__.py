@@ -37,7 +37,8 @@ def _build_groups(
     return tuple(groups)
 
 
-def no_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
+def identity_policy(
+        data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
     """Build groups by name."""
     users = sorted((user for user in data), key=lambda u: u.ident, reverse=True)
     return _build_groups(users, max_group_size, member_reserve)
@@ -53,6 +54,7 @@ def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) ->
 POLICY = Callable[[PolicyData, int, int], Groups]
 POLICIES: Tuple[Tuple[str, str, POLICY], ...] = (
     ('RD', "Random", random_policy),
+    ('ID', "Identity", identity_policy),
 )
 POLICY_META = [(code, name) for (code, name, _) in POLICIES]
 POLICY_NAMES = dict(POLICY_META)
@@ -71,4 +73,4 @@ def get_policy_name(code: str) -> str:
 
 def get_policy(code: str) -> POLICY:
     """Create a policy object based on code."""
-    return POLICY_FUNCS.get(code, no_policy)
+    return POLICY_FUNCS.get(code, identity_policy)

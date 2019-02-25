@@ -26,5 +26,8 @@ from ....policies import get_policy_names
 def test_get_registration_form_class() -> None:
     """The right form class must be delivered."""
     for code, _ in get_policy_names():
-        assert get_registration_form_class(code) is not None
+        form_class = get_registration_form_class(code)
+        assert form_class is not None
+        if code not in ('RD', 'ID'):
+            assert form_class is not EmptyPolicyForm
     assert get_registration_form_class('RD') is EmptyPolicyForm

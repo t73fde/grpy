@@ -22,7 +22,7 @@
 from typing import Set, cast
 
 from .. import (
-    get_policy, get_policy_name, get_policy_names, no_policy, random_policy)
+    get_policy, get_policy_name, get_policy_names, identity_policy, random_policy)
 from ...models import Groups, User, UserKey, UserPreferences
 
 
@@ -40,7 +40,7 @@ def assert_members_and_sizes(
     assert users == set()
 
 
-def test_no_policy() -> None:
+def test_identity_policy() -> None:
     """The no policy places all users into groups by name."""
     data = {}
     repository = {}
@@ -51,7 +51,7 @@ def test_no_policy() -> None:
 
     for max_group_size in range(1, 10):
         for member_reserve in range(10):
-            groups = no_policy(data, max_group_size, member_reserve)
+            groups = identity_policy(data, max_group_size, member_reserve)
             users = cast(Set[UserKey], {user.key for user in data})
             assert_members_and_sizes(groups, users, max_group_size)
             last_ident = ""
@@ -93,5 +93,5 @@ def test_get_policy_name() -> None:
 def test_create_policy() -> None:
     """Test to create a policy object."""
     for code in ('', ' ', '____'):
-        assert get_policy(code) == no_policy  # pylint: disable=comparison-with-callable
-    assert get_policy('RD') == random_policy  # pylint: disable=comparison-with-callable
+        assert get_policy(code) is identity_policy
+    assert get_policy('RD') is random_policy
