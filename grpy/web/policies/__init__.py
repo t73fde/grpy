@@ -22,7 +22,6 @@
 from typing import List, Tuple, Type
 
 from wtforms.fields import StringField
-from wtforms.validators import DataRequired
 
 from ..forms import RegistrationForm
 
@@ -34,8 +33,9 @@ class EmptyPolicyForm(RegistrationForm):
 class SinglePreferencePolicyForm(RegistrationForm):
     """Form for a single preference."""
 
-    name = StringField(
-        "Name", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+    TEMPLATE = "policies/single_preference.html"
+
+    ident = StringField("Ident", filters=[lambda s: s.strip() if s else None])
 
 
 POLICIES: Tuple[Tuple[str, str, Type[RegistrationForm]], ...] = (

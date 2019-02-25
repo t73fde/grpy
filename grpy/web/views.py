@@ -253,9 +253,11 @@ def grouping_register(grouping_key: GroupingKey):
             flash("Registration for '{}' is removed.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
+    form_template = getattr(form, "TEMPLATE", None)
     return render_template(
         "grouping_register.html",
-        grouping=grouping, registration=registration, form=form)
+        grouping=grouping, registration=registration,
+        form=form, form_template=form_template)
 
 
 @login_required
