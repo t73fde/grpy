@@ -21,8 +21,7 @@
 
 from typing import Set, cast
 
-from .. import (
-    get_policy, get_policy_name, get_policy_names, identity_policy, random_policy)
+from .. import (get_policy, identity_policy, random_policy)
 from ...models import Groups, User, UserKey, UserPreferences
 
 
@@ -75,19 +74,6 @@ def test_random_policy() -> None:
             groups = random_policy(data, max_group_size, member_reserve)
             users = cast(Set[UserKey], {user.key for user in data})
             assert_members_and_sizes(groups, users, max_group_size)
-
-
-def test_get_policies() -> None:
-    """At least there must be the random policy."""
-    policies = get_policy_names()
-    assert policies[0][1].lower() == "random"
-
-
-def test_get_policy_name() -> None:
-    """Always get the right name for a policy code."""
-    for code, name in get_policy_names():
-        assert name == get_policy_name(code)
-    assert get_policy_name("") == ""
 
 
 def test_create_policy() -> None:

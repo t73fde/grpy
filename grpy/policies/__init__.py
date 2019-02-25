@@ -20,7 +20,7 @@
 """Policies for group forming."""
 
 import random
-from typing import Callable, List, Tuple, cast
+from typing import Callable, Dict, List, cast
 
 from .sizes import group_sizes
 from ..models import Groups, PolicyData, User, UserKey
@@ -52,23 +52,10 @@ def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) ->
 
 
 POLICY = Callable[[PolicyData, int, int], Groups]
-POLICIES: Tuple[Tuple[str, str, POLICY], ...] = (
-    ('RD', "Random", random_policy),
-    ('ID', "Identity", identity_policy),
-)
-POLICY_META = [(code, name) for (code, name, _) in POLICIES]
-POLICY_NAMES = dict(POLICY_META)
-POLICY_FUNCS = {code: func for (code, _, func) in POLICIES}
-
-
-def get_policy_names() -> List[Tuple[str, str]]:
-    """Return list of policies."""
-    return list(POLICY_META)
-
-
-def get_policy_name(code: str) -> str:
-    """Return policy name for given code."""
-    return POLICY_NAMES.get(code, "")
+POLICY_FUNCS: Dict[str, POLICY] = {
+    'RD': random_policy,
+    'ID': identity_policy,
+}
 
 
 def get_policy(code: str) -> POLICY:

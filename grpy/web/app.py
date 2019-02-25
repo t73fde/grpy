@@ -28,8 +28,7 @@ from flask_babel import Babel
 
 import requests
 
-from . import utils, views
-from .. import policies
+from . import policies, utils, views
 from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code

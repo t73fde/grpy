@@ -26,14 +26,14 @@ from flask import (
     abort, current_app, flash, g, redirect, render_template, request, url_for)
 
 from . import forms
-from .policies import get_registration_form_class
+from .policies import get_policy_names, get_registration_form_class
 from .utils import (
     login_required, login_required_redirect, make_model, update_model,
     value_or_404)
 from .. import logic, utils
 from ..models import (
     Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
-from ..policies import get_policy, get_policy_names
+from ..policies import get_policy
 from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
 

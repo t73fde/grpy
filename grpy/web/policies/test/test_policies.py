@@ -19,8 +19,22 @@
 
 """Tests for the grouping policies."""
 
-from .. import EmptyPolicyForm, get_registration_form_class
-from ....policies import get_policy_names
+from .. import (
+    EmptyPolicyForm, get_policy_name, get_policy_names,
+    get_registration_form_class)
+
+
+def test_get_policies() -> None:
+    """At least there must be the random policy."""
+    policies = get_policy_names()
+    assert policies[0][1].lower() == "random"
+
+
+def test_get_policy_name() -> None:
+    """Always get the right name for a policy code."""
+    for code, name in get_policy_names():
+        assert name == get_policy_name(code)
+    assert get_policy_name("") == ""
 
 
 def test_get_registration_form_class() -> None:
