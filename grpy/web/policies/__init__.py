@@ -19,13 +19,13 @@
 
 """Web part of policies for group forming."""
 
-import dataclasses  # pylint: disable=wrong-import-order
 from typing import List, Optional, Tuple, Type, cast
 
 from wtforms.fields import StringField
 
 from ..forms import RegistrationForm
 from ...models import Registration, UserPreferences
+from ...policies import PreferredPreferences
 
 
 class EmptyPolicyForm(RegistrationForm):
@@ -39,13 +39,6 @@ class EmptyPolicyForm(RegistrationForm):
     def get_user_preferences(self) -> UserPreferences:
         """Read user preferences from form."""
         return UserPreferences()
-
-
-@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
-class PreferredPreferences(UserPreferences):
-    """Perference for preferred users."""
-
-    preferred: List[str]
 
 
 class SinglePreferredPolicyForm(RegistrationForm):

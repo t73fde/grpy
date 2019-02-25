@@ -21,8 +21,10 @@
 
 from typing import Set, cast
 
-from .. import (get_policy, identity_policy, random_policy)
-from ...models import Groups, User, UserKey, UserPreferences
+from .. import (
+    PreferredPreferences, build_preferred_rating_data, get_policy,
+    identity_policy, random_policy, single_preferred_policy)
+from ...models import Groups, PolicyData, User, UserKey, UserPreferences
 
 
 def assert_members_and_sizes(
@@ -74,6 +76,39 @@ def test_random_policy() -> None:
             groups = random_policy(data, max_group_size, member_reserve)
             users = cast(Set[UserKey], {user.key for user in data})
             assert_members_and_sizes(groups, users, max_group_size)
+
+
+def _create_preferred_preferences() -> PolicyData:
+    """Create some policy data for single preferred preferences."""
+    data = {}
+    for i in range(20):
+        preferred = ["user-%02d" % ((i + 2 * (j + 1)) % 20) for j in range(1)]
+        data[User(UserKey(int=i), "user-%02d" % i)] = PreferredPreferences(preferred)
+    return cast(PolicyData, data)
+
+
+def test_build_preferred_rating_data() -> None:
+    """Policy data is a function of user key to set of preferred user keys."""
+    policy_data = _create_preferred_preferences()
+    rating_data = build_preferred_rating_data(policy_data)
+    for user_key, preferred_set in rating_data.items():
+        even = user_key.int % 2 == 0
+        for preferred_key in preferred_set:
+            assert even == (preferred_key.int % 2 == 0)
+
+    user, _ = policy_data.popitem()
+    assert user.key is not None
+    policy_data[user] = UserPreferences()
+    rating_data = build_preferred_rating_data(policy_data)
+    assert rating_data[user.key] == set()
+
+
+def test_single_preferred_policy() -> None:
+    """The single preferred strategy will produce some result."""
+    policy_data = _create_preferred_preferences()
+    for max_group_size in (1, 2, 4):
+        for member_reserve in (0, 6):
+            single_preferred_policy(policy_data, max_group_size, member_reserve)
 
 
 def test_create_policy() -> None:
