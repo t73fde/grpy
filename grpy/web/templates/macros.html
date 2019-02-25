@@ -24,7 +24,7 @@
 
 {% macro render_field(field, autofocus=False) %}
 <div class="w3-panel">
-{{- field.label }}
+<strong>{{- field.label }}:</strong>
 {%- if field.errors %}
   {{- render_input(field, autofocus, class="w3-input w3-border w3-border-red") }}
   {%- for error in field.errors %}

@@ -518,7 +518,7 @@ def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     data = response.data.decode('utf-8')
     assert "Groups" not in data
-    assert "Member" not in data
+    assert "Member</td>" not in data
 
 
 def create_registered_users(
@@ -561,7 +561,7 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     data = response.data.decode('utf-8')
     assert "Groups" in data
-    assert "Member" in data
+    assert "Member</td>" in data
     for user in users:
         assert user.ident in data
 

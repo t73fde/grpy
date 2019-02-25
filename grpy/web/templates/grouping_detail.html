@@ -30,12 +30,12 @@
 </div>
 {{- render_data("Name", grouping.name) }}
 {{- render_data("Code", code_link) }}
-{{- render_data("Begin Date", grouping.begin_date|datetimeformat("iso-short")) }}
-{{- render_data("Final Date", grouping.final_date|datetimeformat("iso-short")) }}
-{{- render_data("Close Date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
+{{- render_data("Begin date", grouping.begin_date|datetimeformat("iso-short")) }}
+{{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
+{{- render_data("Close date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
 {{- render_data("Policy", policy_name(grouping.policy)) }}
-{{- render_data("Maximum Group Size", grouping.max_group_size) }}
-{{- render_data("Reserve", grouping.member_reserve) }}
+{{- render_data("Maximum group size", grouping.max_group_size) }}
+{{- render_data("Member reserve", grouping.member_reserve) }}
 {{- render_data("Note", grouping.note) }}
 </div>
 <div class="w3-container w3-bar">
