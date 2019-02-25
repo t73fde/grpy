@@ -92,9 +92,9 @@ def run_coverage(paths: Sequence[str], test_directory: str, verbose: int) -> boo
         verbose)
     if process.returncode:
         return False
-    match_obj = re.search(rb'\nTOTAL.+ (\d.+)%\n', process.stdout)
+    match_obj = re.search(rb'\nTOTAL.+ (\d+)%\n', process.stdout)
     if match_obj is None:
-        match_obj = re.search(rb'\[(\d.+)%\]', process.stdout)
+        match_obj = re.search(rb' (\d+)%\n', process.stdout)
     covered = match_obj and match_obj[1] == b'100'
     if verbose > 1 or not covered:
         click.echo(process.stdout)
