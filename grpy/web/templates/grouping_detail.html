@@ -17,49 +17,26 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
+{% from "macros.html" import render_data %}
 {% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
 {% block heading %}{% endblock %}
+{% set code_link %}
+<a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a>
+{% endset %}
 {% block content %}
 <div class="w3-panel">
-<h1>Grouping Details</h1>
-
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Code:</strong></div>
-  <div class="w3-rest"><a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a></div>
+<div class="w3-container w3-light-gray">
+  <h1>Grouping Details</h1>
 </div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Name:</strong></div>
-  <div class="w3-rest">{{ grouping.name }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Begin Date:</strong></div>
-  <div class="w3-rest">{{ grouping.begin_date|datetimeformat("iso-short") }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Final Date:</strong></div>
-  <div class="w3-rest">{{ grouping.final_date|datetimeformat("iso-short") }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Close Date:</strong></div>
-  <div class="w3-rest">{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Policy:</strong></div>
-  <div class="w3-rest">{{ policy_name(grouping.policy) }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Max. Size:</strong></div>
-  <div class="w3-rest">{{ grouping.max_group_size }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Reserve:</strong></div>
-  <div class="w3-rest">{{ grouping.member_reserve }}</div>
-</div>
-<div class="w3-row">
-  <div class="w3-col" style="width:7em"><strong>Note:</strong></div>
-  <div class="w3-rest">{{ grouping.note }}</div>
-</div>
-
+{{- render_data("Name", grouping.name) }}
+{{- render_data("Code", code_link) }}
+{{- render_data("Begin Date", grouping.begin_date|datetimeformat("iso-short")) }}
+{{- render_data("Final Date", grouping.final_date|datetimeformat("iso-short")) }}
+{{- render_data("Close Date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
+{{- render_data("Policy", policy_name(grouping.policy)) }}
+{{- render_data("Maximum Group Size", grouping.max_group_size) }}
+{{- render_data("Reserve", grouping.member_reserve) }}
+{{- render_data("Note", grouping.note) }}
 </div>
 <div class="w3-container w3-bar">
   <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
