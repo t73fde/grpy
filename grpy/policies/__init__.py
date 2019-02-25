@@ -20,6 +20,7 @@
 """Policies for group forming."""
 
 import dataclasses  # pylint: disable=wrong-import-order
+import functools
 import random
 from typing import Callable, Dict, List, Set, cast
 
@@ -63,15 +64,16 @@ class PreferredPreferences(UserPreferences):
 PreferredData = Dict[UserKey, Set[UserKey]]
 
 
-def build_preferred_rating_data(data: PolicyData) -> PreferredData:
+def build_preferred_rating_data(data: PolicyData, max_preferred: int) -> PreferredData:
     """Build data structure to help `preferred_rating_func."""
+    max_preferred = max(0, max_preferred)
     ident_dict = {user.ident: cast(UserKey, user.key) for user in data}
     result = {}
     for user, preferences in data.items():
         key = cast(UserKey, user.key)
         if isinstance(preferences, PreferredPreferences):
             result[key] = {
-                ident_dict[key] for key in preferences.preferred[:1]
+                ident_dict[key] for key in preferences.preferred[:max_preferred]
                 if key in ident_dict}
         else:
             result[key] = set()
@@ -89,12 +91,13 @@ def preferred_rating_func(genome: Genome, data: PreferredData) -> Rating:
     return rating
 
 
-def single_preferred_policy(
-        data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
-    """Build groups based on single preferred users."""
+def preferred_policy(
+        max_preferred: int, data: PolicyData,
+        max_group_size: int, member_reserve: int) -> Groups:
+    """Build groups based on preferred users."""
     users = [cast(UserKey, user.key) for user in data]
     sizes = group_sizes(len(users), max_group_size, member_reserve)
-    rating_data = build_preferred_rating_data(data)
+    rating_data = build_preferred_rating_data(data, max_preferred)
     stop_strategy = StopStrategy(1000000, 500, 50, 0.5)
     result = generic_genetic_policy(
         users, sizes, preferred_rating_func, rating_data, stop_strategy)
@@ -105,7 +108,7 @@ POLICY = Callable[[PolicyData, int, int], Groups]
 POLICY_FUNCS: Dict[str, POLICY] = {
     'RD': random_policy,
     'ID': identity_policy,
-    'P1': single_preferred_policy,
+    'P1': functools.partial(preferred_policy, 1),
 }
 
 
