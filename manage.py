@@ -162,6 +162,15 @@ def coverage(ctx, verbose: int) -> None:
         ctx.exit(1)
 
 
+def valid_directory(directory_path) -> bool:
+    """Return True for directories to be covered."""
+    invalid_names = {"__pycache__", "static", "test", "templates"}
+    for name in reversed(directory_path.parts):
+        if name in invalid_names:
+            return False
+    return True
+
+
 def collect_files_and_packages() -> Tuple[List[str], List[str]]:
     """Scan subdirectores and collect needed files and packages."""
     packages = []
@@ -171,7 +180,7 @@ def collect_files_and_packages() -> Tuple[List[str], List[str]]:
         if name.startswith("."):
             continue
         if path.is_dir():
-            if name not in ("__pycache__", "test"):
+            if valid_directory(path):
                 packages.append(str(path))
         elif len(path.parts) == 2 and path.is_file():
             if path.suffix == ".py" and name != "__init__.py":
