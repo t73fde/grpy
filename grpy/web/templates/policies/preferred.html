@@ -17,5 +17,5 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% from "macros.html" import render_field %}
-{{- render_field(form.ident, autofocus=True) }}
+{% from "macros.html" import render_field_list %}
+{{- render_field_list(form.idents, autofocus=True) }}

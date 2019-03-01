@@ -38,6 +38,26 @@
 </div>
 {% endmacro %}
 
+{% macro render_field_list(field_list, autofocus=False) %}
+<div class="w3-panel">
+<strong>{{- field_list.label }}:</strong>
+{%- if field_list.errors %}
+  {% for field in field_list %}
+  {{- render_input(field, autofocus, class="w3-input w3-border w3-border-red") }}
+  {% endfor %}
+  {%- for error in field_list.errors %}
+    <div class="w3-text-red">
+      {{- error -}}
+    </div>
+  {%- endfor %}
+{%- else %}
+{% for field in field_list %}
+  {{- render_input(field, autofocus, class="w3-input") }}
+{% endfor %}
+{%- endif %}
+</div>
+{% endmacro %}
+
 {% macro render_data(label, value) %}
 <div class="w3-panel">
 <strong>{{ label }}:</strong>

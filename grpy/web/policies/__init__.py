@@ -21,7 +21,7 @@
 
 from typing import List, Optional, Tuple, Type, cast
 
-from wtforms.fields import StringField
+from wtforms.fields import FieldList, StringField
 
 from ..forms import RegistrationForm
 from ...models import Registration, UserPreferences
@@ -41,12 +41,14 @@ class EmptyPolicyForm(RegistrationForm):
         return UserPreferences()
 
 
-class SinglePreferredPolicyForm(RegistrationForm):
-    """Form for a single preferred user."""
+class PreferredPolicyForm(RegistrationForm):
+    """Form for preferred user(s)."""
 
-    TEMPLATE = "policies/single_preferred.html"
+    TEMPLATE = "policies/preferred.html"
 
-    ident = StringField("Ident", filters=[lambda s: s.strip() if s else None])
+    idents = FieldList(
+        StringField("Ident", filters=[lambda s: s.strip() if s else None]),
+        min_entries=1, max_entries=1)
 
     @classmethod
     def create(cls, preferences) -> RegistrationForm:
@@ -57,19 +59,20 @@ class SinglePreferredPolicyForm(RegistrationForm):
             None, cast(PreferredPreferences, preferences).preferred))
         if not preferred:
             return cls()
-        return cls(ident=preferred[0])
+        return cls(idents=preferred[:1])
 
     def get_user_preferences(self) -> UserPreferences:
         """Read user preferences from form."""
-        if self.ident.data:
-            return PreferredPreferences([self.ident.data])
+        idents = [ident for ident in self.idents.data if ident]
+        if idents:
+            return PreferredPreferences(idents)
         return PreferredPreferences([])
 
 
 POLICIES: Tuple[Tuple[str, str, Type[RegistrationForm]], ...] = (
     ('RD', "Random", EmptyPolicyForm),
     ('ID', "Identity", EmptyPolicyForm),
-    ('P1', "Single Preference", SinglePreferredPolicyForm),
+    ('P1', "Single Preference", PreferredPolicyForm),
 )
 POLICY_META = [(code, name) for (code, name, _) in POLICIES]
 POLICY_NAMES = dict(POLICY_META)
