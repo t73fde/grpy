@@ -21,11 +21,14 @@
 
 from typing import List, Optional, Tuple, Type, cast
 
-from wtforms.fields import FieldList, StringField
+from wtforms.fields import FieldList, RadioField, StringField
 
 from ..forms import RegistrationForm
 from ...models import Registration, UserPreferences
-from ...policies import PreferredPreferences
+from ...policies import (
+    AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER, DISAGREE, PreferredPreferences,
+    SIMPLE_BELBIN_ANSWER_COUNT, STRONGLY_AGREE, STRONGLY_DISAGREE,
+    SimpleBelbinAnswer, SimpleBelbinPreferences)
 
 
 class EmptyPolicyForm(RegistrationForm):
@@ -74,12 +77,47 @@ def create_preferred_policy_form(num_entries: int):
     return PreferredPolicyForm
 
 
+class SimpleBelbinPolicyForm(RegistrationForm):
+    """Form for preferred user(s)."""
+
+    TEMPLATE = "policies/simple_belbin.html"
+
+    answers = FieldList(
+        RadioField(
+            "Answer",
+            choices=[
+                (STRONGLY_DISAGREE, "Strongly disagree"),
+                (DISAGREE, "Disagree"),
+                (AGREE, "Agree"),
+                (STRONGLY_AGREE, "Strongly agree")],
+            coerce=int),
+        min_entries=SIMPLE_BELBIN_ANSWER_COUNT, max_entries=SIMPLE_BELBIN_ANSWER_COUNT)
+
+    @classmethod
+    def create(cls, preferences) -> RegistrationForm:
+        """Create a filled form."""
+        if not isinstance(preferences, SimpleBelbinPreferences):
+            return cls()
+        answers = cast(SimpleBelbinPreferences, preferences).answers
+        return cls(answers=answers)
+
+    def get_user_preferences(self) -> UserPreferences:
+        """Read user preferences from form."""
+        if len(self.answers.data) == SIMPLE_BELBIN_ANSWER_COUNT and \
+                self.answers.data != [None] * SIMPLE_BELBIN_ANSWER_COUNT:
+            answers = cast(SimpleBelbinAnswer, tuple(self.answers.data))
+        else:
+            answers = DEFAULT_SIMPLE_BELBIN_ANSWER
+        return SimpleBelbinPreferences(answers=answers)
+
+
 POLICIES: Tuple[Tuple[str, str, Type[RegistrationForm]], ...] = (
     ('RD', "Random", EmptyPolicyForm),
     ('ID', "Identity", EmptyPolicyForm),
     ('P1', "Single Preference", create_preferred_policy_form(1)),
     ('P2', "Double Preference", create_preferred_policy_form(2)),
     ('P3', "Triple Preference", create_preferred_policy_form(3)),
+    ('SB', "Simple Belbin", SimpleBelbinPolicyForm),
 )
 POLICY_META = [(code, name) for (code, name, _) in POLICIES]
 POLICY_NAMES = dict(POLICY_META)

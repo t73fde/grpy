@@ -22,7 +22,7 @@
 import dataclasses  # pylint: disable=wrong-import-order
 import functools
 import random
-from typing import Callable, Dict, List, Set, cast
+from typing import Callable, Dict, List, Set, Tuple, cast
 
 from .genetic import Genome, Rating, StopStrategy, generic_genetic_policy
 from .sizes import group_sizes
@@ -104,6 +104,67 @@ def preferred_policy(
     return result
 
 
+STRONGLY_DISAGREE = 0
+DISAGREE = 1
+AGREE = 2
+STRONGLY_AGREE = 3
+
+
+SimpleBelbinAnswer = Tuple[int, int, int, int, int, int, int, int]
+SIMPLE_BELBIN_ANSWER_COUNT = 8
+DEFAULT_SIMPLE_BELBIN_ANSWER: SimpleBelbinAnswer = cast(
+    SimpleBelbinAnswer, (STRONGLY_DISAGREE,) * SIMPLE_BELBIN_ANSWER_COUNT)
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class SimpleBelbinPreferences(UserPreferences):
+    """Preference for simple belbin test."""
+
+    answers: SimpleBelbinAnswer
+
+
+SimpleBelbinData = Dict[UserKey, SimpleBelbinAnswer]
+
+
+def build_simple_belbin_rating_data(data: PolicyData) -> SimpleBelbinData:
+    """Build data structure to help `simple_belbin_rating_func."""
+    result = {}
+    for user, preferences in data.items():
+        key = cast(UserKey, user.key)
+        if isinstance(preferences, SimpleBelbinPreferences):
+            if len(preferences.answers) == SIMPLE_BELBIN_ANSWER_COUNT:
+                result[key] = preferences.answers
+    return result
+
+
+def simple_belbin_rating_func(genome: Genome, data: SimpleBelbinData) -> Rating:
+    """Calculate a rating based on preferred users."""
+    rating = 0.0
+    for group in genome:
+        group_answers = DEFAULT_SIMPLE_BELBIN_ANSWER
+        for member in group:
+            try:
+                group_answers = cast(
+                    SimpleBelbinAnswer,
+                    tuple(max(a, b) for a, b in zip(group_answers, data[member])))
+            except KeyError:
+                pass
+        rating += sum((STRONGLY_AGREE - answer) ** 2 for answer in group_answers)
+    return rating
+
+
+def simple_belbin_policy(
+        data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
+    """Build groups based on preferred users."""
+    users = [cast(UserKey, user.key) for user in data]
+    sizes = group_sizes(len(users), max_group_size, member_reserve)
+    rating_data = build_simple_belbin_rating_data(data)
+    stop_strategy = StopStrategy(1000000, 500, 50, 0.5)
+    result = generic_genetic_policy(
+        users, sizes, simple_belbin_rating_func, rating_data, stop_strategy)
+    return result
+
+
 POLICY = Callable[[PolicyData, int, int], Groups]
 POLICY_FUNCS: Dict[str, POLICY] = {
     'RD': random_policy,
@@ -111,6 +172,7 @@ POLICY_FUNCS: Dict[str, POLICY] = {
     'P1': functools.partial(preferred_policy, 1),
     'P2': functools.partial(preferred_policy, 2),
     'P3': functools.partial(preferred_policy, 3),
+    'SB': simple_belbin_policy,
 }
 
 

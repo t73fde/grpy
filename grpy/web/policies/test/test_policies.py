@@ -22,10 +22,12 @@
 from typing import List, Optional
 
 from .. import (
-    EmptyPolicyForm, PreferredPreferences, create_preferred_policy_form,
+    EmptyPolicyForm, SimpleBelbinPolicyForm, create_preferred_policy_form,
     get_policy_name, get_policy_names, get_registration_form)
 from ....models import GroupingKey, Registration, UserKey, UserPreferences
-from ....policies import get_policy
+from ....policies import (
+    DEFAULT_SIMPLE_BELBIN_ANSWER, PreferredPreferences,
+    SimpleBelbinPreferences, get_policy)
 
 
 def test_get_policies() -> None:
@@ -119,3 +121,22 @@ def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
         form = PreferredPolicyForm.create(PreferredPreferences(["", "1", "", "3"]))
         assert isinstance(form, PreferredPolicyForm)
         assert_idents(form.idents.data, i, ["1", "3"])
+
+
+def test_simple_belbin_policy_form(app) -> None:  # pylint: disable=unused-argument
+    """The simple belbin form contains 8 answers."""
+    preferences = SimpleBelbinPolicyForm().get_user_preferences()
+    assert isinstance(preferences, SimpleBelbinPreferences)
+    assert preferences.answers == DEFAULT_SIMPLE_BELBIN_ANSWER
+
+    form = SimpleBelbinPolicyForm.create(UserPreferences())
+    assert isinstance(form, SimpleBelbinPolicyForm)
+    assert form.answers.data == [None] * 8
+
+    form = SimpleBelbinPolicyForm.create(SimpleBelbinPreferences(
+        answers=(0, 1, 2, 3, 0, 1, 2, 3)))
+    assert isinstance(form, SimpleBelbinPolicyForm)
+    assert form.answers.data == [0, 1, 2, 3, 0, 1, 2, 3]
+    preferences = form.get_user_preferences()
+    assert isinstance(preferences, SimpleBelbinPreferences)
+    assert preferences.answers == (0, 1, 2, 3, 0, 1, 2, 3)

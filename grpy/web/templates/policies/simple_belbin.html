@@ -1,0 +1,50 @@
+{# Form for single preferences #}
+{#
+ # Copyright (c) 2018,2019 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ #
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% from "macros.html" import render_field_list %}
+{# {{- render_field_list(form.answers, autofocus=True) }} #}
+
+{% macro render_line(text, radio) %}
+<tr><td>{{ text }}
+{%- if radio.errors %}{% for error in radio.errors %} <span class="w3-text-red">{{ error }}</span>{% endfor %}{% endif -%}
+</td>
+{%- for subfield in radio %}<td>{{ subfield }}</td>{% endfor %}</tr>
+{% endmacro %}
+
+<div class="w3-panel">
+<strong>Profile:</strong>
+<table class="w3-table w3-striped">
+<tbody>
+{{ render_line("I'm able to write coherent texts.", form.answers[0]) }}
+{{ render_line("I'm sociable and like to communicate.", form.answers[1]) }}
+{{ render_line("I'm assertive and argue my point of view.", form.answers[2]) }}
+{{ render_line("I'm flexible and can handle changes well.", form.answers[3]) }}
+{{ render_line("I'm typically the one who leads a group.", form.answers[4]) }}
+{{ render_line("I make decisions from the gut rather than thinking long.", form.answers[5]) }}
+{{ render_line("I've already some experiences with team work.", form.answers[6]) }}
+{{ render_line("I'm highly motivated to work on tasks", form.answers[7]) }}
+</tbody>
+<tfoot>
+<tr><th></th>
+<th title="Strongly disagree">--</th> <th title="Disagree">-</th>
+<th title="Agree">+</th> <th title="Strongly agree">++</th>
+</tr>
+</tfoot>
+</table>
+</div>

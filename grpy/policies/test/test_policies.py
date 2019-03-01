@@ -19,11 +19,14 @@
 
 """Tests for the grouping policies."""
 
+import random
 from typing import Set, cast
 
 from .. import (
-    PreferredPreferences, build_preferred_rating_data, get_policy,
-    identity_policy, preferred_policy, random_policy)
+    PreferredPreferences, SimpleBelbinAnswer, SimpleBelbinPreferences,
+    build_preferred_rating_data, build_simple_belbin_rating_data,
+    get_policy, identity_policy, preferred_policy, random_policy,
+    simple_belbin_policy)
 from ...models import Groups, PolicyData, User, UserKey, UserPreferences
 
 
@@ -113,6 +116,42 @@ def test_single_preferred_policy() -> None:
             for member_reserve in (0, 6):
                 preferred_policy(
                     max_preferred, policy_data, max_group_size, member_reserve)
+
+
+def _create_simple_belbin_preferences() -> PolicyData:
+    """Create some policy data for simple belbin preferences."""
+    data = {}
+    for i in range(20):
+        user = User(UserKey(int=i), "user-%02d" % i)
+        if i == 7:
+            data[user] = UserPreferences()
+        else:
+            if i == 11:
+                answers = cast(SimpleBelbinAnswer, (0,) * 4)
+            else:
+                answers = cast(
+                    SimpleBelbinAnswer,
+                    tuple(random.randint(0, 3) for _ in range(8)))
+            data[user] = SimpleBelbinPreferences(answers)
+    return cast(PolicyData, data)
+
+
+def test_build_simple_belbin_rating_data() -> None:
+    """Policy data is a function of user key to set of preferred user keys."""
+    policy_data = _create_simple_belbin_preferences()
+    rating_data = build_simple_belbin_rating_data(policy_data)
+    for _, answers in rating_data.items():
+        assert len(answers) == 8
+        for answer in answers:
+            assert 0 <= answer <= 3
+
+
+def test_simple_belbin_policy() -> None:
+    """The single preferred strategy will produce some result."""
+    policy_data = _create_simple_belbin_preferences()
+    for max_group_size in (4, ):
+        for member_reserve in (0, 6):
+            simple_belbin_policy(policy_data, max_group_size, member_reserve)
 
 
 def test_create_policy() -> None:
