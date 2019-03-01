@@ -28,7 +28,9 @@
 </div>
 {{- render_data("Name", grouping.name) }}
 {{- render_data("Final Date", grouping.final_date|datetimeformat("iso-short")) }}
+{% if grouping.note %}
 {{- render_data("Note", grouping.note) }}
+{% endif %}
 <form method="post" action="{{ url_for('grouping_register', grouping_key=grouping.key) }}">
 {{- form.csrf_token }}
 {% if form_template %}{% include form_template %}{% endif %}
