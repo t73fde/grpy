@@ -109,6 +109,8 @@ POLICY_FUNCS: Dict[str, POLICY] = {
     'RD': random_policy,
     'ID': identity_policy,
     'P1': functools.partial(preferred_policy, 1),
+    'P2': functools.partial(preferred_policy, 2),
+    'P3': functools.partial(preferred_policy, 3),
 }
 
 

@@ -41,38 +41,45 @@ class EmptyPolicyForm(RegistrationForm):
         return UserPreferences()
 
 
-class PreferredPolicyForm(RegistrationForm):
-    """Form for preferred user(s)."""
+def create_preferred_policy_form(num_entries: int):
+    """Class factory."""
 
-    TEMPLATE = "policies/preferred.html"
+    class PreferredPolicyForm(RegistrationForm):
+        """Form for preferred user(s)."""
 
-    idents = FieldList(
-        StringField("Ident", filters=[lambda s: s.strip() if s else None]),
-        min_entries=1, max_entries=1)
+        TEMPLATE = "policies/preferred.html"
 
-    @classmethod
-    def create(cls, preferences) -> RegistrationForm:
-        """Create a filled form."""
-        if not isinstance(preferences, PreferredPreferences):
-            return cls()
-        preferred = list(filter(
-            None, cast(PreferredPreferences, preferences).preferred))
-        if not preferred:
-            return cls()
-        return cls(idents=preferred[:1])
+        idents = FieldList(
+            StringField("Ident", filters=[lambda s: s.strip() if s else None]),
+            min_entries=num_entries, max_entries=num_entries)
 
-    def get_user_preferences(self) -> UserPreferences:
-        """Read user preferences from form."""
-        idents = [ident for ident in self.idents.data if ident]
-        if idents:
-            return PreferredPreferences(idents)
-        return PreferredPreferences([])
+        @classmethod
+        def create(cls, preferences) -> RegistrationForm:
+            """Create a filled form."""
+            if not isinstance(preferences, PreferredPreferences):
+                return cls()
+            preferred = list(filter(
+                None, cast(PreferredPreferences, preferences).preferred))
+            if not preferred:
+                return cls()
+            return cls(idents=preferred[:num_entries])
+
+        def get_user_preferences(self) -> UserPreferences:
+            """Read user preferences from form."""
+            idents = [ident for ident in self.idents.data if ident]
+            if idents:
+                return PreferredPreferences(idents)
+            return PreferredPreferences([])
+
+    return PreferredPolicyForm
 
 
 POLICIES: Tuple[Tuple[str, str, Type[RegistrationForm]], ...] = (
     ('RD', "Random", EmptyPolicyForm),
     ('ID', "Identity", EmptyPolicyForm),
-    ('P1', "Single Preference", PreferredPolicyForm),
+    ('P1', "Single Preference", create_preferred_policy_form(1)),
+    ('P2', "Double Preference", create_preferred_policy_form(2)),
+    ('P3', "Triple Preference", create_preferred_policy_form(3)),
 )
 POLICY_META = [(code, name) for (code, name, _) in POLICIES]
 POLICY_NAMES = dict(POLICY_META)
