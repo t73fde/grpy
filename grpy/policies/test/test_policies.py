@@ -17,17 +17,12 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Tests for the grouping policies."""
+"""Tests for common grouping policies."""
 
-import random
 from typing import Set, cast
 
-from .. import (
-    PreferredPreferences, SimpleBelbinAnswer, SimpleBelbinPreferences,
-    build_preferred_rating_data, build_simple_belbin_rating_data,
-    get_policy, identity_policy, preferred_policy, random_policy,
-    simple_belbin_policy)
-from ...models import Groups, PolicyData, User, UserKey, UserPreferences
+from .. import get_policy, identity_policy, random_policy
+from ...models import Groups, User, UserKey, UserPreferences
 
 
 def assert_members_and_sizes(
@@ -79,79 +74,6 @@ def test_random_policy() -> None:
             groups = random_policy(data, max_group_size, member_reserve)
             users = cast(Set[UserKey], {user.key for user in data})
             assert_members_and_sizes(groups, users, max_group_size)
-
-
-def _create_preferred_preferences(max_preferred: int) -> PolicyData:
-    """Create some policy data for single preferred preferences."""
-    data = {}
-    for i in range(20):
-        preferred = [
-            "user-%02d" % ((i + 2 * (j + 1)) % 20) for j in range(max_preferred)]
-        data[User(UserKey(int=i), "user-%02d" % i)] = PreferredPreferences(preferred)
-    return cast(PolicyData, data)
-
-
-def test_build_preferred_rating_data() -> None:
-    """Policy data is a function of user key to set of preferred user keys."""
-    for max_preferred in range(1, 9):
-        policy_data = _create_preferred_preferences(max_preferred)
-        rating_data = build_preferred_rating_data(policy_data, max_preferred)
-        for user_key, preferred_set in rating_data.items():
-            even = user_key.int % 2 == 0
-            for preferred_key in preferred_set:
-                assert even == (preferred_key.int % 2 == 0)
-
-        user, _ = policy_data.popitem()
-        assert user.key is not None
-        policy_data[user] = UserPreferences()
-        rating_data = build_preferred_rating_data(policy_data, max_preferred)
-        assert rating_data[user.key] == set()
-
-
-def test_single_preferred_policy() -> None:
-    """The single preferred strategy will produce some result."""
-    for max_preferred in (1, 2, 5):
-        policy_data = _create_preferred_preferences(max_preferred)
-        for max_group_size in (1, 2, 4):
-            for member_reserve in (0, 6):
-                preferred_policy(
-                    max_preferred, policy_data, max_group_size, member_reserve)
-
-
-def _create_simple_belbin_preferences() -> PolicyData:
-    """Create some policy data for simple belbin preferences."""
-    data = {}
-    for i in range(20):
-        user = User(UserKey(int=i), "user-%02d" % i)
-        if i == 7:
-            data[user] = UserPreferences()
-        else:
-            if i == 11:
-                answers = cast(SimpleBelbinAnswer, (0,) * 4)
-            else:
-                answers = cast(
-                    SimpleBelbinAnswer,
-                    tuple(random.randint(0, 3) for _ in range(8)))
-            data[user] = SimpleBelbinPreferences(answers)
-    return cast(PolicyData, data)
-
-
-def test_build_simple_belbin_rating_data() -> None:
-    """Policy data is a function of user key to set of preferred user keys."""
-    policy_data = _create_simple_belbin_preferences()
-    rating_data = build_simple_belbin_rating_data(policy_data)
-    for _, answers in rating_data.items():
-        assert len(answers) == 8
-        for answer in answers:
-            assert 0 <= answer <= 3
-
-
-def test_simple_belbin_policy() -> None:
-    """The single preferred strategy will produce some result."""
-    policy_data = _create_simple_belbin_preferences()
-    for max_group_size in (4, ):
-        for member_reserve in (0, 6):
-            simple_belbin_policy(policy_data, max_group_size, member_reserve)
 
 
 def test_create_policy() -> None:
