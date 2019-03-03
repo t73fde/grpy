@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2019 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -17,14 +17,21 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Default configuration."""
+"""Entry point of web access layer for gunicorn."""
 
-import platform
+import logging
+
+from grpy.web.app import create_app  # noqa: F401
 
 
-SECRET_KEY = "".join(tuple(platform.uname()._asdict().values()) +
-                     platform.python_build())
+def create_application():
+    """Create a WSGI application for use with Gunicorn."""
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    grpy_app = create_app({
+        'LOG_LEVEL': gunicorn_logger.level,
+        'LOG_HANDLERS': gunicorn_logger.handlers,
+    })
+    return grpy_app
 
-REPOSITORY = "ram://"
 
-LOG_LEVEL = "NOTSET"
+app = create_application()  # pylint: disable=invalid-name

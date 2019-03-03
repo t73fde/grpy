@@ -63,6 +63,27 @@ class GrpyApp(Flask):
                 continue
             self.config[key] = new_value
 
+    def _set_log_level(self, log_level: Any) -> None:
+        """Set the log level to a specific value."""
+        if log_level is None:
+            return
+        if isinstance(log_level, int):
+            self.logger.setLevel(log_level)  # pylint: disable=no-member
+            return
+        if not isinstance(log_level, str):
+            return
+        if log_level.isdigit():
+            self.logger.setLevel(int(log_level))  # pylint: disable=no-member
+            return
+        self.logger.setLevel(log_level.upper())  # pylint: disable=no-member
+
+    def setup_logging(self) -> None:
+        """Setup application logging."""
+        self._set_log_level(self.config.get('LOG_LEVEL'))
+        log_handlers = self.config.get('LOG_HANDLERS')
+        if log_handlers:
+            self.logger.handlers = log_handlers
+
     def setup_repository(self) -> None:
         """Add a repository to the application."""
         self._repository = create_repository(self.config['REPOSITORY'])
@@ -177,6 +198,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     """Create a new web application."""
     app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
+    app.setup_logging()
     app.setup_repository()
     app.setup_user_handling()
     app.setup_babel()
