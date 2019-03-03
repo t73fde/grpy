@@ -21,7 +21,9 @@
 
 import logging
 
-from grpy.web.app import create_app  # noqa: F401
+from grpy.web.app import create_app
+
+from .prefix_middleware import PrefixMiddleware
 
 
 def create_application():
@@ -31,7 +33,7 @@ def create_application():
         'LOG_LEVEL': gunicorn_logger.level,
         'LOG_HANDLERS': gunicorn_logger.handlers,
     })
-    return grpy_app
+    return PrefixMiddleware(grpy_app, "/grpy")
 
 
 app = create_application()  # pylint: disable=invalid-name
