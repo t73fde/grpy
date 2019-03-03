@@ -37,6 +37,7 @@ class PrefixMiddleware:  # pylint: disable=too-few-public-methods
             self.prefix = self.prefix + "/"
 
     def __call__(self, environ, start_response):
+        """Execute the WSGI call."""
         script = environ.get("PATH_INFO", "")
         if script.startswith(self.prefix):
             environ["SCRIPT_NAME"] = environ.get('SCRIPT_NAME', "") + self.prefix[:-1]
