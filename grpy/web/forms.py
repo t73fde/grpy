@@ -112,3 +112,10 @@ class RemoveRegistrationsForm(FlaskForm):
     """
 
     submit_remove = SubmitField("Remove")
+
+
+class RemoveGroupsForm(FlaskForm):
+    """Form to remove the formed groups."""
+
+    submit_remove = SubmitField("Remove")
+    submit_cancel = SubmitField("Cancel")

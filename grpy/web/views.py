@@ -179,19 +179,29 @@ def grouping_detail(grouping_key: GroupingKey):
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
-    can_delete = not user_registrations
+    group_list = _get_group_list(grouping.key)
+    if group_list:
+        user_registrations = []
+    can_delete = not user_registrations and not group_list
     can_start = grouping.can_grouping_start() and user_registrations
-    group_list = []
-    for group in get_connection().get_groups(grouping.key):
-        group_list.append(
-            sorted(
-                cast(User, get_connection().get_user(member)).ident
-                for member in group))
     return render_template(
         "grouping_detail.html",
         grouping=grouping, group_list=group_list,
         user_registrations=user_registrations,
         can_delete=can_delete, can_start=can_start, form=form)
+
+
+def _get_group_list(grouping_key: GroupingKey) -> List[List[str]]:
+    """Return a list of list of user idents, sorted by user ident."""
+    # This could be a good candidate for a new repository method
+    # (because of the many requests for the user idents)
+    group_list = []
+    for group in get_connection().get_groups(grouping_key):
+        group_list.append(
+            sorted(
+                cast(User, get_connection().get_user(member)).ident
+                for member in group))
+    return group_list
 
 
 @login_required
@@ -289,3 +299,25 @@ def grouping_start(grouping_key: GroupingKey):
     return render_template(
         "grouping_start.html",
         grouping=grouping, registration_count=len(user_registrations), form=form)
+
+
+@login_required
+def grouping_remove_groups(grouping_key: GroupingKey):
+    """Remove formed groups."""
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
+    if g.user.key != grouping.host_key:
+        abort(403)
+    group_list = _get_group_list(grouping.key)
+    if not group_list:
+        flash("No groups to remove.", category="info")
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
+    form = forms.RemoveGroupsForm()
+    if form.validate_on_submit():
+        if form.submit_remove.data:
+            get_connection().set_groups(grouping.key, ())
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
+    return render_template(
+        "grouping_remove_groups.html",
+        grouping=grouping, group_list=group_list, form=form)
