@@ -78,7 +78,7 @@ class GrpyApp(Flask):
         self.logger.setLevel(log_level.upper())  # pylint: disable=no-member
 
     def setup_logging(self) -> None:
-        """Setup application logging."""
+        """Set-up application logging."""
         self._set_log_level(self.config.get('LOG_LEVEL'))
         log_handlers = self.config.get('LOG_HANDLERS')
         if log_handlers:

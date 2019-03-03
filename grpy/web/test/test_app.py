@@ -19,6 +19,7 @@
 
 """Test the web application object itself."""
 
+import logging
 import os
 import unittest.mock
 
@@ -54,6 +55,25 @@ def test_env_config(monkeypatch) -> None:
     monkeypatch.setitem(os.environ, 'TESTING', "True")
     assert "dummy:" in create_app()._repository.url
 # pylint: enable=protected-access
+
+
+def _check_log_level(log_level, expected: int) -> None:
+    """Check that log level was set."""
+    app = create_app({'LOG_LEVEL': log_level})
+    assert app.logger.level == expected  # pylint: disable=no-member
+
+
+def test_setup_logging() -> None:
+    """Test the various ways to setup logging."""
+    assert create_app().logger.level == 0  # pylint: disable=no-member
+    _check_log_level([], 0)
+    _check_log_level(7, 7)
+    _check_log_level("99", 99)
+    _check_log_level("INFO", logging.INFO)
+
+    assert create_app().logger.handlers == []
+    handlers = [logging.NullHandler()]
+    assert create_app({'LOG_HANDLERS': handlers}).logger.handlers == handlers
 
 
 def test_check_password(app, monkeypatch) -> None:
