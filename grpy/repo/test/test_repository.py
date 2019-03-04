@@ -33,6 +33,7 @@ from ... import utils
 from ...models import (
     Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey,
     UserPreferences)
+from ...preferences import register_preferences
 
 # pylint: disable=redefined-outer-name
 
@@ -400,6 +401,9 @@ class Prefs(UserPreferences):
     """Test-Class to have some other preferences."""
 
     position: int
+
+
+register_preferences('tstP', Prefs)
 
 
 def test_get_registration(connection: Connection, grouping: Grouping) -> None:

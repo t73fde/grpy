@@ -28,6 +28,7 @@ import pytest
 from ..base import Connection, DuplicateKey
 from ..logic import decode_preferences, encode_preferences, set_grouping_new_code
 from ...models import Grouping, UserPreferences
+from ...preferences import get_code, register_preferences
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:
@@ -79,8 +80,20 @@ class AnotherPersonalityPreferences(UserPreferences):
     personality: Tuple[int, int, int, int]
 
 
+register_preferences('tstr', RealPreferences)
+register_preferences('tstp', PersonalityPreferences)
+register_preferences('tsta', AnotherPersonalityPreferences)
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class NotPreferences(UserPreferences):
+    """Not registered preferences."""
+
+
 def test_preference_conversion() -> None:
     """Check that UserPreferences are converted to JSON and back."""
+
+    assert encode_preferences(NotPreferences()) is None
 
     empty = UserPreferences()
     real = RealPreferences(("u1", "u2", "u3"))
@@ -89,6 +102,7 @@ def test_preference_conversion() -> None:
 
     for preference in (empty, real, personality, personality_2):
         encoded = encode_preferences(preference)
+        assert encoded is not None
         assert encoded != ""
         decoded = decode_preferences(encoded)
         assert decoded == preference
@@ -98,10 +112,8 @@ def test_decode_error() -> None:
     """Check for handle invalid data to be encoded gracefully."""
     assert decode_preferences("") is None
     assert decode_preferences("{}") is None
-    assert decode_preferences('{"type": ["grpy.models", "abcxyz"]}') is None
-    assert decode_preferences('{"type": ["grpy.models", "User"]}') is None
+    assert decode_preferences('{"code": "abcxyz"}') is None
+    code = get_code(RealPreferences(("u1", "u2", "u3")))
+    assert code is not None
     assert decode_preferences(
-        '{"type": ["grpy.repo.test.test_logic", "RealPreferences"]}') is None
-    assert decode_preferences(
-        '{"type": ["grpy.repo.test.test_logic", "RealPreferences"],'
-        '"fields": {"f": "V"}}') is None
+        '{"code": "' + code + '", "fields": {"f": "V"}}') is None
