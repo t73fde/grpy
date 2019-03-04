@@ -275,17 +275,25 @@ def grouping_start(grouping_key: GroupingKey):
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
+
     if not grouping.can_grouping_start():
         flash(
             "Grouping for '{}' must be after the final date.".format(
                 grouping.name),
             category="warning")
-        return redirect(url_for('home'))
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
     user_registrations = utils.LazyList(
         get_connection().iter_user_registrations_by_grouping(grouping.key))
     if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),
               category="warning")
+        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
+    groups = get_connection().get_groups(grouping_key)
+    if groups:
+        flash("Groups for {} already build.".format(grouping.name),
+              category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     form = forms.StartGroupingForm()
@@ -316,6 +324,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     if form.validate_on_submit():
         if form.submit_remove.data:
             get_connection().set_groups(grouping.key, ())
+            flash("Groups removed.", category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     return render_template(

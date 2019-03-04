@@ -478,10 +478,12 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     assert client.get(url).status_code == 403
     assert client.post(url).status_code == 403
 
+    location_url = "http://localhost" + url_for(
+        'grouping_detail', grouping_key=app_grouping.key)
     auth.login('host')
     response = client.get(url)
     assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
+    assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Grouping for '{}' must be after the final date.".format(
             app_grouping.name))]
@@ -493,8 +495,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
         final_date=utils.now() - datetime.timedelta(seconds=1)))
     response = client.get(url)
     assert response.status_code == 302
-    assert response.headers['Location'] == \
-        "http://localhost" + url_for('grouping_detail', grouping_key=new_grouping.key)
+    assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "No registrations for '{}' found.".format(new_grouping.name))]
     client.get(url_for('home'))  # Clear flashes
@@ -507,6 +508,13 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     data = response.data.decode('utf-8')
     assert "Start" in data
+
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    response = client.get(url)
+    assert response.status_code == 302
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Groups for {} already build.".format(app_grouping.name))]
+    client.get(url_for('home'))  # Clear flashes
 
 
 def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
@@ -598,3 +606,46 @@ def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) 
             other_users.remove(member)
     assert users[0].key not in other_users
     assert other_users == set()
+
+
+def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
+    """Groups can be removed after building them."""
+    url = url_for('grouping_remove_groups', grouping_key=app_grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    location_url = "http://localhost" + url_for(
+        'grouping_detail', grouping_key=app_grouping.key)
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "No groups to remove.")]
+    client.get(url_for('home'))  # Clear flashes
+
+    user = app.get_connection().get_user_by_ident("user")
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    response = client.get(url)
+    assert response.status_code == 200
+
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert '_flashes' not in get_session_data(app, response)
+
+    response = client.post(url, data={'submit_remove': "submit_remove"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Groups removed.")]
+    client.get(url_for('home'))  # Clear flashes
+    assert app.get_connection().get_groups(app_grouping.key) == ()
