@@ -182,6 +182,29 @@ def test_set_grouping_exception(monkeypatch) -> None:
         connection.set_grouping(dataclasses.replace(grouping_2, code=grouping_1.code))
 
 
+class NotRegistered(UserPreferences):  # pylint: disable=too-few-public-methods
+    """A preferences class that is not registered (and cannot be encoded)."""
+
+
+def test_set_registration() -> None:
+    """A registration preference that can't be encoded."""
+    connection = get_connection()
+    host = connection.set_user(User(None, "host", Permissions.HOST))
+    assert host.key is not None
+    grouping = connection.set_grouping(make_grouping("code", host.key))
+    assert grouping.key is not None
+    user = connection.set_user(User(None, "UsER"))
+    assert user.key is not None
+
+    registration = Registration(grouping.key, user.key, NotRegistered())
+    connection.set_registration(registration)
+    messages = connection.get_messages()
+    assert len(messages) == 1
+    assert messages[0].category == 'critical'
+    assert messages[0].text.startswith("Unable to store preferences of type ")
+    assert connection.get_registration(grouping.key, user.key) is None
+
+
 def test_get_registration() -> None:
     """An inserted modified registration can't be retrieved."""
     connection = get_connection()

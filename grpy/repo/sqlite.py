@@ -170,10 +170,15 @@ class SqliteConnection(Connection):
     def __init__(self, connection):
         """Initialize the connection."""
         self._connection = connection
+        self._messages: List[Message] = []
+
+    def _add_message(self, category: str, text: str) -> None:
+        """Add a new message."""
+        self._messages.append(Message(category, text))
 
     def get_messages(self, _delete: bool = False) -> Sequence[Message]:
         """Return all connection-related messages."""
-        return []
+        return self._messages
 
     def close(self, success: bool):
         """Close the connection."""
@@ -329,6 +334,13 @@ class SqliteConnection(Connection):
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         encoded = encode_preferences(registration.preferences)
+        if encoded is None:
+            self._add_message(
+                'critical',
+                "Unable to store preferences of type {}. "
+                "Please consult your administrator.".format(
+                    type(registration.preferences)))
+            return registration
         cursor = self._execute(
             "SELECT preferences FROM registrations WHERE grouping_key=? AND user_key=?",
             (registration.grouping_key, registration.user_key))
