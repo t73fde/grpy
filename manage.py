@@ -27,7 +27,7 @@ Provides commands for static and dynamic tests.
 import pathlib
 import re
 import subprocess  # nosec
-from typing import List, Sequence, Tuple
+from typing import List, Sequence, Tuple, cast
 
 import click
 
@@ -59,7 +59,7 @@ def exec_subprocess(args: Sequence[str], verbose: int):
 def run_subprocess(args: Sequence[str], verbose: int) -> bool:
     """Run a subprocess with the given args and report error messages."""
     process = exec_subprocess(args, verbose)
-    return process.returncode == 0
+    return cast(int, process.returncode) == 0
 
 
 def lint_formatting(source_paths: List[str], verbose: int) -> bool:
@@ -70,7 +70,7 @@ def lint_formatting(source_paths: List[str], verbose: int) -> bool:
         click.echo(process.stdout)
         click.echo("-- please format source code")
         return False
-    return process.returncode == 0
+    return cast(int, process.returncode) == 0
 
 
 def lint_flake8(source_paths: List[str], verbose: int) -> bool:
@@ -153,13 +153,27 @@ def lint(ctx, verbose: int) -> None:
 
 
 @main.command()
+@click.argument('directory', required=False)
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def coverage(ctx, verbose: int) -> None:
+def coverage(ctx, directory: str, verbose: int) -> None:
     """Perform a full test with coverage measurement."""
     verbose += ctx.obj['verbose']
-    if not run_coverage(["grpy"], "grpy", verbose):
-        ctx.exit(1)
+    if directory is None:
+        if not run_coverage(["grpy"], "grpy", verbose):
+            ctx.exit(1)
+    else:
+        files, packages = collect_files_and_packages()
+        if directory == "grpy":
+            if not run_coverage(files, "grpy/test", verbose):
+                ctx.exit(1)
+        elif directory in packages:
+            if not run_coverage([directory], directory, verbose):
+                ctx.exit(1)
+        else:
+            click.echo("Unknown directory '{}'. Must be one of {}".format(
+                directory, sorted(["grpy"] + packages)))
+            ctx.exit(1)
 
 
 def valid_directory(directory_path) -> bool:
@@ -173,6 +187,11 @@ def valid_directory(directory_path) -> bool:
 
 def collect_files_and_packages() -> Tuple[List[str], List[str]]:
     """Scan subdirectores and collect needed files and packages."""
+    no_python_dir = {
+        "grpy/web/templates",
+        "grpy/web/static",
+    }
+
     packages = []
     files = []
     for path in pathlib.Path("grpy").glob('**/*'):
@@ -180,7 +199,7 @@ def collect_files_and_packages() -> Tuple[List[str], List[str]]:
         if name.startswith("."):
             continue
         if path.is_dir():
-            if valid_directory(path):
+            if valid_directory(path) and str(path) not in no_python_dir:
                 packages.append(str(path))
         elif len(path.parts) == 2 and path.is_file():
             if path.suffix == ".py" and name != "__init__.py":
@@ -196,20 +215,13 @@ def collect_files_and_packages() -> Tuple[List[str], List[str]]:
 def full_coverage(ctx, verbose: int) -> None:
     """Perform a full test with coverage measurement, for all packages."""
     verbose += ctx.obj['verbose']
-    no_python_dir = {
-        "grpy/web/templates",
-        "grpy/web/static",
-    }
-
     files, packages = collect_files_and_packages()
     if not run_coverage(files, "grpy/test", verbose):
         ctx.exit(1)
     for directory in packages:
-        if directory in no_python_dir:
-            continue
         if not run_coverage([directory], directory, verbose):
             ctx.exit(1)
-    ctx.invoke(coverage, verbose=verbose)
+    ctx.invoke(coverage, directory=None, verbose=verbose)
 
 
 @main.command()
@@ -237,6 +249,7 @@ def check(ctx, verbose: int) -> None:
 def full_check(ctx, verbose: int) -> None:
     """Perform a full check: lint and full-coverage."""
     ctx.invoke(lint, verbose=verbose)
+    ctx.invoke(types, verbose=verbose)
     ctx.invoke(full_coverage, verbose=verbose)
     ctx.invoke(outdated, verbose=verbose)
 
