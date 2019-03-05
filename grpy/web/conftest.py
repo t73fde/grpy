@@ -17,7 +17,7 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Fixtures fpr testing."""
+"""Fixtures for testing the web application."""
 
 import os
 import tempfile
@@ -27,17 +27,19 @@ from flask import url_for
 
 import pytest
 
-from .models import Grouping, Permissions, User
-from .repo import create_repository
-from .repo.logic import set_grouping_new_code
-from .utils import now
-from .web.app import create_app
+from .app import create_app
+from ..models import Grouping, Permissions, User
+from ..repo.logic import set_grouping_new_code
+from ..utils import now
 
 
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(params=["ram:", "sqlite:", "sqlite:///"])
+@pytest.fixture(params=[
+    "ram:",
+    pytest.param("sqlite:", marks=pytest.mark.safe),
+    pytest.param("sqlite:///", marks=pytest.mark.safe)])
 def app(request):
     """Create an app as fixture."""
     if request.param == "sqlite:///":
@@ -86,41 +88,6 @@ class AuthenticationActions:
 def auth(client) -> AuthenticationActions:
     """Fixture for authentication."""
     return AuthenticationActions(client)
-
-
-@pytest.fixture(params=["dummy:", "ram:", "sqlite:", "sqlite:///"])
-def connection(request):
-    """Provide an open connection."""
-    if request.param == "sqlite:///":
-        temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
-        temp_file.close()
-        repository = create_repository("sqlite://" + temp_file.name)
-    else:
-        repository = create_repository(request.param)
-        temp_file = None
-        assert repository.url == request.param
-    repository.initialize()
-
-    connection = repository.create()
-    yield connection
-
-    assert not connection.get_messages()
-    connection.close(True)
-    if temp_file:
-        os.unlink(temp_file.name)
-
-
-@pytest.fixture
-def grouping(connection) -> Grouping:
-    """Build a simple grouping object."""
-    host = connection.get_user_by_ident("host")
-    if not host:
-        host = connection.set_user(User(None, "host", Permissions.HOST))
-
-    yet = now()
-    return Grouping(
-        None, ".code", "g-name", host.key, yet - timedelta(days=1),
-        yet + timedelta(days=6), None, "RD", 7, 7, "")
 
 
 @pytest.fixture

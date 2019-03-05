@@ -21,6 +21,8 @@
 
 from typing import cast
 
+import pytest
+
 from ..preferred import (
     PreferredPreferences, build_preferred_rating_data, preferred_policy)
 from ...models import PolicyData, User, UserKey, UserPreferences
@@ -53,6 +55,7 @@ def test_build_preferred_rating_data() -> None:
         assert rating_data[user.key] == set()
 
 
+@pytest.mark.slow
 def test_single_preferred_policy() -> None:
     """The single preferred strategy will produce some result."""
     for max_preferred in (1, 2, 5):
