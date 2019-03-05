@@ -36,9 +36,6 @@
 {% if form_template %}{% include form_template %}{% endif %}
 <div class="w3-panel">
 {{- form.submit_register(class="w3-btn " + color("primary")) }}
-{% if registration %}
-{{- form.submit_deregister(class="w3-btn " + color("danger")) }}
-{% endif %}
 </div>
 </form>
 <div class="w3-container"></div>

@@ -91,7 +91,6 @@ class RegistrationForm(FlaskForm):
     """Base form for all registrations."""
 
     submit_register = SubmitField("Register")
-    submit_deregister = SubmitField("De-Register")
 
     @classmethod
     def create(cls, preferences) -> 'RegistrationForm':

@@ -246,27 +246,20 @@ def grouping_register(grouping_key: GroupingKey):
 
     form = get_registration_form(grouping.policy, registration)
     if form.validate_on_submit():
-        if form.submit_register.data:
-            user_preferences = form.get_user_preferences()
-            get_connection().set_registration(
-                Registration(grouping.key, g.user.key, user_preferences))
-            if registration:
-                flash("Registration for '{}' is updated.".format(grouping.name),
-                      category="info")
-            else:
-                flash("Registration for '{}' is stored.".format(grouping.name),
-                      category="info")
-        elif registration and form.submit_deregister.data:
-            get_connection().delete_registration(
-                registration.grouping_key, registration.user_key)
-            flash("Registration for '{}' is removed.".format(grouping.name),
+        user_preferences = form.get_user_preferences()
+        get_connection().set_registration(
+            Registration(grouping.key, g.user.key, user_preferences))
+        if registration:
+            flash("Registration for '{}' is updated.".format(grouping.name),
+                  category="info")
+        else:
+            flash("Registration for '{}' is stored.".format(grouping.name),
                   category="info")
         return redirect(url_for('home'))
     form_template = getattr(form, "TEMPLATE", None)
     return render_template(
         "grouping_register.html",
-        grouping=grouping, registration=registration,
-        form=form, form_template=form_template)
+        grouping=grouping, form=form, form_template=form_template)
 
 
 @login_required

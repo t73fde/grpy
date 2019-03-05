@@ -442,28 +442,6 @@ def test_grouping_register_out_of_time(
             app_grouping.name))]
 
 
-def test_grouping_deregister(app, client, auth, app_grouping: Grouping) -> None:
-    """Check de-registrations."""
-    assert app_grouping.key is not None
-    url = url_for('grouping_register', grouping_key=app_grouping.key)
-    auth.login('student')
-
-    response = client.post(url, data={'submit_deregister': "submit_deregister"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert '_flashes' not in get_session_data(app, response)
-
-    app.get_connection().set_registration(Registration(
-        app_grouping.key,
-        app.get_connection().get_user_by_ident('student').key,
-        UserPreferences()))
-    response = client.post(url, data={'submit_deregister': "submit_deregister"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is removed.".format(app_grouping.name))]
-
-
 def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     """Test group building view."""
     url = url_for('grouping_start', grouping_key=app_grouping.key)
