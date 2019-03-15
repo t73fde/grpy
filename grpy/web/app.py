@@ -43,16 +43,16 @@ class GrpyApp(Flask):
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
+        self.config.from_pyfile("config.py")  # type: ignore
         if config_mapping:
-            self.config.from_mapping(  # type: ignore
-                SECRET_KEY="dev",
-                REPOSITORY="ram://",
-                WTF_CSRF_ENABLED=False,
-            )
+            if config_mapping.get('TESTING', False):
+                self.config.from_mapping(  # type: ignore
+                    SECRET_KEY="dev",
+                    REPOSITORY="ram://",
+                    WTF_CSRF_ENABLED=False,
+                )
             self.config.from_mapping(config_mapping)  # type: ignore
-        else:
-            self.config.from_pyfile("config.py")  # type: ignore
-            self.config.from_envvar("GRPY_CONFIG", silent=True)  # type: ignore
+        self.config.from_envvar("GRPY_CONFIG", silent=True)  # type: ignore
         for key, value in self.config.items():
             new_value = os.environ.get(key, None)
             if new_value is None:

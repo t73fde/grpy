@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 #    Copyright (c) 2019 Detlef Stern
 #
@@ -17,28 +19,9 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-FROM python:3.7-alpine
-ARG VERSION
-ENV BASE_NAME=grpy-$VERSION
-ENV TAR_NAME=$BASE_NAME.tar.gz
-COPY dist/$TAR_NAME /
-RUN set -ex \
- && apk update \
- && pip install -U pip \
- && pip install /$TAR_NAME \
- && cd /usr/src \
- && tar xfz /$TAR_NAME \
- && rm /$TAR_NAME \
- && mv $BASE_NAME grpy \
- && rm -rf grpy/grpy \
- && addgroup grpy \
- && adduser -D -H -G grpy grpy \
- && mkdir db \
- && rm -rf /root/.cache /root/.local /root/.virtualenvs \
- && rm -rf /var/cache/apk/* \
- && unset TAR_NAME BASE_NAME
-
-# USER nobody
-WORKDIR /
-ENV GRPY_CONFIG=/usr/src/grpy.cfg
-CMD ["/usr/src/grpy/deploy/run.sh"]
+cd /usr/src
+chown -R grpy:grpy grpy
+chown grpy:grpy .
+chown -R grpy db
+cd /usr/src/grpy
+exec su grpy -c 'gunicorn -b 0.0.0.0:8000 -w 3 deploy.wsgi_gunicorn:app'

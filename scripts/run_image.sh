@@ -19,4 +19,9 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-sudo docker run --rm -it --link winauth -p 127.0.0.1:8000:8000 grpy
+sudo docker run --rm -it \
+  --link winauth \
+  -p 127.0.0.1:8000:8000 \
+  -v "$(pwd)/deploy/docker.cfg":/usr/src/grpy.cfg:ro \
+  -v "$(pwd)/db.db":/usr/src/db/grpy.sqlite \
+  grpy
