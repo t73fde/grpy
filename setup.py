@@ -90,8 +90,6 @@ def create_version_txt() -> None:
         split_version = raw_version.split("-")
         setup_version = ".".join(split_version[:2])
         setup_version = re.sub(r"\.0(\d)", lambda m: "." + m.group(1), setup_version)
-        if len(split_version) > 2:
-            setup_version = setup_version + "+" + ".".join(split_version[2:])
 
         version_file.write(setup_version)
         version_file.write("\n")
@@ -112,6 +110,8 @@ if __name__ == "__main__":
         long_description=README,
         version=VERSION,
         packages=find_packages(),
+        include_package_data=True,
+        zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         python_requires='>=3.6',
         license="AGPL3",

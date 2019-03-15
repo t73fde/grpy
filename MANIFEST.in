@@ -18,9 +18,12 @@
 ##
 
 include COPYING
+include Pipfile
+include README.md
 include VERSION.txt
-include wsgi.py
+include manage.py
 include requirements.txt
-include grpy/web/templates/*
-include grpy/web/static/*
-recursive-include *.md
+include wsgi.py
+graft grpy/web/templates
+graft grpy/web/static
+global-exclude *.pyc
