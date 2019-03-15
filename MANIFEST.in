@@ -24,6 +24,7 @@ include VERSION.txt
 include manage.py
 include requirements.txt
 include wsgi.py
+graft deploy
 graft grpy/web/templates
 graft grpy/web/static
 global-exclude *.pyc
