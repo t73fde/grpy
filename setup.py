@@ -21,6 +21,7 @@
 """Setup script."""
 
 import os
+import re
 import subprocess  # nosec
 from typing import List
 
@@ -85,7 +86,16 @@ def create_version_txt() -> None:
     if not git_version_lines:
         return
     with open_local(VERSION_TXT, "w") as version_file:
-        version_file.write(git_version_lines[0])
+        raw_version = git_version_lines[0]
+        split_version = raw_version.split("-")
+        setup_version = ".".join(split_version[:2])
+        setup_version = re.sub(r"\.0(\d)", lambda m: "." + m.group(1), setup_version)
+        if len(split_version) > 2:
+            setup_version = setup_version + "+" + ".".join(split_version[2:])
+
+        version_file.write(setup_version)
+        version_file.write("\n")
+        version_file.write(raw_version)
         version_file.write("\n")
 
 
