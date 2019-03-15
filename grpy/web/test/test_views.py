@@ -23,15 +23,14 @@ import dataclasses  # pylint: disable=wrong-import-order
 import datetime
 from typing import Any, Dict, List, cast
 
+import pytest
 from flask import g, session, url_for
 from flask.sessions import SecureCookieSessionInterface
-
-import pytest
-
 from werkzeug.http import parse_cookie
 
 from ... import utils
-from ...models import Grouping, GroupingKey, Registration, User, UserPreferences
+from ...models import (Grouping, GroupingKey, Registration, User,
+                       UserPreferences)
 from ...repo.base import Connection
 from ...repo.logic import set_grouping_new_code
 

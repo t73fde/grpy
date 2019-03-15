@@ -24,10 +24,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..filter import FilterProxyConnection
+from ....models import (Grouping, GroupingKey, Registration, User, UserKey,
+                        UserPreferences)
 from ...base import Connection
-from ....models import (
-    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
+from ..filter import FilterProxyConnection
 
 
 class MockedFilterProxyConnection(FilterProxyConnection):

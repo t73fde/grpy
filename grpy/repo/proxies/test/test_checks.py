@@ -26,11 +26,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..check import CatchingProxyConnection, ValidatingProxyConnection
+from ....models import (Grouping, GroupingKey, Registration, User, UserKey,
+                        UserPreferences, ValidationFailed)
 from ...base import DuplicateKey, Message, NothingToUpdate
-from ....models import (
-    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences,
-    ValidationFailed)
+from ..check import CatchingProxyConnection, ValidatingProxyConnection
 
 
 class MockedValidatingProxyConnection(ValidatingProxyConnection):

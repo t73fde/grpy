@@ -22,10 +22,10 @@
 import random
 from typing import List
 
-from ..genetic import (
-    Genome, StopStrategy, build_genome, generic_genetic_policy,
-    iter_genome_count, iter_genome_set)
 from ...models import Groups, UserKey
+from ..genetic import (Genome, StopStrategy, build_genome,
+                       generic_genetic_policy, iter_genome_count,
+                       iter_genome_set)
 
 
 def userkeys(count: int) -> List[UserKey]:

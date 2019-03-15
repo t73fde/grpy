@@ -21,15 +21,14 @@
 
 import dataclasses  # pylint: disable=wrong-import-order
 import random
-from typing import (
-    Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar, cast)
+from typing import (Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar,
+                    cast)
 
-from .base import (
-    Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
-    Repository, WhereSpec)
+from ..models import (Grouping, GroupingKey, Groups, Model, Registration, User,
+                      UserKey)
+from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
+                   OrderSpec, Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
-from ..models import (
-    Grouping, GroupingKey, Groups, Model, Registration, User, UserKey)
 
 
 class RamRepositoryState:  # pylint: disable=too-few-public-methods

@@ -22,11 +22,11 @@
 from datetime import datetime
 from typing import Callable, Iterable, Optional, Sequence, cast
 
-from .base import BaseProxyConnection
+from ...models import (Grouping, GroupingKey, Groups, Registration, User,
+                       UserKey, UserPreferences)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
-from ...models import (
-    Grouping, GroupingKey, Groups, Registration, User, UserKey, UserPreferences)
+from .base import BaseProxyConnection
 
 
 class FilterProxyConnection(BaseProxyConnection):

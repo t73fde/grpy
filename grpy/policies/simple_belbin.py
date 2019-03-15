@@ -22,10 +22,9 @@
 import dataclasses  # pylint: disable=wrong-import-order
 from typing import Dict, Tuple, cast
 
+from ..models import Groups, PolicyData, UserKey, UserPreferences
 from .genetic import Genome, Rating, StopStrategy, generic_genetic_policy
 from .sizes import group_sizes
-from ..models import Groups, PolicyData, UserKey, UserPreferences
-
 
 STRONGLY_DISAGREE = 0
 DISAGREE = 1

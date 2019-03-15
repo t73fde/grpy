@@ -23,10 +23,10 @@ import functools
 import random
 from typing import Callable, Dict, List, cast
 
+from ..models import Groups, PolicyData, User, UserKey
 from .preferred import preferred_policy
 from .simple_belbin import simple_belbin_policy
 from .sizes import group_sizes
-from ..models import Groups, PolicyData, User, UserKey
 
 
 def _build_groups(

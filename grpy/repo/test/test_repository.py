@@ -26,14 +26,13 @@ from typing import List, Tuple, cast
 
 import pytest
 
+from ... import utils
+from ...models import (Grouping, GroupingKey, Groups, Permissions,
+                       Registration, User, UserKey, UserPreferences)
+from ...preferences import register_preferences
 from .. import create_repository
 from ..base import Connection, DuplicateKey
 from ..ram import RamRepository
-from ... import utils
-from ...models import (
-    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey,
-    UserPreferences)
-from ...preferences import register_preferences
 
 # pylint: disable=redefined-outer-name
 

@@ -22,9 +22,9 @@
 import dataclasses  # pylint: disable=wrong-import-order
 from typing import Dict, List, Set, cast
 
+from ..models import Groups, PolicyData, UserKey, UserPreferences
 from .genetic import Genome, Rating, StopStrategy, generic_genetic_policy
 from .sizes import group_sizes
-from ..models import Groups, PolicyData, UserKey, UserPreferences
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods

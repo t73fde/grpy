@@ -23,12 +23,11 @@ import logging
 import os
 import unittest.mock
 
+import requests
 from flask import g, url_for
 
-import requests
-
-from ..app import create_app
 from ...repo.proxies.check import ValidatingProxyConnection
+from ..app import create_app
 
 
 def test_config() -> None:

@@ -25,7 +25,6 @@ from .models import UserPreferences
 from .policies.preferred import PreferredPreferences
 from .policies.simple_belbin import SimpleBelbinPreferences
 
-
 _CODE_TO_PREFERENCES = {
     'user': UserPreferences,
     'pref': PreferredPreferences,

@@ -22,19 +22,18 @@
 import dataclasses  # pylint: disable=wrong-import-order
 from typing import List, Sequence, Tuple, cast
 
-from flask import (
-    abort, current_app, flash, g, redirect, render_template, request, url_for)
+from flask import (abort, current_app, flash, g, redirect, render_template,
+                   request, url_for)
 
-from . import forms
-from .policies import get_policy_names, get_registration_form
-from .utils import (
-    login_required, login_required_redirect, make_model, update_model,
-    value_or_404)
 from .. import logic, utils
 from ..models import Grouping, GroupingKey, Registration, User, UserKey
 from ..policies import get_policy
 from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
+from . import forms
+from .policies import get_policy_names, get_registration_form
+from .utils import (login_required, login_required_redirect, make_model,
+                    update_model, value_or_404)
 
 
 def get_connection() -> Connection:

@@ -23,9 +23,9 @@ from typing import cast
 
 import pytest
 
-from ..preferred import (
-    PreferredPreferences, build_preferred_rating_data, preferred_policy)
 from ...models import PolicyData, User, UserKey, UserPreferences
+from ..preferred import (PreferredPreferences, build_preferred_rating_data,
+                         preferred_policy)
 
 
 def _create_preferred_preferences(max_preferred: int) -> PolicyData:

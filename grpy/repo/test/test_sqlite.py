@@ -29,10 +29,10 @@ from typing import cast
 
 import pytest
 
-from ..sqlite import SqliteConnection, SqliteRepository
-from ...models import (
-    Grouping, Permissions, Registration, User, UserKey, UserPreferences)
+from ...models import (Grouping, Permissions, Registration, User, UserKey,
+                       UserPreferences)
 from ...utils import now
+from ..sqlite import SqliteConnection, SqliteRepository
 
 
 def test_scheme() -> None:

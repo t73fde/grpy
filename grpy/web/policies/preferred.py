@@ -23,9 +23,9 @@ from typing import cast
 
 from wtforms.fields import FieldList, StringField
 
-from ..forms import RegistrationForm
 from ...models import UserPreferences
 from ...policies.preferred import PreferredPreferences
+from ..forms import RegistrationForm
 
 
 def create_preferred_policy_form(num_entries: int):

@@ -22,20 +22,18 @@
 import dataclasses  # pylint: disable=wrong-import-order
 import sqlite3
 from datetime import datetime
-from typing import (
-    AbstractSet, Any, Iterable, List, Optional, Sequence, Tuple, cast)
+from typing import (AbstractSet, Any, Iterable, List, Optional, Sequence,
+                    Tuple, cast)
 from urllib.parse import urlparse
 
 from pytz import utc
 
-from .base import (
-    Connection, DuplicateKey, Message, NothingToUpdate, OrderSpec,
-    Repository, WhereSpec)
+from ..models import (Grouping, GroupingKey, Groups, Permissions, Registration,
+                      User, UserKey)
+from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
+                   OrderSpec, Repository, WhereSpec)
 from .logic import decode_preferences, encode_preferences
 from .models import NamedUser, UserGroup, UserRegistration
-from ..models import (
-    Grouping, GroupingKey, Groups, Permissions, Registration, User, UserKey)
-
 
 sqlite3.register_adapter(UserKey, lambda u: u.bytes_le)
 sqlite3.register_converter('USER_KEY', lambda b: UserKey(bytes_le=b))

@@ -30,7 +30,6 @@ import subprocess  # nosec
 from typing import List, Sequence, Tuple, cast
 
 import click
-
 import requests
 
 

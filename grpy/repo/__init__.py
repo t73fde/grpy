@@ -28,7 +28,6 @@ from .proxies import ProxyRepository
 from .ram import RamRepository
 from .sqlite import SqliteRepository
 
-
 REPOSITORY_DIRECTORY: Dict[str, Type[Repository]] = {
     "ram": RamRepository,
     "sqlite": SqliteRepository,

@@ -21,16 +21,14 @@
 
 import datetime
 
-from flask import url_for
-
 import pytest
-
+from flask import url_for
 from werkzeug.exceptions import NotFound
 
-from ..utils import (
-    datetimeformat, login_required, make_model, update_model, value_or_404)
 from ...models import GroupingKey, Permissions, User, UserKey
 from ...utils import now
+from ..utils import (datetimeformat, login_required, make_model, update_model,
+                     value_or_404)
 
 
 def test_grouping_key_converter(app, client) -> None:

@@ -23,9 +23,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from ..check import CatchingProxyConnection
 from ... import ProxyRepository
 from ...ram import RamConnection, RamRepositoryState
+from ..check import CatchingProxyConnection
 
 
 class MockedProxyRepository(ProxyRepository):

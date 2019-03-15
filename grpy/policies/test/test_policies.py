@@ -21,8 +21,8 @@
 
 from typing import Set, cast
 
-from .. import get_policy, identity_policy, random_policy
 from ...models import Groups, User, UserKey, UserPreferences
+from .. import get_policy, identity_policy, random_policy
 
 
 def assert_members_and_sizes(

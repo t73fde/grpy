@@ -23,12 +23,13 @@ from typing import cast
 
 from wtforms.fields import FieldList, RadioField
 
-from ..forms import RegistrationForm
 from ...models import UserPreferences
-from ...policies.simple_belbin import (
-    AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER, DISAGREE, SIMPLE_BELBIN_ANSWER_COUNT,
-    STRONGLY_AGREE, STRONGLY_DISAGREE, SimpleBelbinAnswer,
-    SimpleBelbinPreferences)
+from ...policies.simple_belbin import (AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER,
+                                       DISAGREE, SIMPLE_BELBIN_ANSWER_COUNT,
+                                       STRONGLY_AGREE, STRONGLY_DISAGREE,
+                                       SimpleBelbinAnswer,
+                                       SimpleBelbinPreferences)
+from ..forms import RegistrationForm
 
 
 class SimpleBelbinPolicyForm(RegistrationForm):

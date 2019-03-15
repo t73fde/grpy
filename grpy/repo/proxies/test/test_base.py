@@ -23,9 +23,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from ....models import (Grouping, GroupingKey, Registration, User, UserKey,
+                        UserPreferences)
 from ..base import BaseProxyConnection
-from ....models import (
-    Grouping, GroupingKey, Registration, User, UserKey, UserPreferences)
 
 
 class MockedBaseProxyConnection(BaseProxyConnection):

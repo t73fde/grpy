@@ -21,9 +21,9 @@
 
 from typing import List, Optional
 
-from ..preferred import create_preferred_policy_form
 from ....models import UserPreferences
 from ....policies.preferred import PreferredPreferences
+from ..preferred import create_preferred_policy_form
 
 
 def assert_idents(

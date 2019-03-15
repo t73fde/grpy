@@ -20,14 +20,12 @@
 """Web forms for grpy."""
 
 from flask_wtf import FlaskForm
-
 from pytz import UTC
-
-from wtforms.fields import (
-    DateTimeField, HiddenField, IntegerField, PasswordField, SelectField,
-    StringField, SubmitField)
-from wtforms.validators import (
-    DataRequired, InputRequired, NumberRange, Optional, ValidationError)
+from wtforms.fields import (DateTimeField, HiddenField, IntegerField,
+                            PasswordField, SelectField, StringField,
+                            SubmitField)
+from wtforms.validators import (DataRequired, InputRequired, NumberRange,
+                                Optional, ValidationError)
 from wtforms.widgets import TextArea
 
 from ..models import UserPreferences

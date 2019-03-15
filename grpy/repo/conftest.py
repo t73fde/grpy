@@ -25,10 +25,9 @@ from datetime import timedelta
 
 import pytest
 
-from . import create_repository
 from ..models import Grouping, Permissions, User
 from ..utils import now
-
+from . import create_repository
 
 # pylint: disable=redefined-outer-name
 

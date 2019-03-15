@@ -23,11 +23,9 @@ import dataclasses  # pylint: disable=wrong-import-order
 from functools import wraps
 from typing import Any, Sequence, Tuple, cast
 
-from flask import (
-    abort, current_app, g, get_flashed_messages, redirect, request, url_for)
-
+from flask import (abort, current_app, g, get_flashed_messages, redirect,
+                   request, url_for)
 from flask_babel import format_datetime
-
 from werkzeug.routing import UUIDConverter
 
 from ..models import GroupingKey

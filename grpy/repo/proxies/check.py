@@ -22,12 +22,11 @@
 from datetime import datetime
 from typing import Callable, List, Sequence
 
+from ...models import (Grouping, GroupingKey, Groups, Registration, User,
+                       UserKey, UserPreferences, ValidationFailed)
+from ..base import Connection, DuplicateKey, Message, NothingToUpdate
 from .base import BaseProxyConnection
 from .filter import FilterProxyConnection
-from ..base import Connection, DuplicateKey, Message, NothingToUpdate
-from ...models import (
-    Grouping, GroupingKey, Groups, Registration, User, UserKey,
-    UserPreferences, ValidationFailed)
 
 
 class ValidatingProxyConnection(BaseProxyConnection):

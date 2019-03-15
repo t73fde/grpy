@@ -22,10 +22,10 @@
 import random
 from typing import cast
 
-from ..simple_belbin import (
-    SimpleBelbinAnswer, SimpleBelbinPreferences,
-    build_simple_belbin_rating_data, simple_belbin_policy)
 from ...models import PolicyData, User, UserKey, UserPreferences
+from ..simple_belbin import (SimpleBelbinAnswer, SimpleBelbinPreferences,
+                             build_simple_belbin_rating_data,
+                             simple_belbin_policy)
 
 
 def _create_simple_belbin_preferences() -> PolicyData:

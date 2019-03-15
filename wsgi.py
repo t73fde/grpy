@@ -21,5 +21,4 @@
 
 from grpy.web.app import create_app  # noqa: F401
 
-
 app = create_app()  # pylint: disable=invalid-name

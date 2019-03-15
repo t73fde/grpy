@@ -22,16 +22,14 @@
 import os
 from typing import Any, Dict, Optional, cast
 
+import requests
 from flask import Flask, g, make_response, render_template, session
-
 from flask_babel import Babel
 
-import requests
-
-from . import policies, utils, views
 from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
+from . import policies, utils, views
 
 
 class GrpyApp(Flask):

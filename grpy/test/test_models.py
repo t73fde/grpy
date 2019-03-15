@@ -25,9 +25,8 @@ from typing import cast
 
 import pytest
 
-from ..models import (
-    Grouping, GroupingKey, Permissions, Registration, User, UserKey,
-    UserPreferences, ValidationFailed)
+from ..models import (Grouping, GroupingKey, Permissions, Registration, User,
+                      UserKey, UserPreferences, ValidationFailed)
 from ..utils import now
 
 

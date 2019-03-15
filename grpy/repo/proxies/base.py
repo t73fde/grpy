@@ -22,10 +22,10 @@
 
 from typing import Iterable, Optional, Sequence
 
+from ...models import (Grouping, GroupingKey, Groups, Registration, User,
+                       UserKey)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
-from ...models import (
-    Grouping, GroupingKey, Groups, Registration, User, UserKey)
 
 
 class BaseProxyConnection(Connection):

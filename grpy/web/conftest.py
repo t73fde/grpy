@@ -23,15 +23,13 @@ import os
 import tempfile
 from datetime import timedelta
 
+import pytest
 from flask import url_for
 
-import pytest
-
-from .app import create_app
 from ..models import Grouping, Permissions, User
 from ..repo.logic import set_grouping_new_code
 from ..utils import now
-
+from .app import create_app
 
 # pylint: disable=redefined-outer-name
 

@@ -25,10 +25,11 @@ from unittest.mock import patch
 
 import pytest
 
-from ..base import Connection, DuplicateKey
-from ..logic import decode_preferences, encode_preferences, set_grouping_new_code
 from ...models import Grouping, UserPreferences
 from ...preferences import get_code, register_preferences
+from ..base import Connection, DuplicateKey
+from ..logic import (decode_preferences, encode_preferences,
+                     set_grouping_new_code)
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:

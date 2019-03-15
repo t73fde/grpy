@@ -23,10 +23,10 @@ import dataclasses  # pylint: disable=wrong-import-order
 import json
 from typing import Any, Optional
 
-from .base import Connection, DuplicateKey
 from ..logic import make_code
 from ..models import Grouping, UserPreferences
 from ..preferences import get_code, get_preferences
+from .base import Connection, DuplicateKey
 
 
 def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Grouping:

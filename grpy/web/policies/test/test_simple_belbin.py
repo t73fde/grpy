@@ -19,10 +19,10 @@
 
 """Tests for the grouping policy by using a simple belbin test."""
 
-from ..simple_belbin import SimpleBelbinPolicyForm
 from ....models import UserPreferences
-from ....policies.simple_belbin import (
-    DEFAULT_SIMPLE_BELBIN_ANSWER, SimpleBelbinPreferences)
+from ....policies.simple_belbin import (DEFAULT_SIMPLE_BELBIN_ANSWER,
+                                        SimpleBelbinPreferences)
+from ..simple_belbin import SimpleBelbinPolicyForm
 
 
 def test_simple_belbin_policy_form(app) -> None:  # pylint: disable=unused-argument

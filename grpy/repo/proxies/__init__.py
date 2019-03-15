@@ -19,8 +19,8 @@
 
 """Proxy reposities."""
 
-from .check import CatchingProxyConnection, ValidatingProxyConnection
 from ..base import Connection, Repository
+from .check import CatchingProxyConnection, ValidatingProxyConnection
 
 
 class ProxyRepository(Repository):
