@@ -22,8 +22,7 @@
 import logging
 
 from grpy.web.app import create_app
-
-from .prefix_middleware import PrefixMiddleware
+from grpy.web.middleware import PrefixMiddleware
 
 
 def create_application():

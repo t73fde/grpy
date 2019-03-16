@@ -54,7 +54,8 @@ def login_required_redirect(view):
     @wraps(view)
     def wrapped_view(*args, **kwargs):
         if g.user is None:
-            return redirect(url_for('login', next_url=request.path))
+            return redirect(url_for(
+                'login', next_url=request.script_root + request.path))
         return view(*args, **kwargs)
     return wrapped_view
 

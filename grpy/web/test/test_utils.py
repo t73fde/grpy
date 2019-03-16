@@ -24,11 +24,14 @@ import datetime
 import pytest
 from flask import url_for
 from werkzeug.exceptions import NotFound
+from werkzeug.test import Client
 
 from ...models import GroupingKey, Permissions, User, UserKey
 from ...utils import now
-from ..utils import (datetimeformat, login_required, make_model, update_model,
-                     value_or_404)
+from ..app import create_app
+from ..middleware import PrefixMiddleware
+from ..utils import (datetimeformat, login_required, login_required_redirect,
+                     make_model, update_model, value_or_404)
 
 
 def test_grouping_key_converter(app, client) -> None:
@@ -61,6 +64,43 @@ def test_login_required(app, client, auth) -> None:
     response = client.get('/test')
     assert response.status_code == 200
     assert response.data == b"Done"
+
+
+def test_login_required_redirect(app, client, auth) -> None:
+    """If no user is logged in, redirect to login page."""
+    @login_required_redirect
+    def just_a_view() -> bytes:
+        """For testing only."""
+        return b"redirect"
+
+    app.add_url_rule('/test', "test", just_a_view)
+    response = client.get('/test')
+    assert response.status_code == 302
+    assert response.headers['Location'] == \
+        "http://localhost" + url_for('login', next_url='/test')
+
+    auth.login("user")
+    response = client.get('/test')
+    assert response.status_code == 200
+    assert response.data == b"redirect"
+
+
+def test_login_required_redirect_prefix() -> None:
+    """Test redirection when there is some prefix middleware."""
+    @login_required_redirect
+    def just_a_view() -> bytes:
+        """For testing only."""
+        return b"prefix"
+
+    grpy_app = create_app({'TESTING': True})
+    grpy_app.add_url_rule('/test', "test", just_a_view)
+    app = PrefixMiddleware(grpy_app, '/prefix')
+    client = Client(app)
+    _, status, headers = client.get('/prefix/test')
+    assert status.split(" ")[:1] == ["302"]
+    with grpy_app.test_request_context():
+        assert headers['Location'] == \
+            "http://localhost/prefix" + url_for('login', next_url='/prefix/test')
 
 
 def test_value_or_404() -> None:
