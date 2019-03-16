@@ -14,7 +14,7 @@ check:
   - pipenv run tox -e 36
 
 build:
-  state: build
+  stage: build
   only:
   - deploy
   image: hshnwinps/dev
