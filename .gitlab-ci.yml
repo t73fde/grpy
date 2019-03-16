@@ -12,3 +12,12 @@ check:
   - pipenv install --dev
   - pipenv run python manage.py -v full-check
   - pipenv run tox -e 36
+
+build:
+  state: build
+  only:
+  - deploy
+  image: hshnwinps/dev
+  script:
+  - pipenv install --dev
+  - pipenv run ./scripts/build_image.sh
