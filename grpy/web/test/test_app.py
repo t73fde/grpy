@@ -65,6 +65,7 @@ def _check_log_level(log_level, expected: int) -> None:
 def test_setup_logging() -> None:
     """Test the various ways to setup logging."""
     assert create_app().logger.level == 0  # pylint: disable=no-member
+    _check_log_level(None, 0)
     _check_log_level([], 0)
     _check_log_level(7, 7)
     _check_log_level("99", 99)
