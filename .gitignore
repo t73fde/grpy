@@ -1,5 +1,8 @@
 **/__pycache__/
 *.db
+*.pyc
+*.sqlite
+*.sqlite3
 .coverage
 .html_coverage
 .mypy_cache
