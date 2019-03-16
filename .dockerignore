@@ -1,0 +1,8 @@
+*
+!dist
+*.egg-info
+.coverage
+.coverage_html
+.git
+.gitgnore
+.tox
