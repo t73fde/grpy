@@ -43,7 +43,7 @@ def test_prefix_init() -> None:
     grpy_app = _make_app()
     for prefix in ('prefix', '/prefix', 'prefix/', '/prefix/'):
         app = PrefixMiddleware(grpy_app, prefix)
-        assert app.prefix == '/prefix/'
+        assert app.prefix == '/prefix'
 
 
 def test_prefix_call_valid() -> None:
@@ -61,3 +61,16 @@ def test_prefix_call_invalid() -> None:
     client = Client(app)
     _iter_data, status, _headers = client.get('/test')
     assert status.split(" ")[:1] == ['404']
+
+
+def test_prefix_call_scheme() -> None:
+    """Call middleware with given HTTP_X_SCHEME."""
+
+    def wsgi_app(environ, _start_response):
+        """WSGI app for testing."""
+        assert environ['PATH_INFO'] == '/test'
+        assert environ['SCRIPT_NAME'] == '/prefix'
+        assert environ['wsgi.url_scheme'] == "http"
+
+    app = PrefixMiddleware(wsgi_app, "prefix")
+    app({'PATH_INFO': '/prefix/test', 'HTTP_X_SCHEME': "http"}, None)

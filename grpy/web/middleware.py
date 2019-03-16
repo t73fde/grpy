@@ -27,21 +27,30 @@ Loosely based on `werkzeug.wsgi.DispatcherMiddleware.
 class PrefixMiddleware:  # pylint: disable=too-few-public-methods
     """Set an URL prefix for a WSGI app."""
 
+    @staticmethod
+    def cleanup_prefix(prefix: str) -> str:
+        """Ensure that prefix is in sane state."""
+        result = prefix.strip()
+        if not result.startswith("/"):
+            result = "/" + result
+        if result.endswith("/"):
+            result = result[:-1]
+        return result
+
     def __init__(self, app, prefix: str) -> None:
         """Remember the WSGI app and the prefix."""
         self.app = app
-        self.prefix = prefix.strip()
-        if not self.prefix.startswith("/"):
-            self.prefix = "/" + self.prefix
-        if not self.prefix.endswith("/"):
-            self.prefix = self.prefix + "/"
+        self.prefix = self.cleanup_prefix(prefix)
 
     def __call__(self, environ, start_response):
         """Execute the WSGI call."""
         script = environ.get("PATH_INFO", "")
         if script.startswith(self.prefix):
-            environ["SCRIPT_NAME"] = environ.get('SCRIPT_NAME', "") + self.prefix[:-1]
-            environ["PATH_INFO"] = script[len(self.prefix) - 1:]
+            environ["SCRIPT_NAME"] = environ.get('SCRIPT_NAME', "") + self.prefix
+            environ["PATH_INFO"] = script[len(self.prefix):]
+            scheme = environ.get('HTTP_X_SCHEME', '')
+            if scheme:
+                environ['wsgi.url_scheme'] = scheme
             return self.app(environ, start_response)
 
         message = b"Not found: you did not specify the needed URL prefix."

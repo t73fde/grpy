@@ -32,7 +32,8 @@ def create_application():
         'LOG_LEVEL': gunicorn_logger.level,
         'LOG_HANDLERS': gunicorn_logger.handlers,
     })
-    return PrefixMiddleware(grpy_app, "/grpy")
+    grpy_app.wsgi_app = PrefixMiddleware(grpy_app.wsgi_app, "/grpy")
+    return grpy_app
 
 
 app = create_application()  # pylint: disable=invalid-name
