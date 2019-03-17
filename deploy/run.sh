@@ -24,4 +24,5 @@ chown -R grpy:grpy grpy
 chown grpy:grpy .
 chown -R grpy db
 cd /usr/src/grpy
+cat VERSION.txt
 exec su grpy -c 'gunicorn -b 0.0.0.0:8000 -w 3 deploy.wsgi_gunicorn:app'
