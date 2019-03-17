@@ -20,15 +20,13 @@
 """In-memory repository, stored in RAM."""
 
 import dataclasses  # pylint: disable=wrong-import-order
-import random
-from typing import (Any, Dict, Iterable, Optional, Sequence, Tuple, TypeVar,
-                    cast)
+from typing import Dict, Iterable, Optional, Sequence, Tuple, cast
 
-from ..models import (Grouping, GroupingKey, Groups, Model, Registration, User,
-                      UserKey)
+from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
 from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
                    OrderSpec, Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
+from .proxies.algebra import AlgebraConnection
 
 
 class RamRepositoryState:  # pylint: disable=too-few-public-methods
@@ -71,11 +69,11 @@ class RamRepository(Repository):
         """Create and setup a repository."""
         if not self._state:
             self._state = RamRepositoryState()
-        return RamConnection(self._state)
+        return AlgebraConnection(RamConnection(self._state))
 
 
 class RamConnection(Connection):
-    """RAM repository."""
+    """RAM connection."""
 
     def __init__(self, state):
         """Initialize the repository."""
@@ -121,7 +119,7 @@ class RamConnection(Connection):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[User]:
         """Return an iterator of all or some users."""
-        return process_where_order(self._state.users.values(), where, order)
+        return self._state.users.values()
 
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
@@ -157,7 +155,7 @@ class RamConnection(Connection):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all or some groupings."""
-        return process_where_order(self._state.groupings.values(), where, order)
+        return self._state.groupings.values()
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
@@ -188,11 +186,8 @@ class RamConnection(Connection):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
-        return process_where_order(
-            (self._state.groupings[g] for g, p in self._state.registrations
-                if p == user_key),
-            where,
-            order)
+        return (self._state.groupings[g] for g, p in self._state.registrations
+                if p == user_key)
 
     def iter_user_registrations_by_grouping(
             self,
@@ -200,12 +195,9 @@ class RamConnection(Connection):
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
-        return process_where_order(
-            (UserRegistration(self._state.users[p], r.preferences)
+        return (UserRegistration(self._state.users[p], r.preferences)
                 for (g, p), r in self._state.registrations.items()
-                if g == grouping_key),
-            where,
-            order)
+                if g == grouping_key)
 
     def set_groups(self, grouping_key: GroupingKey, groups: Groups) -> None:
         """Set / replace groups builded for grouping."""
@@ -229,103 +221,4 @@ class RamConnection(Connection):
                     named_group = frozenset(
                         NamedUser(g, self._state.users[g].ident) for g in group)
                     result.append(UserGroup(grouping, grouping_obj.name, named_group))
-        return process_where_order(result, where, order)
-
-
-class WherePredicate:
-    """Filter attributes."""
-
-    def __init__(self, field_name: str, where_op: str, filter_value: Any):
-        """Initialize the filter."""
-        self.name = field_name
-        self.relop = where_op
-        self.value = filter_value
-
-    def pred(self):
-        """Return the appropriate filter predicate."""
-        return getattr(self, self.relop + "_pred")
-
-    def eq_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] == self.value."""
-        return cast(bool, getattr(data, self.name) == self.value)
-
-    def ne_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] != self.value."""
-        return cast(bool, getattr(data, self.name) != self.value)
-
-    def lt_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] < self.value."""
-        data_value = getattr(data, self.name)
-        if data_value is None:
-            return True
-        return cast(bool, data_value < self.value)
-
-    def le_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] <= self.value."""
-        data_value = getattr(data, self.name)
-        if data_value is None:
-            return True
-        return cast(bool, data_value <= self.value)
-
-    def ge_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] >= self.value."""
-        data_value = getattr(data, self.name)
-        if data_value is None:
-            return True
-        return cast(bool, data_value >= self.value)
-
-    def gt_pred(self, data: Model) -> bool:
-        """Return True if data[self.name] > self.value."""
-        data_value = getattr(data, self.name)
-        if data_value is None:
-            return True
-        return cast(bool, data_value > self.value)
-
-
-ModelT = TypeVar('ModelT')
-
-
-def process_where(
-        result: Iterable[ModelT], where: Optional[WhereSpec]) -> Iterable[ModelT]:
-    """Filter result according to specification."""
-    if where:
-        for where_spec, where_val in where.items():
-            where_spec_split = where_spec.split("__")
-            where_field = where_spec_split[0]
-            where_relop = where_spec_split[1]
-            pred = WherePredicate(where_field, where_relop, where_val).pred()
-            result = [elem for elem in result if pred(elem)]
-    return result
-
-
-def process_order(
-        result: Iterable[ModelT], order: Optional[OrderSpec]) -> Iterable[ModelT]:
-    """Sort result with respect to order specifications."""
-    list_result = list(result)
-    if order:
-        for order_field in reversed(order):
-            if order_field.startswith("-"):
-                reverse = True
-                order_field = order_field[1:]
-            else:
-                reverse = False
-                if order_field.startswith("+"):
-                    order_field = order_field[1:]
-
-            list_result.sort(
-                key=lambda obj: getattr(
-                    obj, order_field),  # pylint: disable=cell-var-from-loop
-                reverse=reverse)
-    else:
-        random.shuffle(list_result)
-    return list_result
-
-
-def process_where_order(
-        result: Iterable[ModelT],
-        where: Optional[WhereSpec],
-        order: Optional[OrderSpec]) -> Iterable[ModelT]:
-    """Process the where and order specification."""
-    result = process_where(result, where)
-    result = process_order(result, order)
-    return result
+        return result

@@ -17,7 +17,7 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Base proxy repository."""
+"""Base proxy connection."""
 
 
 from typing import Iterable, Optional, Sequence

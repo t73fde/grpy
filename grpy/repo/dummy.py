@@ -22,6 +22,7 @@
 from typing import Optional
 
 from .base import Connection, Repository
+from .proxies.algebra import AlgebraConnection
 from .ram import RamConnection, RamRepositoryState
 
 
@@ -42,5 +43,5 @@ class DummyRepository(Repository):
         return True
 
     def create(self) -> Connection:
-        """Create a new dummy repository."""
-        return RamConnection(RamRepositoryState())
+        """Create a new dummy connection."""
+        return AlgebraConnection(RamConnection(RamRepositoryState()))
