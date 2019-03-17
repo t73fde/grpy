@@ -20,7 +20,8 @@
 """
 A simple WSGI middleware to set a URL prefix.
 
-Loosely based on `werkzeug.wsgi.DispatcherMiddleware.
+Loosely based on `werkzeug.wsgi.DispatcherMiddleware` with some ideas from
+<http://blog.macuyiko.com/post/2016/fixing-flask-url_for-when-behind-mod_proxy.html>.
 """
 
 
@@ -51,6 +52,9 @@ class PrefixMiddleware:  # pylint: disable=too-few-public-methods
             scheme = environ.get('HTTP_X_SCHEME', '')
             if scheme:
                 environ['wsgi.url_scheme'] = scheme
+            host = environ.get('HTTP_X_FORWARDED_HOST', '')
+            if host:
+                environ['HTTP_HOST'] = host
             return self.app(environ, start_response)
 
         message = b"Not found: you did not specify the needed URL prefix."

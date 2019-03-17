@@ -71,6 +71,10 @@ def test_prefix_call_scheme() -> None:
         assert environ['PATH_INFO'] == '/test'
         assert environ['SCRIPT_NAME'] == '/prefix'
         assert environ['wsgi.url_scheme'] == "http"
+        assert environ['HTTP_HOST'] == "host.domain"
 
     app = PrefixMiddleware(wsgi_app, "prefix")
-    app({'PATH_INFO': '/prefix/test', 'HTTP_X_SCHEME': "http"}, None)
+    app({
+        'PATH_INFO': '/prefix/test',
+        'HTTP_X_SCHEME': "http",
+        'HTTP_X_FORWARDED_HOST': "host.domain"}, None)
