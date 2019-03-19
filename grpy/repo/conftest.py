@@ -29,14 +29,23 @@ from ..models import Grouping, Permissions, User
 from ..utils import now
 from . import create_repository
 
+
+def _get_request_param():
+    """Return a list of parameters for connection(request)."""
+    if os.environ.get('SMOKE', ''):
+        return ["ram:"]
+    return [
+        "ram:",
+        pytest.param("dummy:", marks=pytest.mark.safe),
+        pytest.param("sqlite:", marks=pytest.mark.safe),
+        pytest.param("sqlite:///", marks=pytest.mark.safe),
+    ]
+
+
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(params=[
-    "ram:",
-    pytest.param("dummy:", marks=pytest.mark.safe),
-    pytest.param("sqlite:", marks=pytest.mark.safe),
-    pytest.param("sqlite:///", marks=pytest.mark.safe)])
+@pytest.fixture(params=_get_request_param())
 def connection(request):
     """Provide an open connection."""
     if request.param == "sqlite:///":

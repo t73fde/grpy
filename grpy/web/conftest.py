@@ -34,10 +34,18 @@ from .app import create_app
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(params=[
-    "ram:",
-    pytest.param("sqlite:", marks=pytest.mark.safe),
-    pytest.param("sqlite:///", marks=pytest.mark.safe)])
+def _get_request_param():
+    """Return a list of parameters for app(request)."""
+    if os.environ.get('SMOKE', ''):
+        return ["ram:"]
+    return [
+        "ram:",
+        pytest.param("sqlite:", marks=pytest.mark.safe),
+        pytest.param("sqlite:///", marks=pytest.mark.safe),
+    ]
+
+
+@pytest.fixture(params=_get_request_param())
 def app(request):
     """Create an app as fixture."""
     if request.param == "sqlite:///":
