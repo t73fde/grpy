@@ -49,13 +49,17 @@ def login_required(view):
     return wrapped_view
 
 
+def redirect_to_login():
+    """Return a redirect to login view."""
+    return redirect(url_for('login', next_url=request.script_root + request.path))
+
+
 def login_required_redirect(view):
     """Wrap a view to enforce a login of an user."""
     @wraps(view)
     def wrapped_view(*args, **kwargs):
         if g.user is None:
-            return redirect(url_for(
-                'login', next_url=request.script_root + request.path))
+            return redirect_to_login()
         return view(*args, **kwargs)
     return wrapped_view
 

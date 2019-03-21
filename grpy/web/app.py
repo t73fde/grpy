@@ -219,7 +219,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.add_url_rule(
         "/groupings/<grouping:grouping_key>/edit", "grouping_update",
         views.grouping_update, methods=('GET', 'POST'))
-    app.add_url_rule("/<string:code>/", "shortlink", views.shortlink)
+    app.add_url_rule("/<string:code>", "shortlink", views.shortlink)
     app.add_url_rule(
         "/groupings/<grouping:grouping_key>/register", "grouping_register",
         views.grouping_register, methods=('GET', 'POST'))

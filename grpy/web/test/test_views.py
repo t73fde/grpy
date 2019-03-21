@@ -361,7 +361,7 @@ def test_shortlink(client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost/login?next_url=%2F{}%2F".format(app_grouping.code)
+        "http://localhost/login?next_url=%2F{}".format(app_grouping.code)
 
     auth.login("host")
     response = client.get(url)

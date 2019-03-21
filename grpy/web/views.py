@@ -32,7 +32,7 @@ from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
 from . import forms
 from .policies import get_policy_names, get_registration_form
-from .utils import (login_required, login_required_redirect, make_model,
+from .utils import (login_required, make_model, redirect_to_login,
                     update_model, value_or_404)
 
 
@@ -221,10 +221,12 @@ def grouping_update(grouping_key: GroupingKey):
     return render_template("grouping_update.html", form=form)
 
 
-@login_required_redirect
 def shortlink(code: str):
     """Show information for short link."""
     grouping = value_or_404(get_connection().get_grouping_by_code(code.upper()))
+    if g.user is None:
+        return redirect_to_login()
+
     if g.user.key == grouping.host_key:
         return render_template("grouping_code.html", code=grouping.code)
 
