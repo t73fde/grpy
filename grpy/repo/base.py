@@ -33,6 +33,7 @@ class Message(NamedTuple):
 
     category: str
     text: str
+    exception: Optional[Exception] = None
 
 
 class DuplicateKey(Exception):

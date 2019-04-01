@@ -80,7 +80,7 @@ class FilterProxyConnection(BaseProxyConnection):
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         return cast(Grouping, self._filter(
-            super().set_grouping, self._user, grouping))
+            super().set_grouping, self._grouping, grouping))
 
     def get_grouping(self, grouping_key: GroupingKey) -> Optional[Grouping]:
         """Return grouping with given key."""

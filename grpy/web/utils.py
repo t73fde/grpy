@@ -21,10 +21,10 @@
 
 import dataclasses  # pylint: disable=wrong-import-order
 from functools import wraps
-from typing import Any, Sequence, Tuple, cast
+from typing import Any, List, Sequence, Tuple, cast
 
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
-                   request, url_for)
+                   request, session, url_for)
 from flask_babel import format_datetime
 from werkzeug.routing import UUIDConverter
 
@@ -119,7 +119,12 @@ def colormap(color_description: str, prefix: str = "w3-") -> str:
 
 def get_all_messages() -> Sequence[Tuple[str, str]]:
     """Return all messages, not just those from the session."""
-    messages = current_app.get_connection().get_messages(delete=False)
-    if messages:
-        return [(m.category, m.text) for m in messages]
+    get_messages: List[Tuple[str, str]] = [
+        (m.category, m.text)
+        for m in current_app.get_connection().get_messages(delete=False)]
+    if get_messages:
+        return get_messages
+    post_messages: List[Tuple[str, str]] = session.get('connection_messages', [])
+    if post_messages:
+        return post_messages
     return cast(Sequence[Tuple[str, str]], get_flashed_messages(with_categories=True))

@@ -134,8 +134,7 @@ def test_catch_get_messages(catch_proxy: MockedCatchProxyConnection) -> None:
     """Return all connection-related messages."""
     catch_proxy.mock.set_user.side_effect = ValueError("BOOM!")
     catch_proxy.set_user(User(None, "name"))
-    assert catch_proxy.get_messages()[0].text == \
-        "Critical error: builtins.ValueError: BOOM!"
+    assert catch_proxy.get_messages()[0].text == "builtins.ValueError: BOOM!"
     assert catch_proxy.mock.get_messages.call_count == 1
 
     catch_proxy.get_messages(delete=True)

@@ -25,6 +25,7 @@ import unittest.mock
 
 import requests
 from flask import g, url_for
+from werkzeug.test import Client
 
 from ...repo.proxies.check import ValidatingProxyConnection
 from ..app import create_app
@@ -100,17 +101,58 @@ def test_check_password(app, monkeypatch) -> None:
     assert app.authenticate("user", "1") is None
 
 
-def test_flash_connection_messages(client, auth, monkeypatch) -> None:
+def create_grpy_app():
+    """Create a new Grpy app with SQLite repository."""
+    return create_app(
+        config_mapping={
+            'TESTING': True,
+            'AUTH_URL': None,
+            'REPOSITORY': "sqlite:",
+        })
+
+
+def do_login(grpy_app):
+    """Login user 'host'."""
+    client = Client(grpy_app)
+    with grpy_app.test_request_context():
+        _iter_data, status, headers = client.post(
+            url_for('login'), data={'username': "host", 'password': "1"})
+    assert status == "302 FOUND"
+    assert headers['Location'] == "http://localhost/"
+    return client
+
+
+def test_flash_connection_messages_get(monkeypatch) -> None:
     """Ensure that messages of connection are shown as a flash message."""
 
     def raise_value_error(*args, **kwargs):
         """Raise a ValueError."""
-        raise ValueError("Test for critical message")
+        raise ValueError("Test for critical get message")
 
-    auth.login("host")
+    grpy_app = create_grpy_app()
+    client = do_login(grpy_app)
     monkeypatch.setattr(
-        ValidatingProxyConnection, 'iter_groupings', raise_value_error)
-    response = client.get(url_for('home'))
-    assert response.status_code == 200
-    assert b"Critical error: builtins.ValueError: " \
-        b"Test for critical message" in response.data
+        ValidatingProxyConnection, 'iter_groups_by_user', raise_value_error)
+    with grpy_app.test_request_context():
+        iter_data, status, _headers = client.get(url_for('home'))
+    assert status == "200 OK"
+    data = b" ".join(iter_data)
+    print("DATA", data)
+    assert b"builtins.ValueError: Test for critical get message" in data
+
+
+def test_flash_connection_messages_push(monkeypatch) -> None:
+    """Ensure that messages of connection are shown as a flash message."""
+
+    def raise_value_error(*args, **kwargs):
+        """Raise a ValueError."""
+        raise ValueError("Test for critical post message")
+
+    grpy_app = create_grpy_app()
+    monkeypatch.setattr(ValidatingProxyConnection, 'set_user', raise_value_error)
+    client = do_login(grpy_app)
+    with grpy_app.test_request_context():
+        iter_data, status, _headers = client.get(url_for('home'))
+    assert status == "200 OK"
+    data = b" ".join(iter_data)
+    assert b"builtins.ValueError: Test for critical post message" in data

@@ -19,11 +19,10 @@
 
 """Checking proxy repositories."""
 
-from datetime import datetime
-from typing import Callable, List, Sequence
+from typing import Callable, List, Optional, Sequence
 
 from ...models import (Grouping, GroupingKey, Groups, Registration, User,
-                       UserKey, UserPreferences, ValidationFailed)
+                       UserKey, ValidationFailed)
 from ..base import Connection, DuplicateKey, Message, NothingToUpdate
 from .base import BaseProxyConnection
 from .filter import FilterProxyConnection
@@ -63,47 +62,50 @@ class CatchingProxyConnection(FilterProxyConnection):
     def __init__(self, delegate: Connection):
         """Initialize the proxy repository."""
         super().__init__(delegate)
-        self._user = User(UserKey(int=0), "*error*")
-        self._grouping = Grouping(
-            GroupingKey(int=0), "*code*", "*error*", UserKey(int=0),
-            datetime(1970, 1, 1), datetime(1970, 1, 2), datetime(1970, 1, 3),
-            "RD", 1, 0, "")
-        self._registration = Registration(
-            GroupingKey(int=0), UserKey(int=0), UserPreferences())
         self._messages: List[Message] = []
+
+    def _add_message(
+            self,
+            category: str,
+            text: str,
+            exception: Optional[Exception] = None) -> None:
+        """Add a message to the list of messages."""
+        self._messages.append(
+            Message(category=category, text=text, exception=exception))
 
     def _filter(self, function: Callable, default, *args):
         """Execute function call and catches all relevant exceptions."""
         try:
             return super()._filter(function, default, *args)
         except ValidationFailed as exc:
-            category = "critical"
-            text = "Internal validation failed: " + \
-                " ".join(str(arg) for arg in exc.args)
+            self._add_message(
+                "critical",
+                "Internal validation failed: " + " ".join(str(arg) for arg in exc.args))
         except DuplicateKey as exc:
             if exc.args[0] == "Grouping.code":
                 raise
-            category = "critical"
-            text = "Duplicate key for field '%s' with value '%s'" % (
-                exc.args[0], exc.args[1])
+            self._add_message(
+                "critical",
+                "Duplicate key for field '%s' with value '%s'" % (
+                    exc.args[0], exc.args[1]))
         except NothingToUpdate as exc:
-            category = "critical"
-            text = "%s: try to update key %s" % (exc.args[0], exc.args[1])
+            self._add_message(
+                "critical", "%s: try to update key %s" % (exc.args[0], exc.args[1]))
         except Exception as exc:  # pylint: disable=broad-except
-            category = "critical"
             exc_class = exc.__class__
-            text = "Critical error: " + exc_class.__module__ + "." + \
-                exc_class.__name__ + ": " + str(exc)
+            self._add_message(
+                "critical",
+                exc_class.__module__ + "." + exc_class.__name__ + ": " + str(exc),
+                exc)
 
-        self._messages.append(Message(category=category, text=text))
         return default
 
     def get_messages(self, delete: bool = False) -> Sequence[Message]:
         """Return all repository-related messages."""
         delegate_messages = super().get_messages(delete)
-        my_messages = self._messages
+        my_messages = list(self._messages)
         if delete:
             self._messages = []
         if delegate_messages:
-            return my_messages + list(delegate_messages)
+            my_messages.extend(delegate_messages)
         return my_messages

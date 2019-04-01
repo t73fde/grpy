@@ -89,6 +89,25 @@ class GrpyApp(Flask):
         if self._repository.url == "ram:" and not self.testing:
             populate_testdata(self._repository)
 
+        def save_messages(response):
+            """Save messages from connection into session."""
+            connection = g.get('connection', None)
+            if connection:
+                messages = connection.get_messages(delete=False)
+                if messages:
+                    connection_messages = session.get('connection_messages', [])
+                    for message in messages:
+                        self.log_error(
+                            "Repository: %s (%s)", message.text, message.category,
+                            exc_info=message.exception)
+                        connection_messages.append((message.category, message.text))
+                    session['connection_messages'] = connection_messages
+                    session.modified = True
+                    print("SESM", session)
+            return response
+
+        self.after_request(save_messages)
+
         def close_connection(_exc: BaseException = None):
             """Close the connection to the repository."""
             connection = g.pop('connection', None)
@@ -103,6 +122,13 @@ class GrpyApp(Flask):
             g.connection = self._repository.create()
         return g.connection
 
+    @staticmethod
+    def clear_session() -> None:
+        """Clear the session object, but not some keys."""
+        keys = set(session.keys()) - {'connection_messages'}
+        for key in keys:
+            del session[key]
+
     def setup_user_handling(self):
         """Prepare application to work with user data."""
 
@@ -114,7 +140,7 @@ class GrpyApp(Flask):
                 if user:
                     g.user = user
                     return None
-                session.clear()
+                self.clear_session()
             g.user = None
             return None
 
@@ -139,16 +165,14 @@ class GrpyApp(Flask):
             policy_name=policies.get_policy_name,
         )
 
-    @staticmethod
-    def login(user: User) -> None:
+    def login(self, user: User) -> None:
         """Log in the given user."""
-        session.clear()
+        self.clear_session()
         session['user_identifier'] = user.ident
 
-    @staticmethod
-    def logout():
+    def logout(self):
         """Log out the current user."""
-        session.clear()
+        self.clear_session()
 
     def _check_pw(self, username: str, password: str) -> bool:
         """Check username / password."""

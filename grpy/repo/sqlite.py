@@ -48,7 +48,7 @@ sqlite3.register_converter(
 
 
 class SqliteRepository(Repository):
-    """Maintain a singleton RAM-based repository."""
+    """Maintain SQLite-based repository."""
 
     def __init__(self, repository_url: str):
         """Initialize the repository."""
