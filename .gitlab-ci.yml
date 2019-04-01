@@ -11,7 +11,7 @@ check:
   script:
   - pipenv install --dev
   - pipenv run python manage.py -v full-check
-  - pipenv run tox -e 36
+  - pipenv run tox -e 37
 
 build:
   stage: build
