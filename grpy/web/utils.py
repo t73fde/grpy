@@ -126,5 +126,6 @@ def get_all_messages() -> Sequence[Tuple[str, str]]:
         return get_messages
     post_messages: List[Tuple[str, str]] = session.get('connection_messages', [])
     if post_messages:
+        del session['connection_messages']
         return post_messages
     return cast(Sequence[Tuple[str, str]], get_flashed_messages(with_categories=True))

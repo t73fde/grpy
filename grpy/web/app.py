@@ -102,7 +102,6 @@ class GrpyApp(Flask):
                             exc_info=message.exception)
                         connection_messages.append((message.category, message.text))
                     session['connection_messages'] = connection_messages
-                    session.modified = True
             return response
 
         self.after_request(save_messages)
