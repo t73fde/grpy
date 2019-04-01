@@ -103,7 +103,6 @@ class GrpyApp(Flask):
                         connection_messages.append((message.category, message.text))
                     session['connection_messages'] = connection_messages
                     session.modified = True
-                    print("SESM", session)
             return response
 
         self.after_request(save_messages)
