@@ -142,7 +142,7 @@ def types(ctx, verbose: int) -> None:
 def lint(ctx, verbose: int) -> None:
     """Perform a static code analysis."""
     verbose += ctx.obj['verbose']
-    source_paths = ["grpy", "deploy", "wsgi.py", "manage.py", "setup.py"]
+    source_paths = ["grpy", "deploy", "wsgi.py", "proctor.py", "setup.py"]
     formatting_ok = lint_formatting(source_paths, verbose)
     docstyle_ok = run_subprocess(["pydocstyle", "-v", "-e"] + source_paths, verbose)
     flake8_ok = lint_flake8(source_paths, verbose)
