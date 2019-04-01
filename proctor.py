@@ -26,6 +26,7 @@ Provides commands for static and dynamic tests.
 
 import pathlib
 import re
+import shutil
 import subprocess  # nosec
 from typing import List, Sequence, Tuple, cast
 
@@ -107,6 +108,34 @@ def main(ctx, verbose: int) -> None:
     """Entry point for all sub-commands."""
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
+
+
+@main.command()
+@click.option('-f', '--force', is_flag=True)
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def clean(ctx, force: bool, verbose: int) -> None:
+    """Remove temporary files and directories."""
+    verbose += ctx.obj['verbose']
+    base_path = pathlib.Path()
+    entries = [str(p) for p in base_path.iterdir()]
+    process = exec_subprocess(["git", "check-ignore", *entries], verbose)
+    if process.returncode:
+        ctx.exit(1)
+    for entry in process.stdout.split():
+        path = base_path / entry.decode('utf-8')
+        if not force:
+            click.echo(path)
+            continue
+
+        if path.is_file():
+            if verbose > 1:
+                click.echo("rm " + str(path))
+            path.unlink()
+        elif path.is_dir():
+            if verbose > 1:
+                click.echo("rm -rf " + str(path))
+            shutil.rmtree(str(path))
 
 
 @main.command()
