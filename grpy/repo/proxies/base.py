@@ -35,9 +35,13 @@ class BaseProxyConnection(Connection):
         """Initialize the proxy repository."""
         self._delegate = delegate
 
-    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all repository-related messages."""
-        return self._delegate.get_messages(delete)
+        return self._delegate.get_messages()
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        return self._delegate.has_errors()
 
     def close(self, success: bool) -> None:
         """Close the repository, store all permanent data."""

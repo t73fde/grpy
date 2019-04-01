@@ -124,6 +124,7 @@ def catch_proxy() -> MockedCatchProxyConnection:
     delegate = Mock()
     delegate.return_value = 1017
     delegate.get_messages.return_value = [Message("test", "1017")]
+    delegate.has_errors.return_value = False
     return MockedCatchProxyConnection(delegate)
 
 
@@ -137,7 +138,7 @@ def test_catch_get_messages(catch_proxy: MockedCatchProxyConnection) -> None:
     assert catch_proxy.get_messages()[0].text == "builtins.ValueError: BOOM!"
     assert catch_proxy.mock.get_messages.call_count == 1
 
-    catch_proxy.get_messages(delete=True)
+    catch_proxy.get_messages()
     assert catch_proxy.mock.get_messages.call_count == 2
     assert catch_proxy.get_messages() == [Message("test", "1017")]
     assert catch_proxy.mock.get_messages.call_count == 3
@@ -147,24 +148,35 @@ def test_catch_get_messages(catch_proxy: MockedCatchProxyConnection) -> None:
     assert catch_proxy.mock.get_messages.call_count == 4
 
 
+def test_catch_has_errors(catch_proxy: MockedCatchProxyConnection) -> None:
+    """Check has_errors method."""
+    assert not catch_proxy.has_errors()
+    assert catch_proxy.mock.has_errors.call_count == 1
+
+    catch_proxy.mock.set_user.side_effect = ValueError("BOOM!")
+    catch_proxy.set_user(User(None, "name"))
+    assert catch_proxy.has_errors()
+    assert catch_proxy.mock.has_errors.call_count == 1
+
+
 def test_catch_set_user_excs(catch_proxy: MockedCatchProxyConnection) -> None:
     """Add / update the given user."""
     catch_proxy.mock.set_user.side_effect = DuplicateKey("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
     assert catch_proxy.mock.set_user.call_count == 1
-    assert catch_proxy.get_messages(delete=True)[0].text == \
+    assert catch_proxy.get_messages()[0].text == \
         "Duplicate key for field 'User.ident' with value '123'"
 
     catch_proxy.mock.set_user.side_effect = NothingToUpdate("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
     assert catch_proxy.mock.set_user.call_count == 2
-    assert catch_proxy.get_messages(delete=True)[0].text == \
+    assert catch_proxy.get_messages()[0].text == \
         "User.ident: try to update key 123"
 
     catch_proxy.mock.set_user.side_effect = ValidationFailed("User.ident")
     catch_proxy.set_user(User(None, "ident"))
     assert catch_proxy.mock.set_user.call_count == 3
-    assert catch_proxy.get_messages(delete=True)[0].text == \
+    assert catch_proxy.get_messages()[0].text == \
         "Internal validation failed: User.ident"
 
 

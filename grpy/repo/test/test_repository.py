@@ -62,6 +62,11 @@ def test_no_initialize(monkeypatch) -> None:
     assert repository.url == "dummy:"
 
 
+def test_has_errors(connection: Connection) -> None:
+    """A new connection never has errors."""
+    assert not connection.has_errors()
+
+
 def test_insert_user(connection: Connection) -> None:
     """Check that inserting a new user works."""
     user = User(None, "user", Permissions.HOST)
@@ -73,7 +78,7 @@ def test_insert_user(connection: Connection) -> None:
 
     connection.set_user(user)
     assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        connection.get_messages(delete=True)[0].text
+        connection.get_messages()[0].text
     assert connection.get_messages() == []
 
 
@@ -82,7 +87,7 @@ def test_update_user(connection: Connection) -> None:
     user = User(UserKey(), "user")
     connection.set_user(user)
     assert "Missing user: try to update key " in \
-        connection.get_messages(delete=True)[0].text
+        connection.get_messages()[0].text
     assert connection.get_messages() == []
 
     user = connection.set_user(User(None, "user", Permissions.HOST))
@@ -95,7 +100,7 @@ def test_update_user(connection: Connection) -> None:
     renamed_user = dataclasses.replace(user_2, ident=user.ident)
     connection.set_user(renamed_user)
     assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        connection.get_messages(delete=True)[0].text
+        connection.get_messages()[0].text
     assert connection.get_messages() == []
 
 
@@ -240,7 +245,7 @@ def test_update_grouping(connection: Connection, grouping: Grouping) -> None:
     grouping_1 = dataclasses.replace(grouping, key=GroupingKey())
     connection.set_grouping(grouping_1)
     assert "Missing grouping: try to update key " + str(grouping_1.key) in \
-        connection.get_messages(delete=True)[0].text
+        connection.get_messages()[0].text
     assert connection.get_messages() == []
 
     grouping = connection.set_grouping(grouping)

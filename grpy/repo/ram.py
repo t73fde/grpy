@@ -79,9 +79,13 @@ class RamConnection(Connection):
         """Initialize the repository."""
         self._state: RamRepositoryState = state
 
-    def get_messages(self, _delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all repository-related messages."""
         return []
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        return False
 
     def close(self, _success: bool) -> None:
         """Close the repository: nothing to do here."""

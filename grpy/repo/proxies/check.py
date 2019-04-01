@@ -63,6 +63,7 @@ class CatchingProxyConnection(FilterProxyConnection):
         """Initialize the proxy repository."""
         super().__init__(delegate)
         self._messages: List[Message] = []
+        self._has_errors = False
 
     def _add_message(
             self,
@@ -72,6 +73,7 @@ class CatchingProxyConnection(FilterProxyConnection):
         """Add a message to the list of messages."""
         self._messages.append(
             Message(category=category, text=text, exception=exception))
+        self._has_errors = True
 
     def _filter(self, function: Callable, default, *args):
         """Execute function call and catches all relevant exceptions."""
@@ -100,12 +102,17 @@ class CatchingProxyConnection(FilterProxyConnection):
 
         return default
 
-    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all repository-related messages."""
-        delegate_messages = super().get_messages(delete)
         my_messages = list(self._messages)
-        if delete:
-            self._messages = []
+        self._messages = []
+        delegate_messages = super().get_messages()
         if delegate_messages:
             my_messages.extend(delegate_messages)
         return my_messages
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        if self._has_errors:
+            return True
+        return super().has_errors()

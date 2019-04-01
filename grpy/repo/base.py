@@ -47,9 +47,13 @@ class NothingToUpdate(Exception):
 class Connection:
     """Abstract connection to a reposity."""
 
-    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all connection-related messages."""
         raise NotImplementedError("Connection.get_messages")
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        raise NotImplementedError("Connection.has_errors")
 
     def close(self, success: bool) -> None:
         """Close the connection, store all permanent data."""

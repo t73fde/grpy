@@ -169,14 +169,22 @@ class SqliteConnection(Connection):
         """Initialize the connection."""
         self._connection = connection
         self._messages: List[Message] = []
+        self._has_errors: bool = False
 
     def _add_message(self, category: str, text: str) -> None:
         """Add a new message."""
         self._messages.append(Message(category, text))
+        self._has_errors = True
 
-    def get_messages(self, _delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all connection-related messages."""
-        return self._messages
+        result = self._messages
+        self._messages = []
+        return result
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        return self._has_errors
 
     def close(self, success: bool):
         """Close the connection."""

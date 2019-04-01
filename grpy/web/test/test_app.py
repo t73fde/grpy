@@ -137,7 +137,6 @@ def test_flash_connection_messages_get(monkeypatch) -> None:
         iter_data, status, _headers = client.get(url_for('home'))
     assert status == "200 OK"
     data = b" ".join(iter_data)
-    print("DATA", data)
     assert b"builtins.ValueError: Test for critical get message" in data
 
 

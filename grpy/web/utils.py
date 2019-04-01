@@ -121,7 +121,7 @@ def get_all_messages() -> Sequence[Tuple[str, str]]:
     """Return all messages, not just those from the session."""
     get_messages: List[Tuple[str, str]] = [
         (m.category, m.text)
-        for m in current_app.get_connection().get_messages(delete=False)]
+        for m in current_app.get_connection().get_messages()]
     if get_messages:
         return get_messages
     post_messages: List[Tuple[str, str]] = session.get('connection_messages', [])

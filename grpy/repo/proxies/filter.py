@@ -45,12 +45,16 @@ class FilterProxyConnection(BaseProxyConnection):
 
     def _filter(  # pylint: disable=no-self-use
             self, function: Callable, _default, *args):
-        """Execute function call and catches all relevant exceptions."""
+        """Execute function call."""
         return function(*args)
 
-    def get_messages(self, delete: bool = False) -> Sequence[Message]:
+    def get_messages(self) -> Sequence[Message]:
         """Return all connection-related messages."""
-        return cast(Sequence[Message], self._filter(super().get_messages, (), delete))
+        return cast(Sequence[Message], self._filter(super().get_messages, ()))
+
+    def has_errors(self) -> bool:
+        """Return True if some errors were detected with this connection."""
+        return cast(bool, self._filter(super().has_errors, True))
 
     def close(self, success: bool) -> None:
         """Close the connection, store all permanent data."""

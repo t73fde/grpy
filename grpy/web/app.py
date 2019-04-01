@@ -93,7 +93,7 @@ class GrpyApp(Flask):
             """Save messages from connection into session."""
             connection = g.get('connection', None)
             if connection:
-                messages = connection.get_messages(delete=False)
+                messages = connection.get_messages()
                 if messages:
                     connection_messages = session.get('connection_messages', [])
                     for message in messages:
@@ -111,7 +111,7 @@ class GrpyApp(Flask):
             """Close the connection to the repository."""
             connection = g.pop('connection', None)
             if connection:
-                connection.close(not connection.get_messages(delete=True))
+                connection.close(not connection.has_errors())
 
         self.teardown_request(close_connection)
 
