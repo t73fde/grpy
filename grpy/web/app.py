@@ -29,6 +29,7 @@ from flask_babel import Babel
 from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
+from ..version import get_version_info, read_version_file
 from . import policies, utils, views
 
 
@@ -39,6 +40,7 @@ class GrpyApp(Flask):
         """Initialize the application object."""
         super().__init__(import_name)
         self._repository = None
+        self.version = None
         self.babel = None
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
@@ -81,6 +83,10 @@ class GrpyApp(Flask):
         log_handlers = self.config.get('LOG_HANDLERS')
         if log_handlers:
             self.logger.handlers = log_handlers
+
+    def setup_version(self) -> None:
+        """Provide version information."""
+        self.version = get_version_info(read_version_file(self.root_path, 3))
 
     def setup_repository(self) -> None:
         """Add a repository to the application."""
@@ -219,6 +225,7 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
     app.setup_logging()
+    app.setup_version()
     app.setup_repository()
     app.setup_user_handling()
     app.setup_babel()
