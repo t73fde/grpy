@@ -11,7 +11,7 @@ check:
   script:
   - pipenv install --dev
   - pipenv run python proctor.py -v full-check
-  - pipenv run tox -e 37
+  - pipenv run tox -e py37
 
 build:
   stage: build
