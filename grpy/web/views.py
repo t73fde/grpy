@@ -97,7 +97,7 @@ def home():
 
 def about():
     """Show about page."""
-    return render_template("about.html")
+    return render_template("about.html", version=current_app.version.user_version)
 
 
 def login():

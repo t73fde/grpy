@@ -17,11 +17,16 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
+{% from "macros.html" import render_data %}
 {% block title %}About{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
 <h1>About this software</h1>
 Grpy is a small service to group users, according to specific constraints.
+{% if version %}
+<hr />
+<div class="w3-right-align w3-small">Version: {{ version }}</div>
+{% endif %}
 </div>
 {% endblock %}
