@@ -85,12 +85,12 @@ def create_version_txt() -> None:
         "git", "describe", "--always", "--dirty", "--long", "--tags", "--abbrev=16"])
     if not git_version_lines:
         return
-    with open_local(VERSION_TXT, "w") as version_file:
-        raw_version = git_version_lines[0]
-        split_version = raw_version.split("-")
-        setup_version = ".".join(split_version[:2])
-        setup_version = re.sub(r"\.0(\d)", lambda m: "." + m.group(1), setup_version)
 
+    raw_version = git_version_lines[0]
+    split_version = raw_version.split("-")
+    setup_version = ".".join(split_version[:2])
+    setup_version = re.sub(r"\.0(\d)", lambda m: "." + m.group(1), setup_version)
+    with open_local(VERSION_TXT, "w") as version_file:
         version_file.write(setup_version)
         version_file.write("\n")
         version_file.write(raw_version)
@@ -118,15 +118,21 @@ if __name__ == "__main__":
         url="https://gitlab.win.hs-heilbronn.de/kreuz/grpy",
         author="Detlef Stern",
         author_email="detlef.stern@hs-heilbronn.de",
-        keywords="education gouping team-building",
+        keywords=["education", "gouping", "team-building"],
         classifiers=[
-            "Development Status :: 1 - Planning",
+            "Development Status :: 3 - Alpha",
             "Environment :: Web Environment",
             "Framework :: Flask",
             "Intended Audience :: Education",
             "License :: OSI Approved :: "
             "GNU Affero General Public License v3 or later (AGPLv3+)",
+            "Natural Language :: English",
+            "Operating System :: POSIX :: Linux",
+            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Topic :: Education",
+            "Topic :: Office/Business :: Scheduling",
+            "Typing :: Typed",
         ],
+        platforms=["Linux"],
     )
