@@ -22,11 +22,12 @@
 import pathlib
 import tempfile
 
-from ..version import Version, get_version_info, read_version_file
+from ..version import Version, get_version, read_version_file
 
 
 def test_read_version_file() -> None:
     """Search for a version file."""
+    assert read_version_file(None, 3) == []
     with tempfile.TemporaryDirectory() as dirname:
         assert read_version_file(dirname, 1) == []
         root_path = pathlib.Path(dirname)
@@ -43,7 +44,7 @@ def test_read_version_file() -> None:
 
 def test_get_version_info() -> None:
     """Test packaging of lines into data class."""
-    assert get_version_info([]) == Version("", "")
-    assert get_version_info(["1"]) == Version("1", "")
-    assert get_version_info(["1", "2"]) == Version("1", "2")
-    assert get_version_info(["1", "2", "3"]) == Version("1", "2")
+    assert get_version([]) == Version("", "")
+    assert get_version(["1"]) == Version("1", "")
+    assert get_version(["1", "2"]) == Version("1", "2")
+    assert get_version(["1", "2", "3"]) == Version("1", "2")

@@ -29,7 +29,7 @@ from flask_babel import Babel
 from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
-from ..version import get_version_info, read_version_file
+from ..version import get_version, read_version_file
 from . import policies, utils, views
 
 
@@ -86,7 +86,7 @@ class GrpyApp(Flask):
 
     def setup_version(self) -> None:
         """Provide version information."""
-        self.version = get_version_info(read_version_file(self.root_path, 3))
+        self.version = get_version(read_version_file(self.root_path, 3))
 
     def setup_repository(self) -> None:
         """Add a repository to the application."""

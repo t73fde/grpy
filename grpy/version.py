@@ -21,7 +21,7 @@
 
 import dataclasses
 import pathlib
-from typing import Sequence
+from typing import Optional, Sequence
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
@@ -32,24 +32,25 @@ class Version:
     vcs_version: str
 
 
-def read_version_file(path: str, max_level: int) -> Sequence[str]:
+def read_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
     """Read the file VERSION.txt and return its content as a sequence."""
-    current_path = pathlib.Path(path)
-    current_level = max_level
-    while current_level > 0:
-        version_path = current_path / "VERSION.txt"
-        try:
-            with version_path.open() as version_file:
-                return [line.strip() for line in version_file.readlines()]
-        except FileNotFoundError:
-            pass
+    if path:
+        current_path = pathlib.Path(path)
+        current_level = max_level
+        while current_level > 0:
+            version_path = current_path / "VERSION.txt"
+            try:
+                with version_path.open() as version_file:
+                    return [line.strip() for line in version_file.readlines()]
+            except FileNotFoundError:
+                pass
 
-        current_level -= 1
-        current_path = current_path.parent
+            current_level -= 1
+            current_path = current_path.parent
     return []
 
 
-def get_version_info(lines: Sequence[str]) -> Version:
+def get_version(lines: Sequence[str]) -> Version:
     """Return version information."""
     if not lines:
         return Version("", "")
