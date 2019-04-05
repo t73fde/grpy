@@ -47,7 +47,12 @@ def test_read_version_file() -> None:
 
 def test_get_version() -> None:
     """Test packaging of lines into data class."""
-    assert get_version([]) == Version("", "")
+    try:
+        version = pkg_resources.get_distribution('grpy').version
+    except pkg_resources.DistributionNotFound:
+        version = ""
+    assert get_version([]) == Version(version, "")
+
     assert get_version(["1"]) == Version("1", "")
     assert get_version(["1", "2"]) == Version("1", "2")
     assert get_version(["1", "2", "3"]) == Version("1", "2")
