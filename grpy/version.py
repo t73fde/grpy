@@ -23,6 +23,8 @@ import dataclasses
 import pathlib
 from typing import Optional, Sequence
 
+import pkg_resources
+
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
 class Version:
@@ -53,7 +55,10 @@ def read_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
 def get_version(lines: Sequence[str]) -> Version:
     """Return version information."""
     if not lines:
-        return Version("", "")
+        try:
+            return Version(pkg_resources.get_distribution("grpy").version, "")
+        except pkg_resources.DistributionNotFound:
+            return Version("", "")
     if len(lines) < 2:
         return Version(lines[0], "")
     return Version(lines[0], lines[1])

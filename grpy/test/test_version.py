@@ -21,6 +21,9 @@
 
 import pathlib
 import tempfile
+from unittest.mock import Mock
+
+import pkg_resources
 
 from ..version import Version, get_version, read_version_file
 
@@ -42,9 +45,21 @@ def test_read_version_file() -> None:
         assert read_version_file(str(subdir), 2) == ["user", "vcs"]
 
 
-def test_get_version_info() -> None:
+def test_get_version() -> None:
     """Test packaging of lines into data class."""
     assert get_version([]) == Version("", "")
     assert get_version(["1"]) == Version("1", "")
     assert get_version(["1", "2"]) == Version("1", "2")
     assert get_version(["1", "2", "3"]) == Version("1", "2")
+
+
+def test_get_version_from_distribution(monkeypatch) -> None:
+    """Test calculating the version by using data from the distribution."""
+
+    def get_distribution(_):
+        mock = Mock()
+        mock.version = "321"
+        return mock
+
+    monkeypatch.setattr(pkg_resources, 'get_distribution', get_distribution)
+    assert get_version([]) == Version("321", "")
