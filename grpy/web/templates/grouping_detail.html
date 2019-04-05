@@ -62,7 +62,7 @@
   </table>
 </div>
 <div class="w3-panel">
-  <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Remove Groups</button></a>
+  <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Remove Groups</button></a>
 </div>
 {% endif %}
 {% if user_registrations %}
