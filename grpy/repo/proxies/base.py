@@ -28,7 +28,7 @@ from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 
 
-class BaseProxyConnection(Connection):
+class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-methods
     """A repository that delegates all requests to another repository."""
 
     def __init__(self, delegate: Connection):
@@ -102,6 +102,10 @@ class BaseProxyConnection(Connection):
     def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
         self._delegate.delete_registration(grouping_key, user_key)
+
+    def delete_registrations(self, grouping_key: GroupingKey) -> None:
+        """Delete all registrations of a grouping from the repository."""
+        self._delegate.delete_registrations(grouping_key)
 
     def iter_groupings_by_user(
             self,

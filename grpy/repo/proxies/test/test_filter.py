@@ -162,6 +162,13 @@ def test_delete_registration(filter_proxy: MockedFilterProxyConnection) -> None:
     assert filter_proxy.filter_count == 1
 
 
+def test_delete_registrations(filter_proxy: MockedFilterProxyConnection) -> None:
+    """Delete the given registration from the repository."""
+    filter_proxy.delete_registrations(GroupingKey(int=0))
+    assert filter_proxy.mock.delete_registrations.call_count == 1
+    assert filter_proxy.filter_count == 1
+
+
 def test_iter_groupings_by_user(filter_proxy: MockedFilterProxyConnection) -> None:
     """Return an iterator of all groupings the user applied to."""
     filter_proxy.iter_groupings_by_user(UserKey(int=0))

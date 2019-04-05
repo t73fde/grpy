@@ -29,7 +29,8 @@ from ..models import UserGroup, UserRegistration
 from .base import BaseProxyConnection
 
 
-class FilterProxyConnection(BaseProxyConnection):
+class FilterProxyConnection(  # pylint: disable=too-many-public-methods
+        BaseProxyConnection):
     """A connection that delegates all requests to another connection."""
 
     def __init__(self, delegate: Connection):
@@ -124,6 +125,10 @@ class FilterProxyConnection(BaseProxyConnection):
     def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
         self._filter(super().delete_registration, None, grouping_key, user_key)
+
+    def delete_registrations(self, grouping_key: GroupingKey) -> None:
+        """Delete all registrations of a grouping from the repository."""
+        self._filter(super().delete_registrations, None, grouping_key)
 
     def iter_groupings_by_user(
             self,

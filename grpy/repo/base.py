@@ -44,7 +44,7 @@ class NothingToUpdate(Exception):
     """Signal a missing data element, so that an update is not possible."""
 
 
-class Connection:
+class Connection:  # pylint: disable=too-many-public-methods
     """Abstract connection to a reposity."""
 
     def get_messages(self) -> Sequence[Message]:
@@ -135,6 +135,10 @@ class Connection:
     def delete_registration(self, grouping_key: GroupingKey, user_key: UserKey) -> None:
         """Delete the given registration from the repository."""
         raise NotImplementedError("Connection.delete_registration")
+
+    def delete_registrations(self, grouping_key: GroupingKey) -> None:
+        """Delete all registrations of a grouping from the repository."""
+        raise NotImplementedError("Connection.delete_registrations")
 
     def iter_groupings_by_user(
             self,

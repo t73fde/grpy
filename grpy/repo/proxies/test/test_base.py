@@ -134,6 +134,12 @@ def test_delete_registration(base_proxy: MockedBaseProxyConnection) -> None:
     assert base_proxy.mock.delete_registration.call_count == 1
 
 
+def test_delete_registrations(base_proxy: MockedBaseProxyConnection) -> None:
+    """Delete the given registration from the connection."""
+    base_proxy.delete_registrations(GroupingKey(int=0))
+    assert base_proxy.mock.delete_registrations.call_count == 1
+
+
 def test_iter_groupings_by_user(base_proxy: MockedBaseProxyConnection) -> None:
     """Return an iterator of all groupings the user applied to."""
     base_proxy.iter_groupings_by_user(UserKey(int=0))

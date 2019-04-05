@@ -72,7 +72,7 @@ class RamRepository(Repository):
         return AlgebraConnection(RamConnection(self._state))
 
 
-class RamConnection(Connection):
+class RamConnection(Connection):  # pylint: disable=too-many-public-methods
     """RAM connection."""
 
     def __init__(self, state):
@@ -183,6 +183,15 @@ class RamConnection(Connection):
             del self._state.registrations[(grouping_key, user_key)]
         except KeyError:
             pass
+
+    def delete_registrations(self, grouping_key: GroupingKey) -> None:
+        """Delete all registrations of a grouping from the repository."""
+        keys = {
+            (g_key, u_key)
+            for g_key, u_key in self._state.registrations.keys()
+            if g_key == grouping_key}
+        for key in keys:
+            del self._state.registrations[key]
 
     def iter_groupings_by_user(
             self,

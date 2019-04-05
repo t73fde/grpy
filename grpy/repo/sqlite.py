@@ -162,7 +162,7 @@ CREATE INDEX idx_groups ON groups(grouping_key)
         return self._connection_class(self._connect())
 
 
-class SqliteConnection(Connection):
+class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
     """SQLite-based connection."""
 
     def __init__(self, connection):
@@ -392,6 +392,11 @@ class SqliteConnection(Connection):
         self._execute(
             "DELETE FROM registrations WHERE grouping_key=? AND user_key=?",
             (grouping_key, user_key))
+
+    def delete_registrations(self, grouping_key: GroupingKey) -> None:
+        """Delete all registrations of a grouping from the repository."""
+        self._execute(
+            "DELETE FROM registrations WHERE grouping_key=?", (grouping_key, ))
 
     def iter_groupings_by_user(
             self,

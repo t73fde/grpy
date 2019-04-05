@@ -488,7 +488,10 @@ def test_iter_groupings_by_user(connection: Connection, grouping: Grouping) -> N
 
 def test_iter_user_registrations_by_grouping(
         connection: Connection, grouping: Grouping) -> None:
-    """Iterate over all user data of registrations."""
+    """
+    Iterate over all user data of registrations.
+
+    Additionally tests the deletion of all registrations."""
     grouping = connection.set_grouping(grouping)
     assert grouping.key is not None
     for i in range(7):
@@ -500,6 +503,10 @@ def test_iter_user_registrations_by_grouping(
             grouping.key))) == i + 1
     assert not utils.LazyList(connection.iter_user_registrations_by_grouping(
         GroupingKey(int=111)))
+
+    connection.delete_registrations(grouping.key)
+    assert not utils.LazyList(connection.iter_user_registrations_by_grouping(
+        grouping.key))
 
 
 def insert_groups(
