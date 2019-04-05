@@ -276,16 +276,22 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
         url_for('grouping_detail', grouping_key=GroupingKey())).status_code == 404
 
 
-def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> None:
-    """Test removal of registrations."""
-    assert app_grouping.key is not None
-    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+def add_user_registrations(app, grouping_key: GroupingKey) -> List[User]:
+    """Add some users and register them for the grouping."""
     users = []
     for i in range(12):
         user = app.get_connection().set_user(User(None, "user%d" % i))
         app.get_connection().set_registration(Registration(
-            app_grouping.key, user.key, UserPreferences()))
+            grouping_key, user.key, UserPreferences()))
         users.append(user)
+    return users
+
+
+def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> None:
+    """Test removal of registrations."""
+    assert app_grouping.key is not None
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+    users = add_user_registrations(app, app_grouping.key)
     auth.login("host")
     response = client.get(url)
     data = response.data.decode('utf-8')
@@ -320,6 +326,40 @@ def test_grouping_detail_remove_illegal(
         assert get_session_data(app, response)['_flashes'] == \
             [('info', "0 registered users removed.")]
         client.get(url_for('home'))  # Clean flash message
+
+
+def test_grouping_detail_fasten(app, client, auth, app_grouping: Grouping) -> None:
+    """
+    Test visibility of button 'Fasten groups'.
+
+    A group assignment can be fastened, if there is a group and if there are
+    user registrations for the grouping."""
+    assert app_grouping.key is not None
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+    auth.login("host")
+    response = client.get(url)
+    assert b"<h1>Groups</h1>" not in response.data
+    assert b"Fasten" not in response.data
+    assert b"Remove Groups" not in response.data
+
+    users = add_user_registrations(app, app_grouping.key)
+    response = client.get(url)
+    assert b"<h1>Groups</h1>" not in response.data
+    assert b"Fasten" not in response.data
+    assert b"Remove Groups" not in response.data
+
+    users_as_group = frozenset(user.key for user in users)
+    app.get_connection().set_groups(app_grouping.key, (users_as_group,))
+    response = client.get(url)
+    assert b"<h1>Groups</h1>" in response.data
+    assert b"Fasten" in response.data
+    assert b"Remove Groups" in response.data
+
+    app.get_connection().delete_registrations(app_grouping.key)
+    response = client.get(url)
+    assert b"<h1>Groups</h1>" in response.data
+    assert b"Fasten" not in response.data
+    assert b"Remove Groups" not in response.data
 
 
 def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:

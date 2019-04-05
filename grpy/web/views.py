@@ -179,6 +179,7 @@ def grouping_detail(grouping_key: GroupingKey):
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     group_list = _get_group_list(grouping.key)
+    can_fasten = group_list and user_registrations
     if group_list:
         user_registrations = []
     can_delete = not user_registrations and not group_list
@@ -187,7 +188,8 @@ def grouping_detail(grouping_key: GroupingKey):
         "grouping_detail.html",
         grouping=grouping, group_list=group_list,
         user_registrations=user_registrations,
-        can_delete=can_delete, can_start=can_start, form=form)
+        can_fasten=can_fasten, can_delete=can_delete, can_start=can_start,
+        form=form)
 
 
 def _get_group_list(grouping_key: GroupingKey) -> List[List[str]]:

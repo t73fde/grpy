@@ -116,3 +116,10 @@ class RemoveGroupsForm(FlaskForm):
 
     submit_remove = SubmitField("Remove")
     submit_cancel = SubmitField("Cancel")
+
+
+class FastenGroupsForm(FlaskForm):
+    """Form to fasten the formed groups by removing all registrations."""
+
+    submit_fasten = SubmitField("Fasten")
+    submit_cancel = SubmitField("Cancel")

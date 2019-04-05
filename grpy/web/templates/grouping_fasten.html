@@ -26,60 +26,36 @@
 {% block content %}
 <div class="w3-panel">
 <div class="w3-container w3-light-gray">
-  <h1>Grouping Details</h1>
+  <h1>Fasten Group Assignments</h1>
 </div>
 {{- render_data("Name", grouping.name) }}
-{{- render_data("Code", code_link) }}
-{{- render_data("Begin date", grouping.begin_date|datetimeformat("iso-short")) }}
 {{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
-{{- render_data("Close date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
 {{- render_data("Policy", policy_name(grouping.policy)) }}
 {{- render_data("Maximum group size", grouping.max_group_size) }}
 {{- render_data("Member reserve", grouping.member_reserve) }}
-{% if grouping.note %}
 {{- render_data("Note", grouping.note) }}
-{% endif %}
 </div>
-{% if not group_list %}
-<div class="w3-container w3-bar">
-  <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
-  {% if can_delete %}
-  <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
-  {% endif %}
-  {% if can_start %}
-  <a href="{{ url_for('grouping_start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
-  {% endif %}
-</div>
-{% endif %}
-{% if group_list %}
 <div class="w3-panel">
-  <h1>Groups</h1>
+  <h2>Groups</h2>
   <table class="w3-table w3-bordered">
   <tr><td>#</td><td>Member</td></tr>
   {%- for group in group_list %}
   <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>
   {%- endfor %}
   </table>
-</div>
-{% if can_fasten %}
-<div class="w3-panel">
-  <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Remove Groups</button></a>
-  <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Fasten Groups</button></a>
-</div>
-{% endif %}
-{% endif %}
-{% if user_registrations %}
-<div class="w3-panel">
-  <h1>Registered users ({{ user_registrations|length }})</h1>
-  <form method="POST">
+  <h2>Registrations</h2>
+  <ol class="w3-ul">
+  {%- for user in user_registrations %}
+  <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident }}</input></label></li>
+  {%- endfor %}
+  </ol>
+  <form method="post" action="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}">
     {{- form.csrf_token }}
-    <ol class="w3-ul">
-    {%- for user in user_registrations %}
-    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident }}</input></label></li>
-    {%- endfor %}
-    </ol>
-    {{- form.submit_remove(class="w3-btn " + color("danger")) }}
+    <div class="w3-panel">
+    {{ form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}
+
+    {{ form.submit_fasten(class="w3-btn w3-ripple " + color("danger")) }}
+    </div>
   </form>
 </div>
-{% endif %}
 {% endblock %}
