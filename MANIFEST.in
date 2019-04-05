@@ -21,7 +21,7 @@ include COPYING
 include Pipfile
 include README.md
 include VERSION.txt
-include manage.py
+include proctor.py
 include requirements.txt
 include wsgi.py
 graft deploy
