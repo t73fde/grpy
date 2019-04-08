@@ -101,6 +101,38 @@ class User(Model):
             raise ValidationFailed("Ident is empty: {}".format(self))
 
 
+class GroupingState(enum.Enum):
+    """
+    State of a grouping.
+
+    Since many states can only be detected by reading other data instances,
+    `Grouping` does'nt provides an appropriate method for getting the state.
+    The state must be recovered by other means.
+
+    `UNKNOWN`: state of grouping cannot be determined.
+
+    `NEW`: grouping is freshly created, only maintenance operations are allowed.
+
+    `AVAILABLE`: user can register for grouping.
+
+    `FINAL`: registration period is over, grouping process can be started.
+
+    `GROUPED`: groups were formed, but nothing is fixed.
+
+    `FASTENED`: formed groups cannot be changed any more.
+
+    `CLOSED`: grouping is only visible to host; it can be deleted.
+    """
+
+    UNKNOWN = enum.auto()
+    NEW = enum.auto()
+    AVAILABLE = enum.auto()
+    FINAL = enum.auto()
+    GROUPED = enum.auto()
+    FASTENED = enum.auto()
+    CLOSED = enum.auto()
+
+
 class GroupingKey(KeyType):
     """Key to identify a grouping."""
 
@@ -147,9 +179,25 @@ class Grouping(Model):
         if self.member_reserve < 0:
             raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
 
+    def get_state(self) -> GroupingState:
+        """
+        Calculate grouping state.
+
+        This can be done only partially. The states `GroupingState.FINAL` and
+        `GroupingState.CLOSED` need further refinement.
+        """
+        yet = now()
+        if yet < self.begin_date:
+            return GroupingState.NEW
+        if yet < self.final_date:
+            return GroupingState.AVAILABLE
+        if self.close_date is None or yet < self.close_date:
+            return GroupingState.FINAL
+        return GroupingState.CLOSED
+
     def is_registration_open(self) -> bool:
         """Check that registrations for given grouping are open."""
-        return self.begin_date < now() < self.final_date
+        return self.get_state() == GroupingState.AVAILABLE
 
     def can_grouping_start(self) -> bool:
         """Check that grouping process can start now."""

@@ -103,6 +103,12 @@ def test_get_grouping_by_code(base_proxy: MockedBaseProxyConnection) -> None:
     assert base_proxy.mock.get_grouping_by_code.call_count == 1
 
 
+def test_get_grouping_state(base_proxy: MockedBaseProxyConnection) -> None:
+    """Return grouping state for given key."""
+    base_proxy.get_grouping_state(GroupingKey(int=0))
+    assert base_proxy.mock.get_grouping_state.call_count == 1
+
+
 def test_iter_groupings(base_proxy: MockedBaseProxyConnection) -> None:
     """Return an iterator of all or some groupings."""
     base_proxy.iter_groupings()

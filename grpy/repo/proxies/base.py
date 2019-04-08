@@ -22,8 +22,8 @@
 
 from typing import Iterable, Optional, Sequence
 
-from ...models import (Grouping, GroupingKey, Groups, Registration, User,
-                       UserKey)
+from ...models import (Grouping, GroupingKey, GroupingState, Groups,
+                       Registration, User, UserKey)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 
@@ -58,6 +58,10 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user for given ident."""
         return self._delegate.get_user_by_ident(ident)
+
+    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
+        """Return current state of given grouping."""
+        return self._delegate.get_grouping_state(grouping_key)
 
     def iter_users(
             self,

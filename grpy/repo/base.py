@@ -21,7 +21,8 @@
 
 from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence
 
-from ..models import Grouping, GroupingKey, Groups, Registration, User, UserKey
+from ..models import (Grouping, GroupingKey, GroupingState, Groups,
+                      Registration, User, UserKey)
 from .models import UserGroup, UserRegistration
 
 WhereSpec = Dict[str, Any]
@@ -105,6 +106,10 @@ class Connection:  # pylint: disable=too-many-public-methods
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
         raise NotImplementedError("Connection.get_grouping_by_code")
+
+    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
+        """Return current state of given grouping."""
+        raise NotImplementedError("Connection.get_grouping_state")
 
     def iter_groupings(
             self,

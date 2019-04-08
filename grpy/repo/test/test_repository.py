@@ -27,11 +27,12 @@ from typing import List, Tuple, cast
 import pytest
 
 from ... import utils
-from ...models import (Grouping, GroupingKey, Groups, Permissions,
-                       Registration, User, UserKey, UserPreferences)
+from ...models import (Grouping, GroupingKey, GroupingState, Groups,
+                       Permissions, Registration, User, UserKey,
+                       UserPreferences)
 from ...preferences import register_preferences
 from .. import create_repository
-from ..base import Connection, DuplicateKey
+from ..base import Connection, DuplicateKey, NothingToUpdate
 from ..ram import RamRepository
 
 # pylint: disable=redefined-outer-name
@@ -62,6 +63,11 @@ def test_no_initialize(monkeypatch) -> None:
     assert repository.url == "dummy:"
 
 
+def test_get_messages(connection: Connection) -> None:
+    """A new connection never has messages."""
+    assert not connection.get_messages()
+
+
 def test_has_errors(connection: Connection) -> None:
     """A new connection never has errors."""
     assert not connection.has_errors()
@@ -76,19 +82,15 @@ def test_insert_user(connection: Connection) -> None:
     assert new_user.ident == user.ident
     assert new_user.is_host == user.is_host
 
-    connection.set_user(user)
-    assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        connection.get_messages()[0].text
-    assert connection.get_messages() == []
+    with pytest.raises(DuplicateKey, match="User.ident"):
+        connection.set_user(user)
 
 
 def test_update_user(connection: Connection) -> None:
     """Check that updating an existing user works."""
     user = User(UserKey(), "user")
-    connection.set_user(user)
-    assert "Missing user: try to update key " in \
-        connection.get_messages()[0].text
-    assert connection.get_messages() == []
+    with pytest.raises(NothingToUpdate, match="Missing user"):
+        connection.set_user(user)
 
     user = connection.set_user(User(None, "user", Permissions.HOST))
     new_user = dataclasses.replace(user, permissions=Permissions(0))
@@ -98,10 +100,8 @@ def test_update_user(connection: Connection) -> None:
 
     user_2 = connection.set_user(User(None, "user_2"))
     renamed_user = dataclasses.replace(user_2, ident=user.ident)
-    connection.set_user(renamed_user)
-    assert "Duplicate key for field 'User.ident' with value 'user'" in \
-        connection.get_messages()[0].text
-    assert connection.get_messages() == []
+    with pytest.raises(DuplicateKey, match="User.ident"):
+        connection.set_user(renamed_user)
 
 
 def test_get_user(connection: Connection) -> None:
@@ -236,17 +236,15 @@ def test_insert_grouping(connection: Connection, grouping: Grouping) -> None:
     assert new_grouping.member_reserve == grouping.member_reserve
     assert new_grouping.note == grouping.note
 
-    with pytest.raises(DuplicateKey):
+    with pytest.raises(DuplicateKey, match="Grouping.code"):
         connection.set_grouping(grouping)
 
 
 def test_update_grouping(connection: Connection, grouping: Grouping) -> None:
     """Check that updating an existing grouping works."""
     grouping_1 = dataclasses.replace(grouping, key=GroupingKey())
-    connection.set_grouping(grouping_1)
-    assert "Missing grouping: try to update key " + str(grouping_1.key) in \
-        connection.get_messages()[0].text
-    assert connection.get_messages() == []
+    with pytest.raises(NothingToUpdate, match="Missing grouping"):
+        connection.set_grouping(grouping_1)
 
     grouping = connection.set_grouping(grouping)
     new_grouping = dataclasses.replace(grouping, name="new name")
@@ -260,7 +258,7 @@ def test_update_grouping_duplicate(connection: Connection, grouping: Grouping) -
     grouping = connection.set_grouping(grouping)
     grouping_2 = connection.set_grouping(
         dataclasses.replace(grouping, key=None, code=grouping.code[::-1]))
-    with pytest.raises(DuplicateKey):
+    with pytest.raises(DuplicateKey, match="Grouping.code"):
         connection.set_grouping(dataclasses.replace(grouping_2, code=grouping.code))
 
 
@@ -304,6 +302,80 @@ def test_get_grouping_by_code_after_change(
     grouping = connection.set_grouping(grouping)
     connection.set_grouping(dataclasses.replace(grouping, code="0000"))
     assert connection.get_grouping_by_code(grouping.code) is None
+
+
+def test_get_grouping_state_simple(connection: Connection, grouping: Grouping) -> None:
+    """
+    Check valid grouping state, for simple cases.
+
+    Simple cases are those, that can be calculated at most by comparing dates.
+    """
+    # If not stored -> state is unknown
+    assert not grouping.key
+    assert connection.get_grouping_state(GroupingKey(int=0)) == GroupingState.UNKNOWN
+
+    grouping = connection.set_grouping(grouping)
+    assert grouping.key
+    assert connection.get_grouping_state(grouping.key) == GroupingState.AVAILABLE
+
+    now = utils.now()
+    connection.set_grouping(dataclasses.replace(
+        grouping, begin_date=now + datetime.timedelta(seconds=600)))
+    assert connection.get_grouping_state(grouping.key) == GroupingState.NEW
+
+
+def assert_final_grouping_state(connection: Connection, grouping: Grouping) -> None:
+    """Test `get_grouping_state` for various states in the final category."""
+    assert grouping.key
+    assert connection.get_grouping_state(grouping.key) == GroupingState.FINAL
+    user = connection.set_user(User(None, "user"))
+    assert user.key
+    connection.set_registration(Registration(grouping.key, user.key, UserPreferences()))
+    assert connection.get_grouping_state(grouping.key) == GroupingState.FINAL
+    connection.set_groups(grouping.key, (frozenset([user.key]),))
+    assert connection.get_grouping_state(grouping.key) == GroupingState.GROUPED
+    connection.delete_registrations(grouping.key)
+    assert connection.get_grouping_state(grouping.key) == GroupingState.FASTENED
+
+
+def test_get_grouping_state_final_1(connection: Connection, grouping: Grouping) -> None:
+    """Test final category of grouping states."""
+    now = utils.now()
+    grouping_1 = connection.set_grouping(dataclasses.replace(
+        grouping, final_date=now - datetime.timedelta(seconds=900)))
+    assert_final_grouping_state(connection, grouping_1)
+
+
+def test_get_grouping_state_final_2(connection: Connection, grouping: Grouping) -> None:
+    """Test final category of grouping states."""
+    now = utils.now()
+    grouping_2 = connection.set_grouping(dataclasses.replace(
+        grouping,
+        final_date=now - datetime.timedelta(seconds=900),
+        close_date=now + datetime.timedelta(seconds=900)))
+    assert_final_grouping_state(connection, grouping_2)
+
+
+def test_get_grouping_state_close(connection: Connection, grouping: Grouping) -> None:
+    """Test close category of grouping states."""
+    now = utils.now()
+    grouping = connection.set_grouping(dataclasses.replace(
+        grouping,
+        final_date=now - datetime.timedelta(seconds=600),
+        close_date=now - datetime.timedelta(seconds=500)))
+    assert grouping.key
+    assert connection.get_grouping_state(grouping.key) == GroupingState.FINAL
+
+    user = connection.set_user(User(None, "user"))
+    assert user.key
+    connection.set_registration(Registration(grouping.key, user.key, UserPreferences()))
+    assert connection.get_grouping_state(grouping.key) == GroupingState.FINAL
+
+    connection.set_groups(grouping.key, (frozenset([user.key]),))
+    assert connection.get_grouping_state(grouping.key) == GroupingState.GROUPED
+
+    connection.delete_registrations(grouping.key)
+    assert connection.get_grouping_state(grouping.key) == GroupingState.CLOSED
 
 
 def setup_groupings(connection: Connection, count: int) -> List[Grouping]:

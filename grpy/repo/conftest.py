@@ -27,7 +27,9 @@ import pytest
 
 from ..models import Grouping, Permissions, User
 from ..utils import now
-from . import create_repository
+from .dummy import DummyRepository
+from .ram import RamRepository
+from .sqlite import SqliteRepository
 
 
 def _get_request_param():
@@ -47,13 +49,24 @@ def _get_request_param():
 
 @pytest.fixture(params=_get_request_param())
 def connection(request):
-    """Provide an open connection."""
+    """
+    Provide an open connection.
+
+    Use the real repositories, and not the proxies, to allow for better
+    assert messages.
+    """
     if request.param == "sqlite:///":
         temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         temp_file.close()
-        repository = create_repository("sqlite://" + temp_file.name)
+        repository = SqliteRepository("sqlite://" + temp_file.name)
     else:
-        repository = create_repository(request.param)
+        if request.param == "ram:":
+            repository = RamRepository(request.param)
+        elif request.param == "dummy:":
+            repository = DummyRepository(request.param)
+        else:
+            assert request.param == "sqlite:"
+            repository = SqliteRepository("sqlite:")
         temp_file = None
         assert repository.url == request.param
     repository.initialize()
@@ -61,7 +74,6 @@ def connection(request):
     connection = repository.create()
     yield connection
 
-    assert not connection.get_messages()
     connection.close(True)
     if temp_file:
         os.unlink(temp_file.name)

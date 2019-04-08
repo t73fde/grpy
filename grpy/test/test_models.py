@@ -25,8 +25,9 @@ from typing import cast
 
 import pytest
 
-from ..models import (Grouping, GroupingKey, Permissions, Registration, User,
-                      UserKey, UserPreferences, ValidationFailed)
+from ..models import (Grouping, GroupingKey, GroupingState, Permissions,
+                      Registration, User, UserKey, UserPreferences,
+                      ValidationFailed)
 from ..utils import now
 
 
@@ -112,6 +113,26 @@ def test_grouping_validation_failed() -> None:
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet + delta, None,
             "RD", 2, -1, "").validate()
+
+
+def test_get_state() -> None:
+    """Return valid date-based states."""
+    yet = now()
+    assert GroupingState.NEW == Grouping(
+        None, ".", "name", UserKey(int=0), yet + timedelta(days=3),
+        yet + timedelta(days=7), None, "RD", 7, 7, "").get_state()
+    assert GroupingState.AVAILABLE == Grouping(
+        None, ".", "name", UserKey(int=0), yet - timedelta(days=3),
+        yet + timedelta(days=7), None, "RD", 7, 7, "").get_state()
+    assert GroupingState.FINAL == Grouping(
+        None, ".", "name", UserKey(int=0), yet - timedelta(days=3),
+        yet - timedelta(days=2), None, "RD", 7, 7, "").get_state()
+    assert GroupingState.FINAL == Grouping(
+        None, ".", "name", UserKey(int=0), yet - timedelta(days=3),
+        yet - timedelta(days=2), yet + timedelta(days=7), "RD", 7, 7, "").get_state()
+    assert GroupingState.CLOSED == Grouping(
+        None, ".", "name", UserKey(int=0), yet - timedelta(days=3),
+        yet - timedelta(days=2), yet - timedelta(days=1), "RD", 7, 7, "").get_state()
 
 
 def test_is_registration_open() -> None:
