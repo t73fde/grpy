@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {#
- # Copyright (c) 2018,2019 Detlef Stern
+ # Copyright (c) 2019 Detlef Stern
  #
  # This file is part of grpy - user grouping.
  #
@@ -43,17 +43,10 @@
   <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>
   {%- endfor %}
   </table>
-  <h2>Registrations</h2>
-  <ol class="w3-ul">
-  {%- for user in user_registrations %}
-  <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident }}</input></label></li>
-  {%- endfor %}
-  </ol>
-  <form method="post" action="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}">
+  <form method="post" action="{{ url_for('grouping_fasten_groups', grouping_key=grouping.key) }}">
     {{- form.csrf_token }}
     <div class="w3-panel">
     {{ form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}
-
     {{ form.submit_fasten(class="w3-btn w3-ripple " + color("danger")) }}
     </div>
   </form>

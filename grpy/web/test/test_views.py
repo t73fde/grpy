@@ -353,6 +353,8 @@ def test_grouping_detail_fasten(app, client, auth, app_grouping: Grouping) -> No
     response = client.get(url)
     assert b"<h1>Groups</h1>" in response.data
     assert b"Fasten" in response.data
+    fasten_url = url_for('grouping_fasten_groups', grouping_key=app_grouping.key)
+    assert fasten_url.encode('utf-8') in response.data
     assert b"Remove Groups" in response.data
 
     app.get_connection().delete_registrations(app_grouping.key)
@@ -666,3 +668,58 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
         [('info', "Groups removed.")]
     client.get(url_for('home'))  # Clear flashes
     assert app.get_connection().get_groups(app_grouping.key) == ()
+
+
+def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
+    """Groups can be fastened after building them."""
+    url = url_for('grouping_fasten_groups', grouping_key=app_grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    location_url = "http://localhost" + url_for(
+        'grouping_detail', grouping_key=app_grouping.key)
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "No groups to fasten.")]
+    client.get(url_for('home'))  # Clear flashes
+
+    user = app.get_connection().set_user(User(None, "uSer-42"))
+    app.get_connection().set_registration(Registration(
+        app_grouping.key, user.key, UserPreferences()))
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    response = client.get(url)
+    assert response.status_code == 200
+    print("USER", response.data)
+    assert response.data.count(user.ident.encode('utf-8')) == 1
+
+    response = client.post(url, data={})
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert '_flashes' not in get_session_data(app, response)
+
+    response = client.post(url, data={'submit_fasten': "submit_fasten"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Groups fastened.")]
+    client.get(url_for('home'))  # Clear flashes
+    assert app.get_connection().get_groups(app_grouping.key) == (frozenset([user.key]),)
+    assert app.get_connection().count_registrations_by_grouping(app_grouping.key) == 0
+
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "No registrations to fasten groups.")]
+    client.get(url_for('home'))  # Clear flashes

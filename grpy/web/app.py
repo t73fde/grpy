@@ -258,6 +258,9 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.add_url_rule(
         "/groupings/<grouping:grouping_key>/remove_groups", "grouping_remove_groups",
         views.grouping_remove_groups, methods=('GET', 'POST'))
+    app.add_url_rule(
+        "/groupings/<grouping:grouping_key>/fasten_groups", "grouping_fasten_groups",
+        views.grouping_fasten_groups, methods=('GET', 'POST'))
     app.log_debug("Application created.")
     return app
 
