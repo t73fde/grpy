@@ -695,12 +695,13 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     client.get(url_for('home'))  # Clear flashes
 
     user = app.get_connection().set_user(User(None, "uSer-42"))
+    assert app_grouping.key
+    assert user.key
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     response = client.get(url)
     assert response.status_code == 200
-    print("USER", response.data)
     assert response.data.count(user.ident.encode('utf-8')) == 1
 
     response = client.post(url, data={})
