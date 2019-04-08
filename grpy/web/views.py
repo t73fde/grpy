@@ -26,7 +26,8 @@ from flask import (abort, current_app, flash, g, redirect, render_template,
                    request, url_for)
 
 from .. import logic, utils
-from ..models import Grouping, GroupingKey, Registration, User, UserKey
+from ..models import (Grouping, GroupingKey, GroupingState, Registration, User,
+                      UserKey)
 from ..policies import get_policy
 from ..repo.base import Connection
 from ..repo.logic import set_grouping_new_code
@@ -178,17 +179,21 @@ def grouping_detail(grouping_key: GroupingKey):
         flash("{} registered users removed.".format(count), category='info')
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
+    state = get_connection().get_grouping_state(grouping_key)
     group_list = _get_group_list(grouping.key)
-    can_fasten = group_list and user_registrations
-    if group_list:
-        user_registrations = []
-    can_delete = not user_registrations and not group_list
-    can_start = grouping.can_grouping_start() and user_registrations
     return render_template(
         "grouping_detail.html",
-        grouping=grouping, group_list=group_list,
+        grouping=grouping,
+        group_list=group_list,
         user_registrations=user_registrations,
-        can_fasten=can_fasten, can_delete=can_delete, can_start=can_start,
+        can_show_link=state in (
+            GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL),
+        can_delete_regs=(state in (GroupingState.AVAILABLE, GroupingState.FINAL)),
+        has_group=(state in (
+            GroupingState.GROUPED, GroupingState.FASTENED, GroupingState.CLOSED)),
+        is_grouped=(state == GroupingState.GROUPED),
+        can_delete=(state in (GroupingState.NEW, GroupingState.CLOSED)),
+        can_start=(state == GroupingState.FINAL),
         form=form)
 
 
@@ -211,6 +216,12 @@ def grouping_update(grouping_key: GroupingKey):
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
+
+    state = get_connection().get_grouping_state(grouping_key)
+    if state not in (GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL):
+        flash("Update of grouping not allowed.", category='warning')
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         form = forms.GroupingForm()
     else:
@@ -241,8 +252,8 @@ def grouping_register(grouping_key: GroupingKey):
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key == grouping.host_key:
         abort(403)
-    if not grouping.is_registration_open():
-        flash("Not within the registration period for '{}'.".format(grouping.name),
+    if not grouping.can_register():
+        flash("Grouping '{}' is not available.".format(grouping.name),
               category="warning")
         return redirect(url_for('home'))
     registration = get_connection().get_registration(grouping.key, g.user.key)
@@ -272,11 +283,9 @@ def grouping_start(grouping_key: GroupingKey):
     if g.user.key != grouping.host_key:
         abort(403)
 
-    if not grouping.can_grouping_start():
-        flash(
-            "Grouping for '{}' must be after the final date.".format(
-                grouping.name),
-            category="warning")
+    state = get_connection().get_grouping_state(grouping_key)
+    if state != GroupingState.FINAL:
+        flash("Grouping is not final.", category="warning")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     user_registrations = utils.LazyList(
@@ -284,12 +293,6 @@ def grouping_start(grouping_key: GroupingKey):
     if not user_registrations:
         flash("No registrations for '{}' found.".format(grouping.name),
               category="warning")
-        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
-
-    groups = get_connection().get_groups(grouping_key)
-    if groups:
-        flash("Groups for {} already build.".format(grouping.name),
-              category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     form = forms.StartGroupingForm()
@@ -311,8 +314,8 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
-    group_list = _get_group_list(grouping.key)
-    if not group_list:
+    state = get_connection().get_grouping_state(grouping_key)
+    if state != GroupingState.GROUPED:
         flash("No groups to remove.", category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
@@ -323,6 +326,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
             flash("Groups removed.", category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
+    group_list = _get_group_list(grouping.key)
     return render_template(
         "grouping_remove_groups.html",
         grouping=grouping, group_list=group_list, form=form)
@@ -334,15 +338,9 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
         abort(403)
-    group_list = _get_group_list(grouping.key)
-    if not group_list:
-        flash("No groups to fasten.", category="info")
-        return redirect(url_for('grouping_detail', grouping_key=grouping.key))
-
-    user_registrations = utils.LazyList(
-        get_connection().iter_user_registrations_by_grouping(grouping.key))
-    if not user_registrations:
-        flash("No registrations to fasten groups.", category="warning")
+    state = get_connection().get_grouping_state(grouping_key)
+    if state != GroupingState.GROUPED:
+        flash("Grouping not performed recently.", category="warning")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
     form = forms.FastenGroupsForm()
@@ -352,6 +350,7 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
             flash("Groups fastened.", category="info")
         return redirect(url_for('grouping_detail', grouping_key=grouping.key))
 
+    group_list = _get_group_list(grouping.key)
     return render_template(
         "grouping_fasten.html",
         grouping=grouping, group_list=group_list, form=form)

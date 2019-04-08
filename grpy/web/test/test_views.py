@@ -314,6 +314,23 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> No
         client.get(url_for('home'))  # Clean flash message
 
 
+def test_grouping_detail_remove_grouped(
+        app, client, auth, app_grouping: Grouping) -> None:
+    """Registered users are not shown when groups were formed."""
+    assert app_grouping.key is not None
+    users = add_user_registrations(app, app_grouping.key)
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
+    users_as_group = frozenset(user.key for user in users)
+    app.get_connection().set_groups(app_grouping.key, (users_as_group,))
+    auth.login("host")
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b"registered users" not in response.data.lower()
+
+
 def test_grouping_detail_remove_illegal(
         app, client, auth, app_grouping: Grouping) -> None:
     """If illegal UUIDs are sent, nothing happens."""
@@ -332,8 +349,13 @@ def test_grouping_detail_fasten(app, client, auth, app_grouping: Grouping) -> No
     """
     Test visibility of button 'Fasten groups'.
 
-    A group assignment can be fastened, if there is a group and if there are
-    user registrations for the grouping."""
+    A group assignment can be fastened, if state of grouping is
+    `GroupingState.GROUPED`.
+    """
+    assert app_grouping.key is not None
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     assert app_grouping.key is not None
     url = url_for('grouping_detail', grouping_key=app_grouping.key)
     auth.login("host")
@@ -391,10 +413,21 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
         'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
+    client.get(url_for('home'))  # Clean flash messages
 
     groupings = list(app.get_connection().iter_groupings())
     assert len(groupings) == 1
     assert groupings[0].key == app_grouping.key
+
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000),
+        close_date=None))
+    assert app_grouping.key is not None
+    user = app.get_connection().get_user_by_ident("user")
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    assert client.get(url).status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
 
 
 def test_shortlink(client, auth, app_grouping: Grouping) -> None:
@@ -466,7 +499,7 @@ def test_grouping_register_out_of_time(
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Not within the registration period for '{}'.".format(
+        [('warning', "Grouping '{}' is not available.".format(
             app_grouping.name))]
 
     client.get(url_for('home'))  # Clean flash messages
@@ -479,7 +512,7 @@ def test_grouping_register_out_of_time(
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Not within the registration period for '{}'.".format(
+        [('warning', "Grouping '{}' is not available.".format(
             app_grouping.name))]
 
 
@@ -504,8 +537,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping for '{}' must be after the final date.".format(
-            app_grouping.name))]
+        [('warning', "Grouping is not final.")]
     client.get(url_for('home'))  # Clear flashes
 
     new_grouping = app.get_connection().set_grouping(dataclasses.replace(
@@ -532,7 +564,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 302
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Groups for {} already build.".format(app_grouping.name))]
+        [('warning', "Grouping is not final.")]
     client.get(url_for('home'))  # Clear flashes
 
 
@@ -629,6 +661,10 @@ def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) 
 
 def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     """Groups can be removed after building them."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
+    assert app_grouping.key is not None
     url = url_for('grouping_remove_groups', grouping_key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
@@ -652,6 +688,8 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     client.get(url_for('home'))  # Clear flashes
 
     user = app.get_connection().get_user_by_ident("user")
+    app.get_connection().set_registration(Registration(
+        app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     response = client.get(url)
     assert response.status_code == 200
@@ -672,6 +710,9 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
 
 def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     """Groups can be fastened after building them."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     url = url_for('grouping_fasten_groups', grouping_key=app_grouping.key)
     assert client.get(url).status_code == 401
     assert client.post(url).status_code == 401
@@ -691,7 +732,7 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
-        [('info', "No groups to fasten.")]
+        [('warning', "Grouping not performed recently.")]
     client.get(url_for('home'))  # Clear flashes
 
     user = app.get_connection().set_user(User(None, "uSer-42"))
@@ -722,5 +763,5 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "No registrations to fasten groups.")]
+        [('warning', "Grouping not performed recently.")]
     client.get(url_for('home'))  # Clear flashes

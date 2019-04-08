@@ -135,28 +135,14 @@ def test_get_state() -> None:
         yet - timedelta(days=2), yet - timedelta(days=1), "RD", 7, 7, "").get_state()
 
 
-def test_is_registration_open() -> None:
-    """Registration is open if now is between begin and final date."""
-    yet = now()
-    grouping = Grouping(
-        None, ".", "name", UserKey(int=0), yet + timedelta(seconds=1),
-        yet + timedelta(days=7), None, "RD", 7, 7, "Note")
-    assert not grouping.is_registration_open()
-    assert dataclasses.replace(grouping, begin_date=yet).is_registration_open()
-    assert not dataclasses.replace(
-        grouping,
-        begin_date=yet - timedelta(seconds=2),
-        final_date=yet - timedelta(seconds=1)).is_registration_open()
-
-
-def test_can_grouping_start() -> None:
-    """Grouping can start after the final date."""
+def test_can_register() -> None:
+    """User can register for Grouping."""
     yet = now()
     grouping = Grouping(
         None, ".", "name", UserKey(int=0), yet - timedelta(days=6),
         yet + timedelta(days=1), None, "RD", 7, 7, "Note")
-    assert not grouping.can_grouping_start()
-    assert dataclasses.replace(grouping, final_date=yet).can_grouping_start()
+    assert grouping.can_register()
+    assert not dataclasses.replace(grouping, final_date=yet).can_register()
 
 
 def test_registration_validation() -> None:

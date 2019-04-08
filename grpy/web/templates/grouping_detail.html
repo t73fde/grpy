@@ -40,7 +40,7 @@
 {{- render_data("Note", grouping.note) }}
 {% endif %}
 </div>
-{% if not group_list %}
+{% if can_delete or can_start %}
 <div class="w3-container w3-bar">
   <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
   {% if can_delete %}
@@ -51,7 +51,7 @@
   {% endif %}
 </div>
 {% endif %}
-{% if group_list %}
+{% if has_group %}
 <div class="w3-panel">
   <h1>Groups</h1>
   <table class="w3-table w3-bordered">
@@ -61,14 +61,14 @@
   {%- endfor %}
   </table>
 </div>
-{% if can_fasten %}
+{% if is_grouped %}
 <div class="w3-panel">
   <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Remove Groups</button></a>
   <a href="{{ url_for('grouping_fasten_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Fasten Groups</button></a>
 </div>
 {% endif %}
 {% endif %}
-{% if user_registrations %}
+{% if can_delete_regs %}
 <div class="w3-panel">
   <h1>Registered users ({{ user_registrations|length }})</h1>
   <form method="POST">

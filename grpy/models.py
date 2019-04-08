@@ -195,13 +195,9 @@ class Grouping(Model):
             return GroupingState.FINAL
         return GroupingState.CLOSED
 
-    def is_registration_open(self) -> bool:
-        """Check that registrations for given grouping are open."""
-        return self.get_state() == GroupingState.AVAILABLE
-
-    def can_grouping_start(self) -> bool:
+    def can_register(self) -> bool:
         """Check that grouping process can start now."""
-        return self.final_date < now()
+        return self.get_state() == GroupingState.AVAILABLE
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods

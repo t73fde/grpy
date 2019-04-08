@@ -46,10 +46,10 @@
     <tr><th>Name</th><th>Final date</th></tr>
     {%- for grouping in registrations -%}
     <tr>
-      {%- if grouping.can_grouping_start() %}
-      <td>{{ grouping.name }}</td>
-      {%- else -%}
+      {%- if grouping.can_register() %}
       <td><a href="{{ url_for('grouping_register', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+      {%- else -%}
+      <td>{{ grouping.name }}</td>
       {%- endif -%}
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
     </tr>
