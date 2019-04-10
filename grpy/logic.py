@@ -49,6 +49,14 @@ def make_code(grouping: Grouping, unique: bool = False) -> str:
     return ''.join(result)
 
 
+def len_groups(groups: Groups) -> int:
+    """Return the number of all member in all groups."""
+    result = 0
+    for group in groups:
+        result += len(group)
+    return result
+
+
 def remove_from_groups(groups: Groups, user_keys: AbstractSet[UserKey]) -> Groups:
     """Remove an user from the builded groups."""
     user_key_set = set(user_keys)

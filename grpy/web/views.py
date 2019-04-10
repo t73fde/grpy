@@ -51,6 +51,24 @@ class UserGroup:
     named_group: Sequence[str]
 
 
+def _get_grouping_count(host_key: UserKey) -> Sequence[Tuple[Grouping, int]]:
+    """Add reservation / member count to groupings."""
+    result = []
+    connection = get_connection()
+    for grouping in connection.iter_groupings(
+            where={
+                "host_key__eq": host_key,
+                "close_date__ge": utils.now()},
+            order=["final_date"]):
+        count = connection.count_registrations_by_grouping(
+            cast(GroupingKey, grouping.key))
+        if count == 0:
+            count = logic.len_groups(connection.get_groups(
+                cast(GroupingKey, grouping.key)))
+        result.append((grouping, count))
+    return result
+
+
 def home():
     """Show home page."""
     grouping_counts: List[Tuple[Grouping, int]] = []
@@ -59,16 +77,7 @@ def home():
     show_welcome = True
     if g.user:
         if g.user.is_host:
-            connection = get_connection()
-            groupings = list(connection.iter_groupings(
-                where={
-                    "host_key__eq": g.user.key,
-                    "close_date__ge": utils.now()},
-                order=["final_date"]))
-            counts = [
-                connection.count_registrations_by_grouping(
-                    cast(GroupingKey, g.key)) for g in groupings]
-            grouping_counts = list(zip(groupings, counts))
+            grouping_counts = _get_grouping_count(g.user.key)
             show_welcome = False
 
         group_list = []

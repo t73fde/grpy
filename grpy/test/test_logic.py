@@ -22,7 +22,7 @@
 import dataclasses  # pylint: disable=wrong-import-order
 from datetime import timedelta
 
-from ..logic import make_code, remove_from_groups
+from ..logic import len_groups, make_code, remove_from_groups
 from ..models import Grouping, UserKey
 from ..utils import now
 
@@ -56,6 +56,14 @@ def test_make_code() -> None:
     check_code(code, dataclasses.replace(grouping, final_date=yet + timedelta(days=60)))
     check_code(code, dataclasses.replace(grouping, policy="LK"))
     check_code(None, grouping, unique=True)
+
+
+def test_len_groups() -> None:
+    """Calculate the len / size of groups."""
+    assert len_groups(()) == 0
+    assert len_groups((frozenset([UserKey(int=0)]),)) == 1
+    assert len_groups((frozenset([UserKey(int=0), UserKey(int=1)]),)) == 2
+    assert len_groups((frozenset([UserKey(int=0)]), frozenset([UserKey(int=1)]))) == 2
 
 
 def test_remove_from_groups() -> None:
