@@ -195,8 +195,9 @@ def grouping_detail(grouping_key: GroupingKey):
         grouping=grouping,
         group_list=group_list,
         user_registrations=user_registrations,
-        can_show_link=state in (
-            GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL),
+        can_show_link=state in (GroupingState.NEW, GroupingState.AVAILABLE),
+        can_update=(state in (
+            GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL)),
         can_delete_regs=(state in (GroupingState.AVAILABLE, GroupingState.FINAL)),
         has_group=(state in (
             GroupingState.GROUPED, GroupingState.FASTENED, GroupingState.CLOSED)),
@@ -248,6 +249,10 @@ def shortlink(code: str):
     grouping = value_or_404(get_connection().get_grouping_by_code(code.upper()))
     if g.user is None:
         return redirect_to_login()
+
+    state = get_connection().get_grouping_state(grouping.key)
+    if state not in (GroupingState.NEW, GroupingState.AVAILABLE):
+        abort(404)
 
     if g.user.key == grouping.host_key:
         return render_template("grouping_code.html", code=grouping.code)

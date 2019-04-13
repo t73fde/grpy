@@ -20,16 +20,18 @@
 {% from "macros.html" import render_data %}
 {% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
 {% block heading %}{% endblock %}
-{% set code_link %}
-<a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a>
-{% endset %}
 {% block content %}
 <div class="w3-panel">
 <div class="w3-container w3-light-gray">
   <h1>Grouping Details</h1>
 </div>
 {{- render_data("Name", grouping.name) }}
+{% if can_show_link %}
+{% set code_link %}
+<a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a>
+{% endset %}
 {{- render_data("Code", code_link) }}
+{% endif %}
 {{- render_data("Begin date", grouping.begin_date|datetimeformat("iso-short")) }}
 {{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
 {{- render_data("Close date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
@@ -40,9 +42,11 @@
 {{- render_data("Note", grouping.note) }}
 {% endif %}
 </div>
-{% if can_delete or can_start %}
+{% if can_update or can_delete or can_start %}
 <div class="w3-container w3-bar">
+  {% if can_update %}
   <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
+  {% endif %}
   {% if can_delete %}
   <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
   {% endif %}

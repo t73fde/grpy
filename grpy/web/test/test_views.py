@@ -266,6 +266,8 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode('utf-8')
+    assert app_grouping.code in data
+    assert url_for('shortlink', code=app_grouping.code) in data
     assert app_grouping.note in data
 
     auth.login("user")
@@ -274,6 +276,19 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
 
     assert client.get(
         url_for('grouping_detail', grouping_key=GroupingKey())).status_code == 404
+
+
+def test_grouping_detail_no_code(app, client, auth, app_grouping: Grouping) -> None:
+    """When final date is reached, no short link / code should be visible."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping, final_date=utils.now() - datetime.timedelta(seconds=600)))
+    url = url_for('grouping_detail', grouping_key=app_grouping.key)
+    auth.login("host")
+    response = client.get(url)
+    assert response.status_code == 200
+    data = response.data.decode('utf-8')
+    assert app_grouping.code not in data
+    assert url_for('shortlink', code=app_grouping.code) not in data
 
 
 def add_user_registrations(app, grouping_key: GroupingKey) -> List[User]:
@@ -448,6 +463,17 @@ def test_shortlink(client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == \
         "http://localhost" + url_for('grouping_register', grouping_key=app_grouping.key)
+
+
+def test_shortlink_after_final(app, client, auth, app_grouping: Grouping) -> None:
+    """When final date is reached, no short link is possible."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping, final_date=utils.now() - datetime.timedelta(seconds=600)))
+    url = url_for('shortlink', code=app_grouping.code)
+    auth.login("host")
+    assert client.get(url).status_code == 404
+    auth.login("student")
+    assert client.get(url).status_code == 404
 
 
 def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
