@@ -77,7 +77,7 @@ def test_login_required_redirect(app, client, auth) -> None:
     response = client.get('/test')
     assert response.status_code == 302
     assert response.headers['Location'] == \
-        "http://localhost" + url_for('login', next_url='/test')
+        "http://localhost" + url_for('auth.login', next_url='/test')
 
     auth.login("user")
     response = client.get('/test')
@@ -100,7 +100,7 @@ def test_login_required_redirect_prefix() -> None:
     assert status.split(" ")[:1] == ["302"]
     with grpy_app.test_request_context():
         assert headers['Location'] == \
-            "http://localhost/prefix" + url_for('login', next_url='/prefix/test')
+            "http://localhost/prefix" + url_for('auth.login', next_url='/prefix/test')
 
 
 def test_value_or_404() -> None:

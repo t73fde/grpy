@@ -20,9 +20,8 @@
 """Web application for grpy."""
 
 import os
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict
 
-import requests
 from flask import Flask, g, make_response, render_template, session
 from flask_babel import Babel
 
@@ -30,7 +29,7 @@ from ..models import Permissions, User
 from ..repo import create_repository
 from ..repo.logic import set_grouping_new_code
 from ..version import get_version, read_version_file
-from . import policies, utils, views
+from . import auth, policies, utils, views
 
 
 class GrpyApp(Flask):
@@ -178,35 +177,6 @@ class GrpyApp(Flask):
         """Log out the current user."""
         self.clear_session()
 
-    def _check_pw(self, username: str, password: str) -> bool:
-        """Check username / password."""
-        url = self.config.get("AUTH_URL", "http://localhost:9876/")
-        if url is None:
-            return True
-        if url == "":
-            return False
-
-        try:
-            response = requests.head(url, auth=(username, password))
-            status_code = response.status_code
-        except requests.RequestException:
-            self.log_error(
-                "Unable to get authentication from '%s' for user '%s':", url, username)
-            status_code = 600
-        return 200 <= status_code <= 299
-
-    def authenticate(self, username: str, password: str) -> Optional[User]:
-        """Authenticate by user name and password, and return user found."""
-        username = username.lower()
-        if self._check_pw(username, password):
-            connection = self.get_connection()
-            user = connection.get_user_by_ident(username)
-            if not user:
-                user = connection.set_user(User(None, username))
-            self.login(user)
-            return cast(User, user)
-        return None
-
     def log_debug(self, message: str, *args, **kwargs) -> None:
         """Emit a debug message."""
         self.logger.debug(message, *args, **kwargs)  # pylint: disable=no-member
@@ -237,8 +207,6 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
 
     app.add_url_rule("/", "home", views.home)
     app.add_url_rule("/about", "about", views.about)
-    app.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
-    app.add_url_rule("/logout", "logout", views.logout)
     app.add_url_rule(
         "/groupings/", "grouping_create", views.grouping_create,
         methods=('GET', 'POST'))
@@ -261,6 +229,9 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     app.add_url_rule(
         "/groupings/<grouping:grouping_key>/fasten_groups", "grouping_fasten_groups",
         views.grouping_fasten_groups, methods=('GET', 'POST'))
+
+    auth_blueprint = auth.create_blueprint()
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
     app.log_debug("Application created.")
     return app
 

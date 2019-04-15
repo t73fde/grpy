@@ -51,7 +51,7 @@ def login_required(view):
 
 def redirect_to_login():
     """Return a redirect to login view."""
-    return redirect(url_for('login', next_url=request.script_root + request.path))
+    return redirect(url_for('auth.login', next_url=request.script_root + request.path))
 
 
 def login_required_redirect(view):

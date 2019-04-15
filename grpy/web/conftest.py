@@ -82,12 +82,12 @@ class AuthenticationActions:
     def login(self, username: str, password: str = 'test') -> None:
         """Perform the login."""
         response = self._client.post(
-            url_for('login'), data={'username': username, 'password': password})
+            url_for('auth.login'), data={'username': username, 'password': password})
         assert response.status_code == 302
 
     def logout(self) -> None:
         """Perform the logout."""
-        self._client.get(url_for('logout'))
+        self._client.get(url_for('auth.logout'))
 
 
 @pytest.fixture

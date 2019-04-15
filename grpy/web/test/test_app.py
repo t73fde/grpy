@@ -21,9 +21,7 @@
 
 import logging
 import os
-import unittest.mock
 
-import requests
 from flask import g, url_for
 from werkzeug.test import Client
 
@@ -77,30 +75,6 @@ def test_setup_logging() -> None:
     assert create_app({'LOG_HANDLERS': handlers}).logger.handlers == handlers
 
 
-def test_check_password(app, monkeypatch) -> None:
-    """Test app.check_pw."""
-    assert app.authenticate("host", "1") is not None
-
-    # Set URL to something that is non-existing
-    app.config['AUTH_URL'] = "http://this.is.sparta:480/"
-
-    def requests_head(_url, auth):  # pylint: disable=unused-argument
-        """Must return a "good" status code > 300."""
-        result = unittest.mock.Mock()
-        result.status_code = 500
-        return result
-
-    monkeypatch.setattr(requests, 'head', requests_head)
-    assert app.authenticate("user", "1") is None
-
-    def requests_head_raise(_url, auth):
-        """Must raise an RequestException."""
-        raise requests.RequestException()
-
-    monkeypatch.setattr(requests, 'head', requests_head_raise)
-    assert app.authenticate("user", "1") is None
-
-
 def create_grpy_app():
     """Create a new Grpy app with SQLite repository."""
     return create_app(
@@ -116,7 +90,7 @@ def do_login(grpy_app):
     client = Client(grpy_app)
     with grpy_app.test_request_context():
         _iter_data, status, headers = client.post(
-            url_for('login'), data={'username': "host", 'password': "1"})
+            url_for('auth.login'), data={'username': "host", 'password': "1"})
     assert status == "302 FOUND"
     assert headers['Location'] == "http://localhost/"
     return client

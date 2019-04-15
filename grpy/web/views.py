@@ -110,34 +110,6 @@ def about():
     return render_template("about.html", version=current_app.version.user_version)
 
 
-def login():
-    """Show login form and authenticate user."""
-    if g.user:
-        current_app.logout()
-        flash("User '{}' was logged out.".format(g.user.ident), category="info")
-        g.user = None
-
-    if request.method == 'POST':
-        form = forms.LoginForm()
-    else:
-        form = forms.LoginForm(data={'next_url': request.args.get('next_url', '')})
-
-    if form.validate_on_submit():
-        if current_app.authenticate(form.username.data, form.password.data):
-            next_url = form.next_url.data
-            if not next_url or not next_url.startswith("/"):
-                next_url = url_for('home')
-            return redirect(next_url)
-        flash("Cannot authenticate user", category="error")
-    return render_template("login.html", form=form)
-
-
-def logout():
-    """Logout current user."""
-    current_app.logout()
-    return redirect(url_for("home"))
-
-
 @login_required
 def grouping_create():
     """Create a new grouping."""

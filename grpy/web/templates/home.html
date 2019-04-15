@@ -73,7 +73,7 @@
 {% else %}
 <div class="w3-panel">
   <h1>Welcome!</h1>
-  <p>Please <a href="{{ url_for('login') }}">login</a> to use this software.<p>
+  <p>Please <a href="{{ url_for('auth.login') }}">login</a> to use this software.<p>
 </div>
 {% endif %}
 {% endblock %}
