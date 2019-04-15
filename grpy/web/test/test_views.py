@@ -23,7 +23,6 @@ import dataclasses  # pylint: disable=wrong-import-order
 import datetime
 from typing import Any, Dict, List, cast
 
-import pytest
 from flask import url_for
 from flask.sessions import SecureCookieSessionInterface
 from werkzeug.http import parse_cookie
@@ -32,7 +31,6 @@ from ... import utils
 from ...models import (Grouping, GroupingKey, Registration, User,
                        UserPreferences)
 from ...repo.base import Connection
-from ...repo.logic import set_grouping_new_code
 
 
 def get_session_data(app, response) -> Dict[str, Any]:
@@ -55,16 +53,6 @@ def test_home_anonymous(client) -> None:
     assert url_for('about') in data
     assert url_for('auth.login') in data
     assert url_for('auth.logout') not in data
-
-
-@pytest.fixture
-def grouping(app) -> Grouping:
-    """Insert a grouping into the repository."""
-    now = utils.now()
-    host = app.get_connection().get_user_by_ident("host")
-    return set_grouping_new_code(app.get_connection(), Grouping(
-        None, ".", "Name", host.key, now, now + datetime.timedelta(days=1),
-        None, "RD", 17, 7, "Notizie"))
 
 
 def test_home_host(client, auth, app_grouping: Grouping) -> None:
