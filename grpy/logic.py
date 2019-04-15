@@ -71,3 +71,10 @@ def remove_from_groups(groups: Groups, user_keys: AbstractSet[UserKey]) -> Group
         else:
             group_list.append(group)
     return tuple(group_list)
+
+
+def sort_groups(groups: Groups) -> Groups:
+    """Sort groups according to user keys to normalize them by some way."""
+    group_list = [sorted(group) for group in groups]
+    group_list.sort()
+    return tuple(frozenset(group) for group in group_list)
