@@ -19,17 +19,18 @@
 
 """Tests for the connection logic."""
 
-import dataclasses  # pylint: disable=wrong-import-order
-from typing import Tuple
+import dataclasses
+import datetime
+from typing import Sequence, Tuple, cast
 from unittest.mock import patch
 
 import pytest
 
-from ...models import Grouping, UserPreferences
+from ...models import Grouping, Registration, User, UserKey, UserPreferences
 from ...preferences import get_code, register_preferences
 from ..base import Connection, DuplicateKey
 from ..logic import (decode_preferences, encode_preferences,
-                     set_grouping_new_code)
+                     groupings_for_host, set_grouping_new_code)
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:
@@ -56,6 +57,82 @@ def test_set_grouping_new_code_no_random(
         with pytest.raises(
                 OverflowError, match="grpy.repo.logic.set_grouping_new_code"):
             set_grouping_new_code(connection, grouping)
+
+
+def test_groupings_for_host_none(connection: Connection, grouping: Grouping) -> None:
+    """When no groupings are stored, both elements will be empty."""
+    opened, closed = groupings_for_host(connection, grouping.host_key)
+    assert opened == []
+    assert closed == []
+
+
+def make_users(connection: Connection, count: int) -> Sequence[User]:
+    """Create some new user objects."""
+    result = []
+    for i in range(count):
+        ident = "ident-%d" % i
+        user = connection.get_user_by_ident(ident)
+        if not user:
+            user = connection.set_user(User(None, ident))
+        result.append(user)
+    return result
+
+
+def test_groupings_for_host_opened_regs(
+        connection: Connection, grouping: Grouping) -> None:
+    """An open grouping with registrations will occur in first element."""
+    grouping = connection.set_grouping(grouping)
+    assert grouping.key is not None
+    opened, closed = groupings_for_host(connection, grouping.host_key)
+    assert len(opened) == 1
+    assert opened[0][0] == grouping
+    assert opened[0][1] == 0
+    assert closed == []
+
+    num_regs = 7
+    for user in make_users(connection, num_regs):
+        assert user.key is not None
+        connection.set_registration(Registration(
+            grouping.key, user.key, UserPreferences()))
+    opened, closed = groupings_for_host(connection, grouping.host_key)
+    assert len(opened) == 1
+    assert opened[0][0] == grouping
+    assert opened[0][1] == num_regs
+    assert closed == []
+
+
+def test_groupings_for_host_opened_groups(
+        connection: Connection, grouping: Grouping) -> None:
+    """An open grouping with registrations will occur in first element."""
+    grouping = connection.set_grouping(grouping)
+    assert grouping.key is not None
+
+    num_regs = 9
+    connection.set_groups(
+        grouping.key,
+        (frozenset(cast(UserKey, user.key) for user in make_users(
+            connection, num_regs)),))
+    opened, closed = groupings_for_host(connection, grouping.host_key)
+    assert len(opened) == 1
+    assert opened[0][0] == grouping
+    assert opened[0][1] == num_regs
+    assert closed == []
+
+
+def test_groupings_for_host_closed(connection: Connection, grouping: Grouping) -> None:
+    """A closed grouping is retrieved on the second element."""
+    grouping = connection.set_grouping(dataclasses.replace(
+        grouping,
+        final_date=grouping.begin_date + datetime.timedelta(seconds=60),
+        close_date=grouping.begin_date + datetime.timedelta(seconds=61)))
+
+    opened, closed = groupings_for_host(
+        connection, UserKey(int=grouping.host_key.int + 1))
+    assert opened == []
+    assert closed == []
+    opened, closed = groupings_for_host(connection, grouping.host_key)
+    assert opened == []
+    assert closed == [grouping]
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods

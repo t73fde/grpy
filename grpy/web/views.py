@@ -20,7 +20,7 @@
 """Web views for grpy."""
 
 import dataclasses  # pylint: disable=wrong-import-order
-from typing import List, Sequence, Tuple, cast
+from typing import List, Sequence, cast
 
 from flask import (abort, current_app, flash, g, redirect, render_template,
                    request, url_for)
@@ -30,7 +30,8 @@ from ..models import (Grouping, GroupingKey, GroupingState, Registration, User,
                       UserKey)
 from ..policies import get_policy
 from ..repo.base import Connection
-from ..repo.logic import set_grouping_new_code
+from ..repo.logic import (GroupingCount, groupings_for_host,
+                          set_grouping_new_code)
 from . import forms
 from .policies import get_policy_names, get_registration_form
 from .utils import (login_required, make_model, redirect_to_login,
@@ -51,33 +52,17 @@ class UserGroup:
     named_group: Sequence[str]
 
 
-def _get_grouping_count(host_key: UserKey) -> Sequence[Tuple[Grouping, int]]:
-    """Add reservation / member count to groupings."""
-    result = []
-    connection = get_connection()
-    for grouping in connection.iter_groupings(
-            where={
-                "host_key__eq": host_key,
-                "close_date__ge": utils.now()},
-            order=["final_date"]):
-        count = connection.count_registrations_by_grouping(
-            cast(GroupingKey, grouping.key))
-        if count == 0:
-            count = logic.len_groups(connection.get_groups(
-                cast(GroupingKey, grouping.key)))
-        result.append((grouping, count))
-    return result
-
-
 def home():
     """Show home page."""
-    grouping_counts: List[Tuple[Grouping, int]] = []
+    open_groupings: Sequence[GroupingCount] = []
+    closed_groupings: Sequence[Grouping] = []
     registrations: List[Grouping] = []
     group_list: List[UserGroup] = []
     show_welcome = True
     if g.user:
         if g.user.is_host:
-            grouping_counts = _get_grouping_count(g.user.key)
+            open_groupings, closed_groupings = groupings_for_host(
+                get_connection(), g.user.key)
             show_welcome = False
 
         group_list = []
@@ -102,11 +87,12 @@ def home():
             if grouping.key not in assigned_groupings]
 
         show_welcome = show_welcome and not (
-            grouping_counts or registrations or group_list)
+            open_groupings or registrations or group_list)
 
     return render_template(
         "home.html",
-        show_welcome=show_welcome, groupings=grouping_counts,
+        show_welcome=show_welcome, open_groupings=open_groupings,
+        closed_groupings=closed_groupings,
         registrations=registrations, group_list=group_list)
 
 

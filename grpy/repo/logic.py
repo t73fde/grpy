@@ -21,11 +21,12 @@
 
 import dataclasses  # pylint: disable=wrong-import-order
 import json
-from typing import Any, Optional
+from typing import Any, List, Optional, Sequence, Tuple, cast
 
-from ..logic import make_code
-from ..models import Grouping, UserPreferences
+from ..logic import len_groups, make_code
+from ..models import Grouping, GroupingKey, UserKey, UserPreferences
 from ..preferences import get_code, get_preferences
+from ..utils import now
 from .base import Connection, DuplicateKey
 
 
@@ -41,6 +42,36 @@ def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Groupin
                 raise
         counter += 1
     raise OverflowError("grpy.repo.logic.set_grouping_new_code")
+
+
+GroupingCount = Tuple[Grouping, int]
+
+
+def groupings_for_host(
+        connection: Connection,
+        host_key: UserKey) -> Tuple[Sequence[GroupingCount], Sequence[Grouping]]:
+    """
+    Retunr sequence of open and closed groupings.
+
+    Open grouping will have an additional number of reservations / groups size,
+    closed grouping will only be listed.
+    """
+    yet = now()
+    open_groupings = []
+    closed_groupings: List[Grouping] = []
+    for grouping in connection.iter_groupings(
+            where={"host_key__eq": host_key},
+            order=["final_date"]):
+        if grouping.close_date is None or grouping.close_date >= yet:
+            count = connection.count_registrations_by_grouping(
+                cast(GroupingKey, grouping.key))
+            if count == 0:
+                count = len_groups(connection.get_groups(
+                    cast(GroupingKey, grouping.key)))
+            open_groupings.append((grouping, count))
+        else:
+            closed_groupings.append(grouping)
+    return (open_groupings, closed_groupings)
 
 
 def encode_preferences(preferences: UserPreferences) -> Optional[str]:

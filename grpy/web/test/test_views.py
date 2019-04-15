@@ -64,6 +64,28 @@ def test_home_host(client, auth, app_grouping: Grouping) -> None:
     assert url_for('grouping_detail', grouping_key=app_grouping.key) in data
     assert app_grouping.name in data
     assert str(app_grouping.final_date.minute) in data
+    assert "Closed Groupings" not in data
+
+
+def test_home_host_closed(app, client, auth, app_grouping: Grouping) -> None:
+    """A closed grouping will be presented after active groupings."""
+    url = url_for('home')
+    auth.login("host")
+    data = client.get(url).data.decode('utf-8')
+    active_pos = data.find("Active Group")
+    assert active_pos > 0
+    assert active_pos < data.find(app_grouping.name)
+
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.begin_date + datetime.timedelta(seconds=60),
+        close_date=app_grouping.begin_date + datetime.timedelta(seconds=61)))
+    data = client.get(url).data.decode('utf-8')
+    active_pos = data.find("Active Group")
+    assert active_pos > 0
+    closed_pos = data.find("Closed Group")
+    assert closed_pos > active_pos
+    assert closed_pos < data.find(app_grouping.name)
 
 
 def test_home_host_without_groupings(client, auth) -> None:
