@@ -512,17 +512,17 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
             order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""
         cursor = self._execute(
-            "SELECT grouping_key, name, group_no FROM groups,groupings "
+            "SELECT grouping_key, name, close_date, group_no FROM groups,groupings "
             "WHERE user_key=? AND grouping_key=key",
             (user_key,))
         result = []
-        for grouping_key, grouping_name, group_no in cursor.fetchall():
+        for grouping_key, name, close_date, group_no in cursor.fetchall():
             cursor_2 = self._execute(
                 "SELECT user_key, ident FROM groups,users "
                 "WHERE grouping_key=? AND group_no=? AND user_key=key",
                 (grouping_key, group_no))
             result.append(UserGroup(
-                grouping_key, grouping_name,
+                grouping_key, name, close_date,
                 frozenset(NamedUser(*row) for row in cursor_2.fetchall())))
             cursor_2.close()
         cursor.close()

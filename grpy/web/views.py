@@ -82,7 +82,12 @@ def home():
 
         group_list = []
         assigned_groupings = set()
-        for group in get_connection().iter_groups_by_user(g.user.key):
+        for group in get_connection().iter_groups_by_user(
+                g.user.key,
+                order=["grouping_name"]):
+            if group.grouping_close_date is not None and \
+                    group.grouping_close_date < utils.now():
+                continue
             group_list.append(UserGroup(
                 group.grouping_key,
                 group.grouping_name,

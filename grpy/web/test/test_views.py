@@ -111,6 +111,25 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     assert client.get(register_url).status_code == 302
 
 
+def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> None:
+    """Home view shows registration."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.begin_date + datetime.timedelta(seconds=60),
+        close_date=app_grouping.begin_date + datetime.timedelta(seconds=61)))
+    assert app_grouping.key is not None
+
+    auth.login("user")
+    user = app.get_connection().get_user_by_ident("user")
+    assert user.key is not None
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+
+    response = client.get(url_for('home'))
+    data = response.data.decode('utf-8')
+    assert "Groups" not in data
+    assert "Member" not in data
+
+
 def test_about_anonymous(client) -> None:
     """Test about view as an anonymous user."""
     response = client.get(url_for('about'))

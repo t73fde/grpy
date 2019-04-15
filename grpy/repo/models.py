@@ -19,8 +19,9 @@
 
 """Repository related data models."""
 
-import dataclasses  # pylint: disable=wrong-import-order
-from typing import FrozenSet
+import dataclasses
+import datetime
+from typing import FrozenSet, Optional
 
 from ..models import GroupingKey, User, UserKey, UserPreferences
 
@@ -47,4 +48,5 @@ class UserGroup:
 
     grouping_key: GroupingKey
     grouping_name: str
+    grouping_close_date: Optional[datetime.datetime]
     group: FrozenSet[NamedUser]
