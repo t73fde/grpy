@@ -650,6 +650,46 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert app.get_connection().get_groups(app_grouping.key) == ()
 
 
+def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
+    """Close date can be set easily."""
+    url = url_for('grouping_close', grouping_key=app_grouping.key)
+    assert client.get(url).status_code == 401
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+
+    location_url = "http://localhost" + url_for(
+        'grouping_detail', grouping_key=app_grouping.key)
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "Please wait until final date is reached.")]
+    client.get(url_for('home'))  # Clear flashes
+
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
+
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Close date is now set.")]
+    client.get(url_for('home'))  # Clear flashes
+    assert app.get_connection().get_grouping(app_grouping.key).close_date is not None
+
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Close date removed.")]
+    client.get(url_for('home'))  # Clear flashes
+    assert app.get_connection().get_grouping(app_grouping.key).close_date is None
+
+
 def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     """Groups can be fastened after building them."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(

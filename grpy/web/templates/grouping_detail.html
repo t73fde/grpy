@@ -42,7 +42,6 @@
 {{- render_data("Note", grouping.note) }}
 {% endif %}
 </div>
-{% if can_update or can_delete or can_start %}
 <div class="w3-container w3-bar">
   {% if can_update %}
   <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
@@ -53,8 +52,8 @@
   {% if can_start %}
   <a href="{{ url_for('grouping_start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
   {% endif %}
+  <a href="{{ url_for('grouping_close', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Close</button></a>
 </div>
-{% endif %}
 {% if has_group %}
 <div class="w3-panel">
   <h1>Groups</h1>

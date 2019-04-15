@@ -319,6 +319,26 @@ def grouping_remove_groups(grouping_key: GroupingKey):
 
 
 @login_required
+def grouping_close(grouping_key: GroupingKey):
+    """Set the close date of the grouping to now."""
+    grouping = value_or_404(get_connection().get_grouping(grouping_key))
+    if g.user.key != grouping.host_key:
+        abort(403)
+    if grouping.close_date:
+        get_connection().set_grouping(dataclasses.replace(grouping, close_date=None))
+        flash("Close date removed.", category="info")
+    else:
+        yet = utils.now()
+        if yet <= grouping.final_date:
+            flash("Please wait until final date is reached.", category="warning")
+        else:
+            get_connection().set_grouping(dataclasses.replace(
+                grouping, close_date=yet))
+            flash("Close date is now set.", category="info")
+    return redirect(url_for('grouping_detail', grouping_key=grouping.key))
+
+
+@login_required
 def grouping_fasten_groups(grouping_key: GroupingKey):
     """Fasten formed groups."""
     grouping = value_or_404(get_connection().get_grouping(grouping_key))

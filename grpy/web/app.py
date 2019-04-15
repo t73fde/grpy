@@ -221,6 +221,9 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
         "/groupings/<grouping:grouping_key>/register", "grouping_register",
         views.grouping_register, methods=('GET', 'POST'))
     app.add_url_rule(
+        "/groupings/<grouping:grouping_key>/close", "grouping_close",
+        views.grouping_close)
+    app.add_url_rule(
         "/groupings/<grouping:grouping_key>/start", "grouping_start",
         views.grouping_start, methods=('GET', 'POST'))
     app.add_url_rule(
