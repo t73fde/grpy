@@ -204,6 +204,6 @@ class Repository:
         """Initialize the repository, if needed."""
         raise NotImplementedError("Repository.initialize.")
 
-    def create(self):
+    def create(self) -> Connection:
         """Create and setup a connection."""
         raise NotImplementedError("Repository.create")

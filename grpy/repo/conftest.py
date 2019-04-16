@@ -22,6 +22,7 @@
 import os
 import tempfile
 from datetime import timedelta
+from typing import Any, Sequence
 
 import pytest
 
@@ -32,7 +33,7 @@ from .ram import RamRepository
 from .sqlite import SqliteRepository
 
 
-def _get_request_param():
+def _get_request_param() -> Sequence[Any]:
     """Return a list of parameters for connection(request)."""
     if os.environ.get('SMOKE', ''):
         return ["ram:"]

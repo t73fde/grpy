@@ -165,7 +165,7 @@ CREATE INDEX idx_groups ON groups(grouping_key)
 class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
     """SQLite-based connection."""
 
-    def __init__(self, connection):
+    def __init__(self, connection: Optional[sqlite3.Connection]):
         """Initialize the connection."""
         self._connection = connection
         self._messages: List[Message] = []
@@ -190,12 +190,15 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         """Close the connection."""
         if success:
             self._execute("COMMIT")
-        self._connection.close()
+        if self._connection is not None:
+            self._connection.close()
         self._connection = None
 
     def _execute(
             self, sql: str, values: Sequence[Any] = ()) -> sqlite3.Cursor:
         """Execute a SQL command."""
+        if self._connection is None:
+            raise TypeError("SQLite connection is None")
         return cast(sqlite3.Cursor, self._connection.execute(sql, values))
 
     def set_user(self, user: User) -> User:

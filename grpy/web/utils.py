@@ -21,14 +21,14 @@
 
 import dataclasses  # pylint: disable=wrong-import-order
 from functools import wraps
-from typing import List, Optional, Sequence, Tuple, TypeVar, cast
+from typing import Any, List, Optional, Sequence, Tuple, TypeVar, cast
 
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
                    request, session, url_for)
 from flask_babel import format_datetime
 from werkzeug.routing import UUIDConverter
 
-from ..models import GroupingKey
+from ..models import GroupingKey, Model
 
 
 class GroupingKeyConverter(UUIDConverter):
@@ -49,7 +49,7 @@ def login_required(view):
     return wrapped_view
 
 
-def redirect_to_login():
+def redirect_to_login() -> Any:
     """Return a redirect to login view."""
     return redirect(url_for('auth.login', next_url=request.script_root + request.path))
 
@@ -83,7 +83,7 @@ def make_model(model_class, form_data, additional_values):
         (field.name for field in dataclasses.fields(model_class)))))
 
 
-def update_model(model, form_data):
+def update_model(model: Model, form_data):
     """Update a given model with data from a form."""
     fields = set(field.name for field in dataclasses.fields(model))
     return dataclasses.replace(

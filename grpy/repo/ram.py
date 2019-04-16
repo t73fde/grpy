@@ -33,7 +33,7 @@ from .proxies.algebra import AlgebraConnection
 class RamRepositoryState:  # pylint: disable=too-few-public-methods
     """The actual data stored for a RamRepository."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the repository."""
         self.users: Dict[UserKey, User] = {}
         self.users_ident: Dict[str, User] = {}
@@ -76,9 +76,9 @@ class RamRepository(Repository):
 class RamConnection(Connection):  # pylint: disable=too-many-public-methods
     """RAM connection."""
 
-    def __init__(self, state):
+    def __init__(self, state: RamRepositoryState):
         """Initialize the repository."""
-        self._state: RamRepositoryState = state
+        self._state = state
 
     def get_messages(self) -> Sequence[Message]:
         """Return all repository-related messages."""

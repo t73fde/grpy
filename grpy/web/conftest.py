@@ -22,6 +22,7 @@
 import os
 import tempfile
 from datetime import timedelta
+from typing import Any, Sequence
 
 import pytest
 from flask import url_for
@@ -34,7 +35,7 @@ from .app import create_app
 # pylint: disable=redefined-outer-name
 
 
-def _get_request_param():
+def _get_request_param() -> Sequence[str]:
     """Return a list of parameters for app(request)."""
     if os.environ.get('SMOKE', ''):
         return ["ram:"]
@@ -75,7 +76,7 @@ def app(request):
 class AuthenticationActions:
     """Actions for Authentication, to be used as a fixture."""
 
-    def __init__(self, client):
+    def __init__(self, client: Any):
         """Initialize the object."""
         self._client = client
 

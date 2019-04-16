@@ -205,7 +205,7 @@ class StopStrategy:  # pylint: disable=too-many-instance-attributes
         self.max_seconds: float = max_seconds
         self.start()
 
-    def start(self):
+    def start(self) -> None:
         """Signal that algorithm starts."""
         self.best_rating: float = self.initial_rating
         self.best_rounds: int = 0

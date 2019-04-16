@@ -33,7 +33,9 @@ class KeyType(UUID):
 
     def __init__(
             self,
-            hex=None, bytes_le=None, int=None,  # pylint: disable=redefined-builtin
+            hex=None,  # pylint: disable=redefined-builtin
+            bytes_le=None,
+            int: Optional[int] = None,  # pylint: disable=redefined-builtin
             key=None):
         """Initialize the key type."""
         if key is not None:

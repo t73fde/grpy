@@ -20,7 +20,7 @@
 """Proxy connection that implements WHERE and ORDER."""
 
 import random
-from typing import Any, Iterable, Optional, TypeVar, cast
+from typing import Any, Callable, Iterable, Optional, TypeVar, cast
 
 from ...models import Grouping, GroupingKey, Model, User, UserKey
 from ..base import OrderSpec, WhereSpec
@@ -74,6 +74,10 @@ class AlgebraConnection(BaseProxyConnection):
             super().iter_groups_by_user(user_key, where, order), where, order)
 
 
+ModelT = TypeVar('ModelT')
+Predicate = Callable[[ModelT], bool]
+
+
 class WherePredicate:
     """Filter attributes."""
 
@@ -83,9 +87,9 @@ class WherePredicate:
         self.relop = where_op
         self.value = filter_value
 
-    def pred(self):
+    def pred(self) -> Predicate:
         """Return the appropriate filter predicate."""
-        return getattr(self, self.relop + "_pred")
+        return cast(Predicate, getattr(self, self.relop + "_pred"))
 
     def eq_pred(self, data: Model) -> bool:
         """Return True if data[self.name] == self.value."""
@@ -122,9 +126,6 @@ class WherePredicate:
         if data_value is None:
             return True
         return cast(bool, data_value > self.value)
-
-
-ModelT = TypeVar('ModelT')
 
 
 def process_where(

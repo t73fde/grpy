@@ -22,11 +22,20 @@
 import logging
 import os
 
+import pytest
 from flask import g, url_for
 from werkzeug.test import Client
 
 from ...repo.proxies.check import ValidatingProxyConnection
-from ..app import create_app
+from ..app import GrpyApp, create_app
+
+
+def test_grpy_app() -> None:
+    """Some simple tests with a partially set-up class."""
+    app = GrpyApp("grpy.app")
+    with app.test_request_context():
+        with pytest.raises(TypeError, match="Repository not set"):
+            assert app.get_connection()
 
 
 def test_config() -> None:

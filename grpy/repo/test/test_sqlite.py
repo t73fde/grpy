@@ -121,6 +121,14 @@ def test_memory_no_initialize(monkeypatch) -> None:
     assert repository.initialize() is False
 
 
+def test_failed_connection() -> None:
+    """Test a connection that was not set-up properly."""
+    conn = SqliteConnection(None)
+    conn.close(False)
+    with pytest.raises(TypeError):
+        conn.close(True)
+
+
 def get_connection() -> SqliteConnection:
     """Create an initialized repository."""
     repository = SqliteRepository("sqlite:")

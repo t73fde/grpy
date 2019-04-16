@@ -20,26 +20,27 @@
 """Web application for grpy."""
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional, cast
 
 from flask import Flask, g, make_response, render_template, session
 from flask_babel import Babel
 
-from ..models import Permissions, User
+from ..models import Permissions, User, UserKey
 from ..repo import create_repository
+from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
-from ..version import get_version, read_version_file
+from ..version import Version, get_version, read_version_file
 from . import auth, policies, utils, views
 
 
 class GrpyApp(Flask):
     """Application object."""
 
-    def __init__(self, import_name):
+    def __init__(self, import_name: str):
         """Initialize the application object."""
         super().__init__(import_name)
-        self._repository = None
-        self.version = None
+        self._repository: Optional[Repository] = None
+        self.version: Optional[Version] = None
         self.babel = None
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
@@ -119,11 +120,13 @@ class GrpyApp(Flask):
 
         self.teardown_request(close_connection)
 
-    def get_connection(self):
+    def get_connection(self) -> Connection:
         """Return an open connection, specific for this request."""
         if 'connection' not in g:
+            if self._repository is None:
+                raise TypeError("Repository not set")
             g.connection = self._repository.create()
-        return g.connection
+        return cast(Connection, g.connection)
 
     @staticmethod
     def clear_session() -> None:
@@ -132,7 +135,7 @@ class GrpyApp(Flask):
         for key in keys:
             del session[key]
 
-    def setup_user_handling(self):
+    def setup_user_handling(self) -> None:
         """Prepare application to work with user data."""
 
         def load_logged_in_user() -> None:
@@ -149,18 +152,18 @@ class GrpyApp(Flask):
 
         self.before_request(load_logged_in_user)
 
-    def setup_babel(self):
+    def setup_babel(self) -> None:
         """Prepare application to work with Babel."""
         self.babel = Babel(self, configure_jinja=True)
         self.jinja_env.filters.update(  # pylint: disable=no-member
             datetimeformat=utils.datetimeformat,
         )
 
-    def setup_werkzeug(self):
+    def setup_werkzeug(self) -> None:
         """Add some globals for Werkzeug."""
         self.url_map.converters['grouping'] = utils.GroupingKeyConverter
 
-    def setup_jinja(self):
+    def setup_jinja(self) -> None:
         """Add some filters / globals for Jinja2."""
         self.jinja_env.globals.update(  # pylint: disable=no-member
             get_all_messages=utils.get_all_messages,
@@ -244,7 +247,7 @@ def handle_client_error(exc):
     return make_response(render_template("%d.html" % exc.code), exc.code)
 
 
-def populate_testdata(repository):
+def populate_testdata(repository: Repository) -> None:
     """Add some initial data for testing."""
     connection = repository.create()
     try:
@@ -259,15 +262,15 @@ def populate_testdata(repository):
         now = utils_now()
         for user in (kreuz, stern):
             set_grouping_new_code(connection, Grouping(
-                None, ".", "PM", user.key,
+                None, ".", "PM", cast(UserKey, user.key),
                 now, now + timedelta(days=14), None,
                 "RD", 7, 7, "Note: not"))
             set_grouping_new_code(connection, Grouping(
-                None, ".", "SWE", user.key,
+                None, ".", "SWE", cast(UserKey, user.key),
                 now, now + timedelta(days=7), now + timedelta(days=14),
                 "RD", 7, 7, "Was?"))
         set_grouping_new_code(connection, Grouping(
-            None, ".", "PSITS", kreuz.key,
+            None, ".", "PSITS", cast(UserKey, kreuz.key),
             now + timedelta(days=1), now + timedelta(days=8), None,
             "RD", 5, 3, "Nun wird es spannend"))
     finally:
