@@ -21,7 +21,7 @@
 
 import dataclasses  # pylint: disable=wrong-import-order
 from functools import wraps
-from typing import Any, List, Sequence, Tuple, cast
+from typing import List, Optional, Sequence, Tuple, TypeVar, cast
 
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
                    request, session, url_for)
@@ -64,7 +64,10 @@ def login_required_redirect(view):
     return wrapped_view
 
 
-def value_or_404(value: Any) -> Any:
+TYPE = TypeVar('TYPE')
+
+
+def value_or_404(value: Optional[TYPE]) -> TYPE:
     """If value is None, raise 404."""
     if value is None:
         abort(404)
