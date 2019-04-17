@@ -19,9 +19,10 @@
 
 """Some utility functions for the web application."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
+import datetime
 from functools import wraps
-from typing import Any, List, Optional, Sequence, Tuple, TypeVar, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, cast
 
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
                    request, session, url_for)
@@ -74,13 +75,13 @@ def value_or_404(value: Optional[TYPE]) -> TYPE:
     return value
 
 
-def make_model(model_class, form_data, additional_values):
+def make_model(model_class, form_data: Dict, additional_values: Dict) -> Model:
     """Create a new model based on form data."""
     data = dict(form_data)
     data.update(additional_values)
-    return model_class(*tuple(map(
+    return cast(Model, model_class(*tuple(map(
         lambda f: data.get(f, None),
-        (field.name for field in dataclasses.fields(model_class)))))
+        (field.name for field in dataclasses.fields(model_class))))))
 
 
 def update_model(model: Model, form_data):
@@ -90,18 +91,21 @@ def update_model(model: Model, form_data):
         model, **{k: v for k, v in form_data.items() if k in fields})
 
 
-def datetimeformat(datetime=None, dt_format=None, rebase=True):
+def datetimeformat(
+        dt_value: Optional[datetime.datetime] = None,
+        dt_format: Optional[str] = None,
+        rebase: bool = True) -> Optional[str]:
     """
     Return a datetime formatted according to format.
 
     This function is needed, because `flask_babel.format_datetime` formats the
     current datetime, if `datetime` is None.
     """
-    if not datetime:
-        return datetime
+    if not dt_value:
+        return None
     if dt_format == "iso-short":
-        return format_datetime(datetime, "YYYY-MM-dd HH:mm z", rebase)
-    return format_datetime(datetime, dt_format, rebase)
+        return cast(str, format_datetime(dt_value, "YYYY-MM-dd HH:mm z", rebase))
+    return cast(str, format_datetime(dt_value, dt_format, rebase))
 
 
 def colormap(color_description: str, prefix: str = "w3-") -> str:

@@ -23,7 +23,7 @@ import logging
 import os
 
 import pytest
-from flask import g, url_for
+from flask import Flask, g, url_for
 from werkzeug.test import Client
 
 from ...repo.proxies.check import ValidatingProxyConnection
@@ -84,7 +84,7 @@ def test_setup_logging() -> None:
     assert create_app({'LOG_HANDLERS': handlers}).logger.handlers == handlers
 
 
-def create_grpy_app():
+def create_grpy_app() -> Flask:
     """Create a new Grpy app with SQLite repository."""
     return create_app(
         config_mapping={
@@ -94,11 +94,11 @@ def create_grpy_app():
         })
 
 
-def do_login(grpy_app):
+def do_login(grpy_app: Flask) -> Client:
     """Login user 'host'."""
     client = Client(grpy_app)
     with grpy_app.test_request_context():
-        _iter_data, status, headers = client.post(
+        _iter_data, status, headers = client.post(  # type: ignore
             url_for('auth.login'), data={'username': "host", 'password': "1"})
     assert status == "302 FOUND"
     assert headers['Location'] == "http://localhost/"
@@ -117,7 +117,7 @@ def test_flash_connection_messages_get(monkeypatch) -> None:
     monkeypatch.setattr(
         ValidatingProxyConnection, 'iter_groups_by_user', raise_value_error)
     with grpy_app.test_request_context():
-        iter_data, status, _headers = client.get(url_for('home'))
+        iter_data, status, _headers = client.get(url_for('home'))  # type: ignore
     assert status == "200 OK"
     data = b" ".join(iter_data)
     assert b"builtins.ValueError: Test for critical get message" in data
@@ -134,7 +134,7 @@ def test_flash_connection_messages_push(monkeypatch) -> None:
     monkeypatch.setattr(ValidatingProxyConnection, 'set_user', raise_value_error)
     client = do_login(grpy_app)
     with grpy_app.test_request_context():
-        iter_data, status, _headers = client.get(url_for('home'))
+        iter_data, status, _headers = client.get(url_for('home'))  # type: ignore
     assert status == "200 OK"
     data = b" ".join(iter_data)
     assert b"builtins.ValueError: Test for critical post message" in data

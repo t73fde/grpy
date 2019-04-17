@@ -96,7 +96,7 @@ def test_login_required_redirect_prefix() -> None:
     grpy_app.add_url_rule('/test', "test", just_a_view)
     app = PrefixMiddleware(grpy_app, '/prefix')
     client = Client(app)
-    _, status, headers = client.get('/prefix/test')
+    _, status, headers = client.get('/prefix/test')  # type: ignore
     assert status.split(" ")[:1] == ["302"]
     with grpy_app.test_request_context():
         assert headers['Location'] == \
@@ -130,10 +130,8 @@ def test_update_model() -> None:
 
 def test_datetime_format(app) -> None:  # pylint: disable=unused-argument
     """Return a datetime according to given format."""
+    assert datetimeformat() is None
     assert datetimeformat(None, None, False) is None
-    assert datetimeformat("", None, False) == ""
-    assert datetimeformat(0, None, False) == 0
-    assert datetimeformat([], None, False) == []
 
     dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=now().tzinfo)
     assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55 UTC"

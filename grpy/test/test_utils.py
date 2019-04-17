@@ -36,7 +36,7 @@ def test_now() -> None:
 class MockIterator:
     """An iterator that counts how many its next method is called."""
 
-    def __init__(self, max_count):
+    def __init__(self, max_count: int):
         """The next method can be called max_count."""
         self.max_count = max_count
         self.count = 0

@@ -50,7 +50,7 @@ def test_prefix_call_valid() -> None:
     """A valid prefix will lead to valid results."""
     app = PrefixMiddleware(_make_app(), "prefix")
     client = Client(app)
-    iter_data, status, _headers = client.get('/prefix/test')
+    iter_data, status, _headers = client.get('/prefix/test')  # type: ignore
     assert status.split(" ")[:1] == ['200']
     assert list(iter_data) == [b"jaw"]
 
@@ -59,7 +59,7 @@ def test_prefix_call_invalid() -> None:
     """An invalid prefix will lead to error page."""
     app = PrefixMiddleware(_make_app(), "prefix")
     client = Client(app)
-    _iter_data, status, _headers = client.get('/test')
+    _iter_data, status, _headers = client.get('/test')  # type: ignore
     assert status.split(" ")[:1] == ['404']
 
 
