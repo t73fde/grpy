@@ -45,3 +45,4 @@ dataclasses = {version="*", markers="python_version < 3.7"}
 pytz = "*"
 gunicorn = "*"
 requests = "*"
+pyqrcode = "*"

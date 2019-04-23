@@ -19,9 +19,11 @@
 
 """Web views for grpy."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
+import io
 from typing import List, Sequence, cast
 
+import pyqrcode
 from flask import (abort, current_app, flash, g, redirect, render_template,
                    request, url_for)
 
@@ -228,7 +230,22 @@ def shortlink(code: str):
         abort(404)
 
     if g.user.key == grouping.host_key:
-        return render_template("grouping_code.html", code=grouping.code)
+        url = request.url
+        pos = url.find("?")
+        if pos >= 0:
+            url = url[:pos]
+        qr_code = pyqrcode.create(url)
+        byte_data = io.BytesIO()
+        try:
+            scale = max(2, int(request.args.get("scale", 8)))
+        except ValueError:
+            scale = 8
+        qr_code.svg(byte_data, scale=scale, quiet_zone=2, xmldecl=False)
+        return render_template(
+            "grouping_code.html",
+            code=grouping.code,
+            url=url,
+            qr_svg=byte_data.getbuffer().tobytes().decode("utf-8"))
 
     return redirect(url_for(
         'grouping_register', grouping_key=cast(GroupingKey, grouping.key)))

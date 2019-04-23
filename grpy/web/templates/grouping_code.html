@@ -23,6 +23,9 @@
 <div class="w3-panel">
   <h1>Grouping Short Link</h1>
   <p>To register for the grouping, please use this URL:</p>
-  <p class="w3-panel w3-padding w3-leftbar w3-xxlarge"><b>{{ request.url }}</b></p>
+  <p class="w3-panel w3-padding w3-leftbar w3-xxlarge"><b>{{ url }}</b></p>
+  <div class="w3-panel w3-center">
+    {{ qr_svg|safe }}
+  </div>
 </div>
 {% endblock %}

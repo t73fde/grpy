@@ -390,18 +390,33 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     assert response.headers['Location'] == "http://localhost/"
 
 
-def test_shortlink(client, auth, app_grouping: Grouping) -> None:
+def test_shortlink_host(client, auth, app_grouping: Grouping) -> None:
     """Test home view as a host."""
     url = url_for('shortlink', code=app_grouping.code)
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == \
-        "http://localhost/auth/login?next_url=%2F{}".format(app_grouping.code)
 
     auth.login("host")
     response = client.get(url)
     assert response.status_code == 200
     assert response.data.count(url.encode('utf-8')) == 1
+    assert response.data.count(b"scale(8)") == 1
+
+    response = client.get(url + "?scale=A")
+    assert response.data.count(b"scale(8)") == 1
+
+    response = client.get(url + "?scale=16")
+    assert response.data.count(b"scale(16)") == 1
+
+    response = client.get(url + "?scale=1")
+    assert response.data.count(b"scale(2)") == 1
+
+
+def test_shortlink(client, auth, app_grouping: Grouping) -> None:
+    """Test home view as a non-host."""
+    url = url_for('shortlink', code=app_grouping.code)
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == \
+        "http://localhost/auth/login?next_url=%2F{}".format(app_grouping.code)
 
     auth.login("student")
     response = client.get(url)
