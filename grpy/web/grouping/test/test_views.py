@@ -252,7 +252,8 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
         'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
         'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
     assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
+    assert response.headers['Location'] == \
+        "http://localhost" + url_for('.detail', grouping_key=app_grouping.key)
     client.get(url_for('home'))  # Clean flash messages
 
     groupings = list(app.get_connection().iter_groupings())
@@ -267,7 +268,8 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     user = app.get_connection().get_user_by_ident("user")
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     assert client.get(url).status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
+    assert response.headers['Location'] == \
+        "http://localhost" + url_for('.detail', grouping_key=app_grouping.key)
 
 
 def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
