@@ -19,7 +19,7 @@
 
 """Test specific for checking proxy connection."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import uuid
 from typing import cast
 from unittest.mock import Mock

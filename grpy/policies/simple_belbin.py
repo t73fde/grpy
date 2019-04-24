@@ -19,7 +19,7 @@
 
 """Policy for group forming by a simple belbin test."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 from typing import Dict, Tuple, cast
 
 from ..models import Groups, PolicyData, UserKey, UserPreferences

@@ -19,7 +19,7 @@
 
 """Test the specifics of SQLite-based repositories."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import os
 import os.path
 import sqlite3

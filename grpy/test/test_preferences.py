@@ -19,7 +19,7 @@
 
 """Test the registry for preferences."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 from typing import Type, cast
 
 from ..models import UserPreferences

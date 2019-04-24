@@ -19,7 +19,7 @@
 
 """In-memory repository, stored in RAM."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 from typing import Dict, Iterable, Optional, Sequence, Tuple, cast
 
 from ..models import (Grouping, GroupingKey, GroupingState, Groups,

@@ -19,7 +19,7 @@
 
 """Repository logic."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import json
 from typing import Any, List, Optional, Sequence, Tuple, cast
 

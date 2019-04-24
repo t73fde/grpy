@@ -19,7 +19,7 @@
 
 """Data models."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import datetime
 import enum
 from typing import Dict, FrozenSet, Optional, Tuple

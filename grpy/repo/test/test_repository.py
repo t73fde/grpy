@@ -19,7 +19,7 @@
 
 """Test the repositories."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import datetime
 import random
 from typing import List, Tuple, cast

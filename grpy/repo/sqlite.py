@@ -19,7 +19,7 @@
 
 """SQLite-based repository."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 import sqlite3
 from datetime import datetime
 from typing import (AbstractSet, Any, Iterable, List, Optional, Sequence,

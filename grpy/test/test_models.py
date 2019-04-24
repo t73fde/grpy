@@ -19,7 +19,7 @@
 
 """Test the models module."""
 
-import dataclasses  # pylint: disable=wrong-import-order
+import dataclasses
 from datetime import timedelta
 from typing import cast
 
