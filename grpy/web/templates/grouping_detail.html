@@ -44,15 +44,15 @@
 </div>
 <div class="w3-container w3-bar">
   {% if can_update %}
-  <a href="{{ url_for('grouping_update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
+  <a href="{{ url_for('.update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
   {% endif %}
   {% if can_delete %}
   <a href="#"><button class="w3-button w3-ripple {{ color('danger') }}">Delete</button></a>
   {% endif %}
   {% if can_start %}
-  <a href="{{ url_for('grouping_start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
+  <a href="{{ url_for('.start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
   {% endif %}
-  <a href="{{ url_for('grouping_close', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Close</button></a>
+  <a href="{{ url_for('.close', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Close</button></a>
 </div>
 {% if has_group %}
 <div class="w3-panel">
@@ -66,8 +66,8 @@
 </div>
 {% if is_grouped %}
 <div class="w3-panel">
-  <a href="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Remove Groups</button></a>
-  <a href="{{ url_for('grouping_fasten_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Fasten Groups</button></a>
+  <a href="{{ url_for('.remove_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Remove Groups</button></a>
+  <a href="{{ url_for('.fasten_groups', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Fasten Groups</button></a>
 </div>
 {% endif %}
 {% endif %}

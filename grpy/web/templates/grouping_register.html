@@ -31,7 +31,7 @@
 {% if grouping.note %}
 {{- render_data("Note", grouping.note) }}
 {% endif %}
-<form method="post" action="{{ url_for('grouping_register', grouping_key=grouping.key) }}">
+<form method="post" action="{{ url_for('.register', grouping_key=grouping.key) }}">
 {{- form.csrf_token }}
 {% if form_template %}{% include form_template %}{% endif %}
 <div class="w3-panel">

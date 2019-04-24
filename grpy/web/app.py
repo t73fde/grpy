@@ -30,7 +30,7 @@ from ..repo import create_repository
 from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
 from ..version import Version, get_version, read_version_file
-from . import auth, policies, utils, views
+from . import auth, grouping, policies, utils, views
 
 
 class GrpyApp(Flask):
@@ -210,34 +210,14 @@ def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
 
     app.add_url_rule("/", "home", views.home)
     app.add_url_rule("/about", "about", views.about)
-    app.add_url_rule(
-        "/groupings/", "grouping_create", views.grouping_create,
-        methods=('GET', 'POST'))
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/", "grouping_detail",
-        views.grouping_detail, methods=('GET', 'POST'))
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/edit", "grouping_update",
-        views.grouping_update, methods=('GET', 'POST'))
     app.add_url_rule("/<string:code>", "shortlink", views.shortlink)
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/register", "grouping_register",
-        views.grouping_register, methods=('GET', 'POST'))
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/close", "grouping_close",
-        views.grouping_close)
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/start", "grouping_start",
-        views.grouping_start, methods=('GET', 'POST'))
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/remove_groups", "grouping_remove_groups",
-        views.grouping_remove_groups, methods=('GET', 'POST'))
-    app.add_url_rule(
-        "/groupings/<grouping:grouping_key>/fasten_groups", "grouping_fasten_groups",
-        views.grouping_fasten_groups, methods=('GET', 'POST'))
 
     auth_blueprint = auth.create_blueprint()
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
+
+    grouping_blueprint = grouping.create_blueprint()
+    app.register_blueprint(grouping_blueprint, url_prefix='/groupings')
+
     app.log_debug("Application created.")
     return app
 

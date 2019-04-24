@@ -20,9 +20,6 @@
 {% from "macros.html" import render_data %}
 {% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
 {% block heading %}{% endblock %}
-{% set code_link %}
-<a href="{{ url_for('shortlink', code=grouping.code) }}">{{ grouping.code }}</a>
-{% endset %}
 {% block content %}
 <div class="w3-panel">
 <div class="w3-container w3-light-gray">
@@ -43,7 +40,7 @@
   <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>
   {%- endfor %}
   </table>
-  <form method="post" action="{{ url_for('grouping_remove_groups', grouping_key=grouping.key) }}">
+  <form method="post" action="{{ url_for('.remove_groups', grouping_key=grouping.key) }}">
     {{- form.csrf_token }}
     <div class="w3-panel">
     {{ form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2019 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -17,4 +17,4 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test the web forms."""
+"""Test package."""

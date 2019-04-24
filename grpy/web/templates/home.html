@@ -28,7 +28,7 @@
     <tr><th>Name</th><th>Final date</th><th>Registrations</th></tr>
     {% for grouping, count in open_groupings %}
     <tr>
-      <td><a href="{{ url_for('grouping_detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td><a href="{{ url_for('grouping.detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
       <td>{{ count }}</td>
     </tr>
@@ -37,7 +37,7 @@
     {% endfor %}
   </table>
   <div class="w3-panel">
-    <a href="{{ url_for('grouping_create') }}" class="w3-button {{ color('primary') }}">Create</a>
+    <a href="{{ url_for('grouping.create') }}" class="w3-button {{ color('primary') }}">Create</a>
   </div>
   {% if closed_groupings %}
   <h1>Closed Groupings</h1>
@@ -45,7 +45,7 @@
     <tr><th>Name</th><th>Final date</th><th>Close Date</th></tr>
     {% for grouping in closed_groupings %}
     <tr>
-      <td><a href="{{ url_for('grouping_detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td><a href="{{ url_for('grouping.detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
       <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
       <td>{{ grouping.close_date|datetimeformat("iso-short") }}</td>
     </tr>
@@ -60,7 +60,7 @@
     {%- for grouping in registrations -%}
     <tr>
       {%- if grouping.can_register() %}
-      <td><a href="{{ url_for('grouping_register', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+      <td><a href="{{ url_for('grouping.register', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
       {%- else -%}
       <td>{{ grouping.name }}</td>
       {%- endif -%}
