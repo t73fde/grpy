@@ -28,6 +28,7 @@ import pytest
 
 from ..core.models import Grouping, Permissions, User
 from ..core.utils import now
+from .base import Repository
 from .dummy import DummyRepository
 from .ram import RamRepository
 from .sqlite import SqliteRepository
@@ -59,7 +60,8 @@ def connection(request):
     if request.param == "sqlite:///":
         temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         temp_file.close()
-        repository = SqliteRepository("sqlite://" + temp_file.name)
+        repository: Repository = SqliteRepository("sqlite://" + temp_file.name)
+        with_tempfile = True
     else:
         if request.param == "ram:":
             repository = RamRepository(request.param)
@@ -68,7 +70,7 @@ def connection(request):
         else:
             assert request.param == "sqlite:"
             repository = SqliteRepository("sqlite:")
-        temp_file = None
+        with_tempfile = False
         assert repository.url == request.param
     repository.initialize()
 
@@ -76,7 +78,7 @@ def connection(request):
     yield connection
 
     connection.close(True)
-    if temp_file:
+    if with_tempfile:
         os.unlink(temp_file.name)
 
 

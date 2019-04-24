@@ -53,9 +53,10 @@ def app(request):
         temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         temp_file.close()
         repository_url = "sqlite://" + temp_file.name
+        with_tempfile = True
     else:
         repository_url = request.param
-        temp_file = None
+        with_tempfile = False
 
     grpy_app = create_app({
         'TESTING': True,
@@ -69,7 +70,7 @@ def app(request):
         connection.set_user(User(None, "host-0", Permissions.HOST))
 
     yield grpy_app
-    if temp_file:
+    if with_tempfile:
         os.unlink(temp_file.name)
 
 

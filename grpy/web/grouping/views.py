@@ -54,8 +54,8 @@ def grouping_create():
     form = forms.GroupingForm()
     form.policy.choices = [('', '')] + get_policy_names()
     if form.validate_on_submit():
-        grouping = make_model(
-            Grouping, form.data, {"code": ".", "host_key": g.user.key})
+        grouping = cast(Grouping, make_model(
+            Grouping, form.data, {"code": ".", "host_key": g.user.key}))
         set_grouping_new_code(
             get_connection(),
             dataclasses.replace(grouping, code=logic.make_code(grouping)))
