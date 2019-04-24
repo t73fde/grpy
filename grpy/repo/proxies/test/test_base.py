@@ -23,8 +23,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from ....models import (Grouping, GroupingKey, Registration, User, UserKey,
-                        UserPreferences)
+from ....core.models import (Grouping, GroupingKey, Registration, User,
+                             UserKey, UserPreferences)
 from ..base import BaseProxyConnection
 
 

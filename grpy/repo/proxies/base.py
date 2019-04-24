@@ -22,8 +22,8 @@
 
 from typing import Iterable, Optional, Sequence
 
-from ...models import (Grouping, GroupingKey, GroupingState, Groups,
-                       Registration, User, UserKey)
+from ...core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                            Registration, User, UserKey)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 

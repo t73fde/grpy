@@ -27,8 +27,8 @@ from flask import url_for
 from flask.sessions import SecureCookieSessionInterface
 from werkzeug.http import parse_cookie
 
-from ... import utils
-from ...models import Grouping, Registration, UserPreferences
+from ...core import utils
+from ...core.models import Grouping, Registration, UserPreferences
 
 
 def get_session_data(app, response) -> Dict[str, Any]:

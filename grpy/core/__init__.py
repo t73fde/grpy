@@ -17,24 +17,4 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Common web forms for grpy."""
-
-from flask_wtf import FlaskForm
-from wtforms.fields import SubmitField
-
-from ..core.models import UserPreferences
-
-
-class RegistrationForm(FlaskForm):
-    """Base form for all registrations."""
-
-    submit_register = SubmitField("Register")
-
-    @classmethod
-    def create(cls, preferences) -> 'RegistrationForm':
-        """Create a filled form."""
-        raise NotImplementedError("RegistrationForm.create")
-
-    def get_user_preferences(self) -> UserPreferences:
-        """Read user preferences from form."""
-        raise NotImplementedError("RegistrationForm.get_user_preferences")
+"""Main package for grpy."""

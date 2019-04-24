@@ -29,9 +29,9 @@ from typing import cast
 
 import pytest
 
-from ...models import (Grouping, Permissions, Registration, User, UserKey,
-                       UserPreferences)
-from ...utils import now
+from ...core.models import (Grouping, Permissions, Registration, User, UserKey,
+                            UserPreferences)
+from ...core.utils import now
 from ..sqlite import SqliteConnection, SqliteRepository
 
 

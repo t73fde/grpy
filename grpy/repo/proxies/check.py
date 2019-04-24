@@ -21,8 +21,8 @@
 
 from typing import Callable, List, Optional, Sequence
 
-from ...models import (Grouping, GroupingKey, Groups, Registration, User,
-                       UserKey, ValidationFailed)
+from ...core.models import (Grouping, GroupingKey, Groups, Registration, User,
+                            UserKey, ValidationFailed)
 from ..base import Connection, DuplicateKey, Message, NothingToUpdate
 from .base import BaseProxyConnection
 from .filter import FilterProxyConnection

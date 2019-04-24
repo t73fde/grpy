@@ -23,10 +23,10 @@ import dataclasses
 import json
 from typing import Any, List, Optional, Sequence, Tuple, cast
 
-from ..logic import len_groups, make_code
-from ..models import Grouping, GroupingKey, UserKey, UserPreferences
-from ..preferences import get_code, get_preferences
-from ..utils import now
+from ..core.logic import len_groups, make_code
+from ..core.models import Grouping, GroupingKey, UserKey, UserPreferences
+from ..core.preferences import get_code, get_preferences
+from ..core.utils import now
 from .base import Connection, DuplicateKey
 
 

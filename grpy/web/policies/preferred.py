@@ -23,7 +23,7 @@ from typing import cast
 
 from wtforms.fields import FieldList, StringField
 
-from ...models import UserPreferences
+from ...core.models import UserPreferences
 from ...policies.preferred import PreferredPreferences
 from ..forms import RegistrationForm
 

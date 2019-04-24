@@ -22,9 +22,9 @@
 import dataclasses
 from typing import Type, cast
 
+from ...policies.preferred import PreferredPreferences
+from ...policies.simple_belbin import SimpleBelbinPreferences
 from ..models import UserPreferences
-from ..policies.preferred import PreferredPreferences
-from ..policies.simple_belbin import SimpleBelbinPreferences
 from ..preferences import get_code, get_preferences, register_preferences
 
 _PREFERENCES_CLASSES = {

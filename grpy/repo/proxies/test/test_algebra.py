@@ -22,8 +22,8 @@
 from datetime import timedelta
 from typing import Iterable, Optional, cast
 
-from ....models import Grouping, GroupingKey, Permissions, User, UserKey
-from ....utils import now
+from ....core.models import Grouping, GroupingKey, Permissions, User, UserKey
+from ....core.utils import now
 from ...base import (Connection, OrderSpec, UserGroup, UserRegistration,
                      WhereSpec)
 from ..algebra import AlgebraConnection

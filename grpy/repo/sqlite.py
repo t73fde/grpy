@@ -28,8 +28,8 @@ from urllib.parse import urlparse
 
 from pytz import utc
 
-from ..models import (Grouping, GroupingKey, GroupingState, Groups,
-                      Permissions, Registration, User, UserKey)
+from ..core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                           Permissions, Registration, User, UserKey)
 from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
                    OrderSpec, Repository, WhereSpec)
 from .logic import decode_preferences, encode_preferences

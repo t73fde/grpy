@@ -21,8 +21,8 @@
 
 from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence
 
-from ..models import (Grouping, GroupingKey, GroupingState, Groups,
-                      Registration, User, UserKey)
+from ..core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                           Registration, User, UserKey)
 from .models import UserGroup, UserRegistration
 
 WhereSpec = Dict[str, Any]

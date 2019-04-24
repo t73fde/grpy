@@ -26,8 +26,9 @@ from unittest.mock import patch
 
 import pytest
 
-from ...models import Grouping, Registration, User, UserKey, UserPreferences
-from ...preferences import get_code, register_preferences
+from ...core.models import (Grouping, Registration, User, UserKey,
+                            UserPreferences)
+from ...core.preferences import get_code, register_preferences
 from ..base import Connection, DuplicateKey
 from ..logic import (decode_preferences, encode_preferences,
                      groupings_for_host, set_grouping_new_code)

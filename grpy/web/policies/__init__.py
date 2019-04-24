@@ -21,7 +21,7 @@
 
 from typing import List, Optional, Tuple, Type
 
-from ...models import Registration, UserPreferences
+from ...core.models import Registration, UserPreferences
 from ..forms import RegistrationForm
 from .preferred import create_preferred_policy_form
 from .simple_belbin import SimpleBelbinPolicyForm

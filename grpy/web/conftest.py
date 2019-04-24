@@ -27,9 +27,9 @@ from typing import Any, Sequence
 import pytest
 from flask import url_for
 
-from ..models import Grouping, Permissions, User
+from ..core.models import Grouping, Permissions, User
+from ..core.utils import now
 from ..repo.logic import set_grouping_new_code
-from ..utils import now
 from .app import create_app
 
 # pylint: disable=redefined-outer-name

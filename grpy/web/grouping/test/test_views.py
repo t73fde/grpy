@@ -27,9 +27,9 @@ from flask import url_for
 from flask.sessions import SecureCookieSessionInterface
 from werkzeug.http import parse_cookie
 
-from .... import utils
-from ....models import (Grouping, GroupingKey, Registration, User,
-                        UserPreferences)
+from ....core import utils
+from ....core.models import (Grouping, GroupingKey, Registration, User,
+                             UserPreferences)
 from ....repo.base import Connection
 
 

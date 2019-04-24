@@ -27,8 +27,8 @@ import pyqrcode
 from flask import (abort, current_app, g, redirect, render_template, request,
                    url_for)
 
-from .. import utils
-from ..models import Grouping, GroupingKey, GroupingState
+from ..core import utils
+from ..core.models import Grouping, GroupingKey, GroupingState
 from ..repo.base import Connection
 from ..repo.logic import GroupingCount, groupings_for_host
 from .utils import redirect_to_login, value_or_404

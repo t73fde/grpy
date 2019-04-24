@@ -24,7 +24,7 @@ from typing import Optional, cast
 import requests
 from flask import current_app
 
-from ...models import User
+from ...core.models import User
 
 
 def check_pw(app, url: Optional[str], username: str, password: str) -> bool:

@@ -22,7 +22,7 @@
 import random
 from typing import List
 
-from ...models import Groups, UserKey
+from ...core.models import Groups, UserKey
 from ..genetic import (Genome, StopStrategy, build_genome,
                        generic_genetic_policy, iter_genome_count,
                        iter_genome_set)

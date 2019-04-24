@@ -32,7 +32,7 @@ import random
 import time
 from typing import Any, Callable, Iterator, List, NamedTuple, Set, Tuple
 
-from ..models import Groups, UserKey
+from ..core.models import Groups, UserKey
 
 Genome = List[List[UserKey]]
 Rating = float

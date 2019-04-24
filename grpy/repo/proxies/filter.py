@@ -22,8 +22,8 @@
 from datetime import datetime
 from typing import Callable, Iterable, Optional, Sequence, cast
 
-from ...models import (Grouping, GroupingKey, GroupingState, Groups,
-                       Registration, User, UserKey, UserPreferences)
+from ...core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                            Registration, User, UserKey, UserPreferences)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 from .base import BaseProxyConnection

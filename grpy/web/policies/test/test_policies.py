@@ -19,7 +19,7 @@
 
 """Tests for the grouping policies."""
 
-from ....models import GroupingKey, Registration, UserKey, UserPreferences
+from ....core.models import GroupingKey, Registration, UserKey, UserPreferences
 from ....policies import get_policy
 from .. import (EmptyPolicyForm, get_policy_name, get_policy_names,
                 get_registration_form)

@@ -22,7 +22,7 @@
 import dataclasses
 from typing import Dict, List, Set, cast
 
-from ..models import Groups, PolicyData, UserKey, UserPreferences
+from ..core.models import Groups, PolicyData, UserKey, UserPreferences
 from .genetic import Genome, Rating, StopStrategy, generic_genetic_policy
 from .sizes import group_sizes
 

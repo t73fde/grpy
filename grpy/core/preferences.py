@@ -21,9 +21,9 @@
 
 from typing import Optional, Type
 
+from ..policies.preferred import PreferredPreferences
+from ..policies.simple_belbin import SimpleBelbinPreferences
 from .models import UserPreferences
-from .policies.preferred import PreferredPreferences
-from .policies.simple_belbin import SimpleBelbinPreferences
 
 _CODE_TO_PREFERENCES = {
     'user': UserPreferences,

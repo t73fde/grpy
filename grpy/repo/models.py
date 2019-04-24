@@ -23,7 +23,7 @@ import dataclasses
 import datetime
 from typing import FrozenSet, Optional
 
-from ..models import GroupingKey, User, UserKey, UserPreferences
+from ..core.models import GroupingKey, User, UserKey, UserPreferences
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods

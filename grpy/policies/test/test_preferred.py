@@ -23,7 +23,7 @@ from typing import cast
 
 import pytest
 
-from ...models import PolicyData, User, UserKey, UserPreferences
+from ...core.models import PolicyData, User, UserKey, UserPreferences
 from ..preferred import (PreferredPreferences, build_preferred_rating_data,
                          preferred_policy)
 

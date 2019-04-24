@@ -26,8 +26,8 @@ from typing import Any, Sequence
 
 import pytest
 
-from ..models import Grouping, Permissions, User
-from ..utils import now
+from ..core.models import Grouping, Permissions, User
+from ..core.utils import now
 from .dummy import DummyRepository
 from .ram import RamRepository
 from .sqlite import SqliteRepository

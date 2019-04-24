@@ -21,7 +21,7 @@
 
 from typing import Set, cast
 
-from ...models import Groups, User, UserKey, UserPreferences
+from ...core.models import Groups, User, UserKey, UserPreferences
 from .. import get_policy, identity_policy, random_policy
 
 

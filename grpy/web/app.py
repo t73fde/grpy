@@ -25,7 +25,7 @@ from typing import Any, Dict, Optional, cast
 from flask import Flask, g, make_response, render_template, session
 from flask_babel import Babel
 
-from ..models import Permissions, User, UserKey
+from ..core.models import Permissions, User, UserKey
 from ..repo import create_repository
 from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
@@ -237,8 +237,8 @@ def populate_testdata(repository: Repository) -> None:
         connection.set_user(User(None, "xnologin"))
 
         from datetime import timedelta
-        from ..utils import now as utils_now
-        from ..models import Grouping
+        from ..core.utils import now as utils_now
+        from ..core.models import Grouping
         now = utils_now()
         for user in (kreuz, stern):
             set_grouping_new_code(connection, Grouping(

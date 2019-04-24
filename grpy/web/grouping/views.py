@@ -25,9 +25,9 @@ from typing import List, cast
 from flask import (abort, current_app, flash, g, redirect, render_template,
                    request, url_for)
 
-from ... import logic, utils
-from ...models import (Grouping, GroupingKey, GroupingState, Registration,
-                       User, UserKey)
+from ...core import logic, utils
+from ...core.models import (Grouping, GroupingKey, GroupingState, Registration,
+                            User, UserKey)
 from ...policies import get_policy
 from ...repo.base import Connection
 from ...repo.logic import set_grouping_new_code

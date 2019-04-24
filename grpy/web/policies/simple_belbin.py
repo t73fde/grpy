@@ -23,7 +23,7 @@ from typing import cast
 
 from wtforms.fields import FieldList, RadioField
 
-from ...models import UserPreferences
+from ...core.models import UserPreferences
 from ...policies.simple_belbin import (AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER,
                                        DISAGREE, SIMPLE_BELBIN_ANSWER_COUNT,
                                        STRONGLY_AGREE, STRONGLY_DISAGREE,

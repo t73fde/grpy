@@ -26,8 +26,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from ....models import (Grouping, GroupingKey, Registration, User, UserKey,
-                        UserPreferences, ValidationFailed)
+from ....core.models import (Grouping, GroupingKey, Registration, User,
+                             UserKey, UserPreferences, ValidationFailed)
 from ...base import DuplicateKey, Message, NothingToUpdate
 from ..check import CatchingProxyConnection, ValidatingProxyConnection
 

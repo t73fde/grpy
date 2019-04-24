@@ -22,7 +22,7 @@
 import random
 from typing import Any, Callable, Iterable, Optional, TypeVar, cast
 
-from ...models import Grouping, GroupingKey, Model, User, UserKey
+from ...core.models import Grouping, GroupingKey, Model, User, UserKey
 from ..base import OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 from .base import BaseProxyConnection

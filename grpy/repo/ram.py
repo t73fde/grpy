@@ -22,8 +22,8 @@
 import dataclasses
 from typing import Dict, Iterable, Optional, Sequence, Tuple, cast
 
-from ..models import (Grouping, GroupingKey, GroupingState, Groups,
-                      Registration, User, UserKey)
+from ..core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                           Registration, User, UserKey)
 from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
                    OrderSpec, Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration

@@ -26,11 +26,11 @@ from typing import List, Tuple, cast
 
 import pytest
 
-from ... import utils
-from ...models import (Grouping, GroupingKey, GroupingState, Groups,
-                       Permissions, Registration, User, UserKey,
-                       UserPreferences)
-from ...preferences import register_preferences
+from ...core import utils
+from ...core.models import (Grouping, GroupingKey, GroupingState, Groups,
+                            Permissions, Registration, User, UserKey,
+                            UserPreferences)
+from ...core.preferences import register_preferences
 from .. import create_repository
 from ..base import Connection, DuplicateKey, NothingToUpdate
 from ..ram import RamRepository
