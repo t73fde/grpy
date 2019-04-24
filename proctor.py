@@ -112,28 +112,32 @@ def main(ctx, verbose: int) -> None:
 
 @main.command()
 @click.option('-f', '--force', is_flag=True)
+@click.option('-q', '--quiet', is_flag=True)
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
-def clean(ctx, force: bool, verbose: int) -> None:
+def clean(ctx, force: bool, quiet: bool, verbose: int) -> None:
     """Remove temporary files and directories."""
     verbose += ctx.obj['verbose']
     base_path = pathlib.Path()
+    paths = list(base_path.glob("**/__pycache__"))
+
     entries = [str(p) for p in base_path.iterdir()]
     process = exec_subprocess(["git", "check-ignore", *entries], verbose)
-    if process.returncode:
-        ctx.exit(1)
-    for entry in process.stdout.split():
-        path = base_path / entry.decode('utf-8')
+    if not process.returncode:
+        paths.extend(
+            [base_path / entry.decode('utf-8') for entry in process.stdout.split()])
+
+    for path in paths:
         if not force:
             click.echo(path)
             continue
 
         if path.is_file():
-            if verbose > 1:
+            if not quiet:
                 click.echo("rm " + str(path))
             path.unlink()
         elif path.is_dir():
-            if verbose > 1:
+            if not quiet:
                 click.echo("rm -rf " + str(path))
             shutil.rmtree(str(path))
 
