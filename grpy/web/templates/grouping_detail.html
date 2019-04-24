@@ -71,7 +71,7 @@
 </div>
 {% endif %}
 {% endif %}
-{% if can_delete_regs %}
+{% if user_registrations and can_delete_regs %}
 <div class="w3-panel">
   <h1>Registered users ({{ user_registrations|length }})</h1>
   <form method="POST">
