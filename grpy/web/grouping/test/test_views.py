@@ -21,11 +21,9 @@
 
 import dataclasses
 import datetime
-from typing import Any, Dict, List, cast
+from typing import List
 
-from flask import url_for
-from flask.sessions import SecureCookieSessionInterface
-from werkzeug.http import parse_cookie
+from flask import get_flashed_messages, url_for
 
 from ....core import utils
 from ....core.models import (Grouping, GroupingKey, Registration, User,
@@ -33,25 +31,54 @@ from ....core.models import (Grouping, GroupingKey, Registration, User,
 from ....repo.base import Connection
 
 
-def get_session_data(app, response) -> Dict[str, Any]:
-    """Retrieve the session data from a response."""
-    cookie = response.headers.get('Set-Cookie')
-    if not cookie:
-        return {}
-    session_str = parse_cookie(cookie)['session']
-    session_serializer = SecureCookieSessionInterface().get_signing_serializer(app)
-    return cast(Dict[str, Any], session_serializer.loads(session_str))
+def check_requests(client, url: str, status_code: int, do_post: bool = True) -> None:
+    """Check GET/POST requests for status code."""
+    assert client.get(url).status_code == status_code
+    if do_post:
+        assert client.post(url).status_code == status_code
+
+
+def check_bad_anon_requests(client, auth, url: str, do_post: bool = True) -> None:
+    """Assert that anonymous users cannot access ressource."""
+    auth.logout()
+    check_requests(client, url, 401, do_post)
+
+
+def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
+    """Assert that others cannot access resource."""
+    auth.login('user')
+    check_requests(client, url, 403, do_post)
+    check_bad_anon_requests(client, auth, url, do_post)
+
+
+def check_bad_host_requests(client, auth, url: str, do_post: bool = True) -> None:
+    """Assert that other host and other users cannot access resource."""
+    auth.login('host-0')
+    check_requests(client, url, 403, do_post)
+    check_bad_requests(client, auth, url, do_post)
+
+
+def check_redirect(response, location_url: str):
+    """Assert that a redirect without flash message will happen."""
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost" + location_url
+    assert get_flashed_messages(with_categories=True) == []
+    return response
+
+
+def check_flash(client, response, location_url: str, category: str, message: str):
+    """Assert that flash message will occur."""
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost" + location_url
+    assert get_flashed_messages(with_categories=True) == [(category, message)]
+    client.get(url_for('home'))  # Clean flash message
+    return response
 
 
 def test_grouping_create(app, client, auth) -> None:
     """Test the creation of new groupings."""
     url = url_for('grouping.create')
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
-
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
+    check_bad_requests(client, auth, url)
 
     auth.login('host')
     assert client.get(url).status_code == 200
@@ -60,22 +87,22 @@ def test_grouping_create(app, client, auth) -> None:
     assert response.status_code == 200
     assert response.data.count(b'This field is required') == 5
 
-    response = client.post(url, data={
-        'name': "name", 'begin_date': "1970-01-01 00:00",
-        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
+    check_redirect(
+        client.post(url, data={
+            'name': "name", 'begin_date': "1970-01-01 00:00",
+            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
+        "/")
 
     groupings = app.get_connection().iter_groupings(where={"name__eq": "name"})
     assert len(list(groupings)) == 1
 
-    response = client.post(url, data={
-        'name': "name", 'begin_date': "1970-01-01 00:00",
-        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
+    check_redirect(
+        client.post(url, data={
+            'name': "name", 'begin_date': "1970-01-01 00:00",
+            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
+        "/")
 
     groupings = app.get_connection().iter_groupings(where={"name__eq": "name"})
     assert len(list(groupings)) == 2
@@ -84,8 +111,7 @@ def test_grouping_create(app, client, auth) -> None:
 def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     """Test grouping detail view."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(url)
-    assert response.status_code == 401
+    check_bad_requests(client, auth, url, False)
 
     auth.login("host")
     response = client.get(url)
@@ -144,14 +170,12 @@ def test_grouping_detail_remove(app, client, auth, app_grouping: Grouping) -> No
         to_delete = users[:count]
         users = users[count:]
         count += 1
-        response = client.post(url, data={
-            'u': [str(u.key) for u in to_delete],
-        })
-        assert response.status_code == 302
-        assert response.headers['Location'] == "http://localhost" + url
-        assert get_session_data(app, response)['_flashes'] == \
-            [('info', "{} registered users removed.".format(len(to_delete)))]
-        client.get(url_for('home'))  # Clean flash message
+        check_flash(
+            client,
+            client.post(url, data={
+                'u': [str(u.key) for u in to_delete],
+            }),
+            url, "info", "{} registered users removed.".format(len(to_delete)))
 
 
 def test_grouping_detail_remove_grouped(
@@ -171,18 +195,15 @@ def test_grouping_detail_remove_grouped(
     assert b"registered users" not in response.data.lower()
 
 
-def test_grouping_detail_remove_illegal(
-        app, client, auth, app_grouping: Grouping) -> None:
+def test_grouping_detail_remove_illegal(client, auth, app_grouping: Grouping) -> None:
     """If illegal UUIDs are sent, nothing happens."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login("host")
     for data in ("1,2,3", [str(app_grouping.key)]):
-        response = client.post(url, data={'u': data})
-        assert response.status_code == 302
-        assert response.headers['Location'] == "http://localhost" + url
-        assert get_session_data(app, response)['_flashes'] == \
-            [('info', "0 registered users removed.")]
-        client.get(url_for('home'))  # Clean flash message
+        check_flash(
+            client,
+            client.post(url, data={'u': data}),
+            url, "info", "0 registered users removed.")
 
 
 def test_grouping_detail_fasten(app, client, auth, app_grouping: Grouping) -> None:
@@ -229,16 +250,7 @@ def test_grouping_detail_fasten(app, client, auth, app_grouping: Grouping) -> No
 def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     """Test the update of an existing grouping."""
     url = url_for('grouping.update', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
-
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
+    check_bad_host_requests(client, auth, url)
 
     auth.login('host')
     assert client.get(url).status_code == 200
@@ -247,14 +259,12 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     assert response.data.count(b'This field is required') == 5
 
-    response = client.post(url, data={
-        'name': "very new name", 'begin_date': "1970-01-01 00:00",
-        'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
-        'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == \
-        "http://localhost" + url_for('.detail', grouping_key=app_grouping.key)
-    client.get(url_for('home'))  # Clean flash messages
+    check_redirect(
+        client.post(url, data={
+            'name': "very new name", 'begin_date': "1970-01-01 00:00",
+            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
+        url_for('.detail', grouping_key=app_grouping.key))
 
     groupings = list(app.get_connection().iter_groupings())
     assert len(groupings) == 1
@@ -267,16 +277,16 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     assert app_grouping.key is not None
     user = app.get_connection().get_user_by_ident("user")
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    assert client.get(url).status_code == 302
-    assert response.headers['Location'] == \
-        "http://localhost" + url_for('.detail', grouping_key=app_grouping.key)
+
+    check_flash(
+        client, client.get(url), "/", "warning",
+        "Update of grouping not allowed.")
 
 
-def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
+def test_grouping_register(client, auth, app_grouping: Grouping) -> None:
     """Check the grouping registration."""
     url = url_for('grouping.register', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
+    check_bad_anon_requests(client, auth, url)
 
     auth.login('host')
     assert client.get(url).status_code == 403
@@ -284,21 +294,16 @@ def test_grouping_register(app, client, auth, app_grouping: Grouping) -> None:
 
     auth.login('student')
     assert client.get(url).status_code == 200
-    response = client.get(url)
 
-    response = client.post(url, data={'submit_register': "submit_register"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is stored.".format(app_grouping.name))]
+    check_flash(
+        client,
+        client.post(url, data={'submit_register': "submit_register"}),
+        "/", "info", "Registration for '{}' is stored.".format(app_grouping.name))
 
-    client.get(url_for('home'))  # Clean flash messages
-
-    response = client.post(url, data={'submit_register': "submit_register"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Registration for '{}' is updated.".format(app_grouping.name))]
+    check_flash(
+        client,
+        client.post(url, data={'submit_register': "submit_register"}),
+        "/", "info", "Registration for '{}' is updated.".format(app_grouping.name))
 
     response = client.get(url_for('home'))
     assert response.status_code == 200
@@ -317,61 +322,36 @@ def test_grouping_register_out_of_time(
     now = utils.now()
     app.get_connection().set_grouping(dataclasses.replace(
         app_grouping, begin_date=now + datetime.timedelta(seconds=3600)))
-    response = client.post(url, data={})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping '{}' is not available.".format(
-            app_grouping.name))]
-
-    client.get(url_for('home'))  # Clean flash messages
+    check_flash(
+        client, client.post(url, data={}),
+        "/", "warning", "Grouping '{}' is not available.".format(app_grouping.name))
 
     app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         begin_date=now - datetime.timedelta(seconds=3600),
         final_date=now - datetime.timedelta(seconds=1800)))
-    response = client.post(url, data={})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping '{}' is not available.".format(
-            app_grouping.name))]
+    check_flash(
+        client, client.post(url, data={}),
+        "/", "warning", "Grouping '{}' is not available.".format(app_grouping.name))
 
 
 def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     """Test group building view."""
     url = url_for('grouping.start', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
+    check_bad_host_requests(client, auth, url)
 
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
+    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login('host')
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping is not final.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "warning", "Grouping is not final.")
 
     new_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         begin_date=utils.now() - datetime.timedelta(days=7),
         final_date=utils.now() - datetime.timedelta(seconds=1)))
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "No registrations for '{}' found.".format(new_grouping.name))]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "warning",
+        "No registrations for '{}' found.".format(new_grouping.name))
 
     user = app.get_connection().get_user_by_ident("user")
     app.get_connection().set_registration(
@@ -383,11 +363,8 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     assert "Start" in data
 
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    response = client.get(url)
-    assert response.status_code == 302
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping is not final.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "warning", "Grouping is not final.")
 
 
 def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
@@ -434,10 +411,11 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     assert app_grouping.key is not None
     users = create_registered_users(app.get_connection(), app_grouping.key)
 
-    response = start_grouping(client, auth, app.get_connection(), app_grouping)
-    assert response.status_code == 302
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    assert response.headers['Location'] == "http://localhost" + detail_url
+    check_redirect(
+        start_grouping(client, auth, app.get_connection(), app_grouping),
+        detail_url)
+
     response = client.get(detail_url)
     assert response.status_code == 200
     data = response.data.decode('utf-8')
@@ -460,15 +438,17 @@ def test_grouping_delete_after_build(app, client, auth, app_grouping: Grouping) 
     """User is deleted after groups are formed, it must be removed from group."""
     assert app_grouping.key is not None
     users = create_registered_users(app.get_connection(), app_grouping.key)
-    response = start_grouping(client, auth, app.get_connection(), app_grouping)
-    assert response.status_code == 302
+    check_redirect(
+        start_grouping(client, auth, app.get_connection(), app_grouping),
+        url_for('grouping.detail', grouping_key=app_grouping.key))
 
     # Now deregister one user
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.post(url, data={
-        'u': [users[0].key],
-    })
-    assert response.status_code == 302
+    check_flash(
+        client,
+        client.post(url, data={'u': [users[0].key]}),
+        url_for('grouping.detail', grouping_key=app_grouping.key),
+        "info", "1 registered users removed.")
 
     # This user must not be in the freshly formed group
     other_users = {user.key for user in users if user != users[0]}
@@ -488,26 +468,12 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     assert app_grouping.key is not None
     url = url_for('grouping.remove_groups', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
+    check_bad_host_requests(client, auth, url)
 
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
+    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login('host')
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "No groups to remove.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "info", "No groups to remove.")
 
     user = app.get_connection().get_user_by_ident("user")
     app.get_connection().set_registration(Registration(
@@ -516,28 +482,19 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 200
 
-    response = client.post(url, data={})
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert '_flashes' not in get_session_data(app, response)
+    check_redirect(client.post(url, data={}), location_url)
 
-    response = client.post(url, data={'submit_remove': "submit_remove"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Groups removed.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client,
+        client.post(url, data={'submit_remove': "submit_remove"}),
+        location_url, "info", "Groups removed.")
     assert app.get_connection().get_groups(app_grouping.key) == ()
 
 
 def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
     """Close date can be set easily."""
     url = url_for('grouping.close', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
+    check_bad_host_requests(client, auth, url, False)
 
     auth.login('host')
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
@@ -545,33 +502,21 @@ def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     assert url not in response.data.decode('utf-8')
 
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Close date cannot be set now.")]
-    client.get(url_for('home'))  # Clear flashes
+    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
+    check_flash(
+        client, client.get(url), location_url,
+        "warning", "Close date cannot be set now.")
 
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
 
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Close date is now set.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "info", "Close date is now set.")
     assert app.get_connection().get_grouping(app_grouping.key).close_date is not None
 
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Close date removed.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "info", "Close date removed.")
     assert app.get_connection().get_grouping(app_grouping.key).close_date is None
 
 
@@ -581,26 +526,13 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
         app_grouping,
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     url = url_for('grouping.fasten_groups', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
+    check_bad_host_requests(client, auth, url)
 
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
+    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login('host')
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping not performed recently.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "warning",
+        "Grouping not performed recently.")
 
     user = app.get_connection().set_user(User(None, "uSer-42"))
     assert app_grouping.key
@@ -612,50 +544,30 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     assert response.data.count(user.ident.encode('utf-8')) == 1
 
-    response = client.post(url, data={})
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert '_flashes' not in get_session_data(app, response)
+    check_redirect(client.post(url, data={}), location_url)
 
-    response = client.post(url, data={'submit_fasten': "submit_fasten"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Groups fastened.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client,
+        client.post(url, data={'submit_fasten': "submit_fasten"}),
+        location_url, "info", "Groups fastened.")
     assert app.get_connection().get_groups(app_grouping.key) == (frozenset([user.key]),)
     assert app.get_connection().count_registrations_by_grouping(app_grouping.key) == 0
 
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping not performed recently.")]
-    client.get(url_for('home'))  # Clear flashes
+    check_flash(
+        client, client.get(url), location_url, "warning",
+        "Grouping not performed recently.")
 
 
-def test_delete_grouping_auth(app, client, auth, app_grouping: Grouping) -> None:
+def test_delete_grouping_auth(client, auth, app_grouping: Grouping) -> None:
     """A grouping cannot be deleted."""
     url = url_for('grouping.delete', grouping_key=app_grouping.key)
-    assert client.get(url).status_code == 401
-    assert client.post(url).status_code == 401
+    check_bad_host_requests(client, auth, url)
 
-    auth.login('user')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    auth.login('host-0')
-    assert client.get(url).status_code == 403
-    assert client.post(url).status_code == 403
-
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
+    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login('host')
-    response = client.get(url)
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
-    assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Grouping cannot be deleted.")]
+    check_flash(
+        client, client.get(url), location_url,
+        "warning", "Grouping cannot be deleted.")
 
 
 def test_delete_grouping(app, client, auth, app_grouping: Grouping) -> None:
@@ -672,20 +584,14 @@ def test_delete_grouping(app, client, auth, app_grouping: Grouping) -> None:
     response = client.get(url)
     assert response.status_code == 200
 
-    location_url = "http://localhost" + url_for(
-        'grouping.detail', grouping_key=app_grouping.key)
-    response = client.post(url, data={'submit_cancel': "submit_cancel"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == location_url
+    check_redirect(
+        client.post(url, data={'submit_cancel': "submit_cancel"}),
+        url_for('grouping.detail', grouping_key=app_grouping.key))
 
-    response = client.post(url, data={'submit_delete': "submit_delete"})
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost/"
-    assert get_session_data(app, response)['_flashes'] == \
-        [('info', "Grouping '{}' deleted.".format(app_grouping.name))]
-    client.get(url_for('home'))  # Clear flashes
-
+    check_flash(
+        client,
+        client.post(url, data={'submit_delete': "submit_delete"}),
+        "/", "info", "Grouping '{}' deleted.".format(app_grouping.name))
     assert app.get_connection().get_grouping(app_grouping.key) is None
 
-    response = client.get(url)
-    assert response.status_code == 404
+    check_requests(client, url, 404, False)

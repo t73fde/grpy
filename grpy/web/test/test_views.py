@@ -21,24 +21,11 @@
 
 import dataclasses
 import datetime
-from typing import Any, Dict, cast
 
 from flask import url_for
-from flask.sessions import SecureCookieSessionInterface
-from werkzeug.http import parse_cookie
 
 from ...core import utils
 from ...core.models import Grouping, Registration, UserPreferences
-
-
-def get_session_data(app, response) -> Dict[str, Any]:
-    """Retrieve the session data from a response."""
-    cookie = response.headers.get('Set-Cookie')
-    if not cookie:
-        return {}
-    session_str = parse_cookie(cookie)['session']
-    session_serializer = SecureCookieSessionInterface().get_signing_serializer(app)
-    return cast(Dict[str, Any], session_serializer.loads(session_str))
 
 
 def test_home_anonymous(client) -> None:
