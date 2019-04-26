@@ -34,7 +34,11 @@
 {% endif %}
 {{- render_data("Begin date", grouping.begin_date|datetimeformat("iso-short")) }}
 {{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
-{{- render_data("Close date", grouping.close_date|datetimeformat("iso-short")|default("(None)")) }}
+{% set close_date %}
+{{ grouping.close_date|datetimeformat("iso-short")|default("(None)") -}}
+&nbsp;<a href="{{ url_for('.close', grouping_key=grouping.key) }}">&#x1f4c5;</a>
+{% endset %}
+{{- render_data("Close date", close_date) }}
 {{- render_data("Policy", policy_name(grouping.policy)) }}
 {{- render_data("Maximum group size", grouping.max_group_size) }}
 {{- render_data("Member reserve", grouping.member_reserve) }}
@@ -42,6 +46,7 @@
 {{- render_data("Note", grouping.note) }}
 {% endif %}
 </div>
+{% if can_update or can_delete or ca_start %}
 <div class="w3-container w3-bar">
   {% if can_update %}
   <a href="{{ url_for('.update', grouping_key=grouping.key) }}"><button class="w3-button {{ color('primary') }}">Update</button></a>
@@ -52,8 +57,8 @@
   {% if can_start %}
   <a href="{{ url_for('.start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>
   {% endif %}
-  <a href="{{ url_for('.close', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Close</button></a>
 </div>
+{% endif %}
 {% if has_group %}
 <div class="w3-panel">
   <h1>Groups</h1>
