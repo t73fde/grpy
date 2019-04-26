@@ -123,6 +123,10 @@ class Connection:  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError("Connection.iter_groupings")
 
+    def delete_grouping(self, grouping_key: GroupingKey) -> None:
+        """Delete the grouping object referenced by the given key."""
+        raise NotImplementedError("Connection.delete_grouping")
+
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         raise NotImplementedError("Connection.add_registration")

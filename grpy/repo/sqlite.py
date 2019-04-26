@@ -368,6 +368,11 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         cursor.close()
         return result
 
+    def delete_grouping(self, grouping_key: GroupingKey) -> None:
+        """Delete the grouping object referenced by the given key."""
+        cursor = self._execute("DELETE FROM groupings WHERE key=?", (grouping_key,))
+        cursor.close()
+
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         encoded = encode_preferences(registration.preferences)

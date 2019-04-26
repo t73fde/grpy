@@ -96,3 +96,10 @@ class FastenGroupsForm(FlaskForm):
 
     submit_fasten = SubmitField("Fasten")
     submit_cancel = SubmitField("Cancel")
+
+
+class DeleteGroupingForm(FlaskForm):
+    """Form to delete the grouping."""
+
+    submit_delete = SubmitField("Delete")
+    submit_cancel = SubmitField("Cancel")

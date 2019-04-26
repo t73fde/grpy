@@ -46,6 +46,16 @@ def _redirect_to_detail(grouping_key: GroupingKey):
     return redirect(url_for('.detail', grouping_key=grouping_key))
 
 
+def _can_delete(state: GroupingState) -> bool:
+    """Return True if grouping can be deleted."""
+    return state in (GroupingState.NEW, GroupingState.CLOSED)
+
+
+def _remove_groups(grouping_key: GroupingKey) -> None:
+    """Remove all groups of this grouping."""
+    get_connection().set_groups(grouping_key, ())
+
+
 @login_required
 def grouping_create():
     """Create a new grouping."""
@@ -122,7 +132,7 @@ def grouping_detail(grouping_key: GroupingKey):
         has_group=(state in (
             GroupingState.GROUPED, GroupingState.FASTENED, GroupingState.CLOSED)),
         is_grouped=(state == GroupingState.GROUPED),
-        can_delete=(state in (GroupingState.NEW, GroupingState.CLOSED)),
+        can_delete=_can_delete(state),
         can_start=(state == GroupingState.FINAL),
         form=form)
 
@@ -236,7 +246,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     form = forms.RemoveGroupsForm()
     if form.validate_on_submit():
         if form.submit_remove.data:
-            get_connection().set_groups(grouping_key, ())
+            _remove_groups(grouping_key)
             flash("Groups removed.", category="info")
         return _redirect_to_detail(grouping_key)
 
@@ -286,3 +296,25 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
     return render_template(
         "grouping_fasten.html",
         grouping=grouping, group_list=group_list, form=form)
+
+
+@login_required
+def grouping_delete(grouping_key: GroupingKey):
+    """Delete the grouping."""
+    grouping = _get_grouping(grouping_key)
+
+    state = get_connection().get_grouping_state(grouping_key)
+    if not _can_delete(state):
+        flash("Grouping cannot be deleted.", category="warning")
+        return _redirect_to_detail(grouping_key)
+
+    form = forms.DeleteGroupingForm()
+    if form.validate_on_submit():
+        if form.submit_delete.data:
+            _remove_groups(grouping_key)
+            get_connection().delete_grouping(grouping_key)
+            flash("Grouping '{}' deleted.".format(grouping.name), category="info")
+            return redirect(url_for('home'))
+        return _redirect_to_detail(grouping_key)
+
+    return render_template("grouping_delete.html", grouping=grouping, form=form)

@@ -19,6 +19,7 @@
 
 """Test specific for checking proxy connection."""
 
+import inspect
 from typing import Callable
 from unittest.mock import Mock
 
@@ -28,6 +29,14 @@ from ....core.models import (Grouping, GroupingKey, Registration, User,
                              UserKey, UserPreferences)
 from ...base import Connection
 from ..filter import FilterProxyConnection
+
+
+def test_overwritten() -> None:
+    """Ensure that all methods from FilterProxyConnection are overwritten."""
+    prefix = FilterProxyConnection.__name__ + "."
+    for _, member in inspect.getmembers(
+            FilterProxyConnection, predicate=inspect.isfunction):
+        assert member.__qualname__.startswith(prefix)
 
 
 class MockedFilterProxyConnection(FilterProxyConnection):
@@ -136,6 +145,13 @@ def test_iter_groupings(filter_proxy: MockedFilterProxyConnection) -> None:
     """Return an iterator of all or some groupings."""
     filter_proxy.iter_groupings()
     assert filter_proxy.mock.iter_groupings.call_count == 1
+    assert filter_proxy.filter_count == 1
+
+
+def test_delete_grouping(filter_proxy: MockedFilterProxyConnection) -> None:
+    """Delete a grouping."""
+    filter_proxy.delete_grouping(GroupingKey(int=0))
+    assert filter_proxy.mock.delete_grouping.call_count == 1
     assert filter_proxy.filter_count == 1
 
 

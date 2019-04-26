@@ -461,6 +461,21 @@ def test_iter_groupings_order(connection: Connection) -> None:
     assert groupings == list(reversed(all_groupings))
 
 
+def test_delete_grouping(connection: Connection, grouping: Grouping) -> None:
+    """A deleted grouping cannot be retrieved afterwards."""
+    grouping = connection.set_grouping(grouping)
+    assert grouping.key is not None
+
+    assert connection.get_grouping(grouping.key) == grouping
+    assert list(connection.iter_groupings()) == [grouping]
+
+    connection.delete_grouping(grouping.key)
+    assert connection.get_grouping(grouping.key) is None
+    assert list(connection.iter_groupings()) == []
+
+    connection.delete_grouping(GroupingKey(int=0))
+
+
 def test_set_registration(connection: Connection, grouping: Grouping) -> None:
     """Test add / update of an registration."""
     grouping = connection.set_grouping(grouping)

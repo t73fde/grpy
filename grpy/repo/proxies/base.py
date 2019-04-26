@@ -59,10 +59,6 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
         """Return user for given ident."""
         return self._delegate.get_user_by_ident(ident)
 
-    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
-        """Return current state of given grouping."""
-        return self._delegate.get_grouping_state(grouping_key)
-
     def iter_users(
             self,
             where: Optional[WhereSpec] = None,
@@ -82,12 +78,20 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
         """Return grouping with given short code."""
         return self._delegate.get_grouping_by_code(code)
 
+    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
+        """Return current state of given grouping."""
+        return self._delegate.get_grouping_state(grouping_key)
+
     def iter_groupings(
             self,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all or some groupings."""
         return self._delegate.iter_groupings(where, order)
+
+    def delete_grouping(self, grouping_key: GroupingKey) -> None:
+        """Delete the grouping object referenced by the given key."""
+        self._delegate.delete_grouping(grouping_key)
 
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""

@@ -110,6 +110,10 @@ class FilterProxyConnection(  # pylint: disable=too-many-public-methods
         return cast(Iterable[Grouping], self._filter(
             super().iter_groupings, (), where, order))
 
+    def delete_grouping(self, grouping_key: GroupingKey) -> None:
+        """Delete the grouping object referenced by the given key."""
+        self._filter(super().delete_grouping, None, grouping_key)
+
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         return cast(Registration, self._filter(

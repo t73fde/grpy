@@ -627,3 +627,60 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert get_session_data(app, response)['_flashes'] == \
         [('warning', "Grouping not performed recently.")]
     client.get(url_for('home'))  # Clear flashes
+
+
+def test_delete_grouping_auth(app, client, auth, app_grouping: Grouping) -> None:
+    """A grouping cannot be deleted."""
+    url = url_for('grouping.delete', grouping_key=app_grouping.key)
+    assert client.get(url).status_code == 401
+    assert client.post(url).status_code == 401
+
+    auth.login('user')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    auth.login('host-0')
+    assert client.get(url).status_code == 403
+    assert client.post(url).status_code == 403
+
+    location_url = "http://localhost" + url_for(
+        'grouping.detail', grouping_key=app_grouping.key)
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+    assert get_session_data(app, response)['_flashes'] == \
+        [('warning', "Grouping cannot be deleted.")]
+
+
+def test_delete_grouping(app, client, auth, app_grouping: Grouping) -> None:
+    """A grouping can be deleted."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.begin_date + datetime.timedelta(seconds=5),
+        close_date=app_grouping.begin_date + datetime.timedelta(seconds=9)))
+    user = app.get_connection().set_user(User(None, "user_del"))
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    url = url_for('grouping.delete', grouping_key=app_grouping.key)
+
+    auth.login('host')
+    response = client.get(url)
+    assert response.status_code == 200
+
+    location_url = "http://localhost" + url_for(
+        'grouping.detail', grouping_key=app_grouping.key)
+    response = client.post(url, data={'submit_cancel': "submit_cancel"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == location_url
+
+    response = client.post(url, data={'submit_delete': "submit_delete"})
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost/"
+    assert get_session_data(app, response)['_flashes'] == \
+        [('info', "Grouping '{}' deleted.".format(app_grouping.name))]
+    client.get(url_for('home'))  # Clear flashes
+
+    assert app.get_connection().get_grouping(app_grouping.key) is None
+
+    response = client.get(url)
+    assert response.status_code == 404

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{#
+ # Copyright (c) 2019 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ #
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% from "macros.html" import render_data %}
+{% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
+{% block heading %}{% endblock %}
+{% block content %}
+<div class="w3-panel">
+<div class="w3-container w3-light-gray">
+  <h1>Delete Grouping</h1>
+</div>
+{{- render_data("Name", grouping.name) }}
+{{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
+{{- render_data("Policy", policy_name(grouping.policy)) }}
+{{- render_data("Maximum group size", grouping.max_group_size) }}
+{{- render_data("Member reserve", grouping.member_reserve) }}
+{{- render_data("Note", grouping.note) }}
+</div>
+<div class="w3-container w3-bar">
+  <form method="POST">
+  {{- form.csrf_token }}
+  {{ form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}
+  {{ form.submit_delete(class="w3-btn w3-ripple " + color("danger")) }}
+  </form>
+</div>
+{% endblock %}

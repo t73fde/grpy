@@ -180,6 +180,13 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
         """Return an iterator of all or some groupings."""
         return self._state.groupings.values()
 
+    def delete_grouping(self, grouping_key: GroupingKey) -> None:
+        """Delete the grouping object referenced by the given key."""
+        grouping = self._state.groupings.get(grouping_key, None)
+        if grouping is not None:
+            del self._state.groupings_code[grouping.code]
+            del self._state.groupings[grouping_key]
+
     def set_registration(self, registration: Registration) -> Registration:
         """Add / update a grouping registration."""
         self._state.registrations[
