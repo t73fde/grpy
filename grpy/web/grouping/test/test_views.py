@@ -539,14 +539,19 @@ def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
     auth.login('host-0')
     assert client.get(url).status_code == 403
 
+    auth.login('host')
+    detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    assert url not in response.data.decode('utf-8')
+
     location_url = "http://localhost" + url_for(
         'grouping.detail', grouping_key=app_grouping.key)
-    auth.login('host')
     response = client.get(url)
     assert response.status_code == 302
     assert response.headers['Location'] == location_url
     assert get_session_data(app, response)['_flashes'] == \
-        [('warning', "Please wait until final date is reached.")]
+        [('warning', "Close date cannot be set now.")]
     client.get(url_for('home'))  # Clear flashes
 
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(

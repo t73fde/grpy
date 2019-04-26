@@ -36,8 +36,10 @@
 {{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
 {% set close_date %}
 {{ grouping.close_date|datetimeformat("iso-short")|default("(None)") -}}
+{% if can_set_close -%}
 &nbsp;<a href="{{ url_for('.close', grouping_key=grouping.key) }}">&#x1f4c5;</a>
-{% endset %}
+{%- endif %}
+{%- endset %}
 {{- render_data("Close date", close_date) }}
 {{- render_data("Policy", policy_name(grouping.policy)) }}
 {{- render_data("Maximum group size", grouping.max_group_size) }}

@@ -51,6 +51,14 @@ def _can_delete(state: GroupingState) -> bool:
     return state in (GroupingState.NEW, GroupingState.CLOSED)
 
 
+def _can_set_close(grouping: Grouping) -> bool:
+    """Determine if close date can be set to current datetime."""
+    if grouping.close_date is not None:
+        # Close date can be set to None
+        return True
+    return grouping.final_date < utils.now()
+
+
 def _remove_groups(grouping_key: GroupingKey) -> None:
     """Remove all groups of this grouping."""
     get_connection().set_groups(grouping_key, ())
@@ -126,6 +134,7 @@ def grouping_detail(grouping_key: GroupingKey):
         group_list=group_list,
         user_registrations=user_registrations,
         can_show_link=state in (GroupingState.NEW, GroupingState.AVAILABLE),
+        can_set_close=_can_set_close(grouping),
         can_update=(state in (
             GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL)),
         can_delete_regs=(state in (GroupingState.AVAILABLE, GroupingState.FINAL)),
@@ -260,18 +269,16 @@ def grouping_remove_groups(grouping_key: GroupingKey):
 def grouping_close(grouping_key: GroupingKey):
     """Set the close date of the grouping to now."""
     grouping = _get_grouping(grouping_key)
-
-    if grouping.close_date:
-        get_connection().set_grouping(dataclasses.replace(grouping, close_date=None))
+    if not _can_set_close(grouping):
+        flash("Close date cannot be set now.", category="warning")
+    elif grouping.close_date:
+        get_connection().set_grouping(
+            dataclasses.replace(grouping, close_date=None))
         flash("Close date removed.", category="info")
     else:
-        yet = utils.now()
-        if yet <= grouping.final_date:
-            flash("Please wait until final date is reached.", category="warning")
-        else:
-            get_connection().set_grouping(dataclasses.replace(
-                grouping, close_date=yet))
-            flash("Close date is now set.", category="info")
+        get_connection().set_grouping(
+            dataclasses.replace(grouping, close_date=utils.now()))
+        flash("Close date is now set.", category="info")
     return _redirect_to_detail(grouping_key)
 
 
