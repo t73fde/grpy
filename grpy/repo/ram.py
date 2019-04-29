@@ -22,8 +22,8 @@
 import dataclasses
 from typing import Dict, Iterable, Optional, Sequence, Tuple, cast
 
-from ..core.models import (Grouping, GroupingKey, GroupingState, Groups,
-                           Registration, User, UserKey)
+from ..core.models import (Grouping, GroupingKey, Groups, Registration, User,
+                           UserKey)
 from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
                    OrderSpec, Repository, WhereSpec)
 from .models import NamedUser, UserGroup, UserRegistration
@@ -154,24 +154,6 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
         return self._state.groupings_code.get(code, None)
-
-    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
-        """Return current state of given grouping."""
-        grouping = self._state.groupings.get(grouping_key, None)
-        if grouping is None:
-            return GroupingState.UNKNOWN
-        state = grouping.get_state()
-        if state not in (GroupingState.FINAL, GroupingState.CLOSED):
-            return state
-        has_regs = any(g for g, _ in self._state.registrations if g == grouping_key)
-        has_groups = bool(self._state.groups.get(grouping_key, False))
-        if has_groups:
-            if has_regs:
-                return GroupingState.GROUPED
-            if state == GroupingState.FINAL:
-                return GroupingState.FASTENED
-            return GroupingState.CLOSED
-        return GroupingState.FINAL
 
     def iter_groupings(
             self,

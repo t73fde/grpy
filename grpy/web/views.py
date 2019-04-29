@@ -30,7 +30,7 @@ from flask import (abort, current_app, g, redirect, render_template, request,
 from ..core import utils
 from ..core.models import Grouping, GroupingKey, GroupingState
 from ..repo.base import Connection
-from ..repo.logic import GroupingCount, groupings_for_host
+from ..repo.logic import GroupingCount, get_grouping_state, groupings_for_host
 from .utils import redirect_to_login, value_or_404
 
 
@@ -103,7 +103,7 @@ def shortlink(code: str):
     if g.user is None:
         return redirect_to_login()
 
-    state = get_connection().get_grouping_state(cast(GroupingKey, grouping.key))
+    state = get_grouping_state(get_connection(), cast(GroupingKey, grouping.key))
     if state not in (GroupingState.NEW, GroupingState.AVAILABLE):
         abort(404)
 

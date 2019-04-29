@@ -24,7 +24,8 @@ import json
 from typing import Any, List, Optional, Sequence, Tuple, cast
 
 from ..core.logic import len_groups, make_code
-from ..core.models import Grouping, GroupingKey, UserKey, UserPreferences
+from ..core.models import (Grouping, GroupingKey, GroupingState, UserKey,
+                           UserPreferences)
 from ..core.preferences import get_code, get_preferences
 from ..core.utils import now
 from .base import Connection, DuplicateKey
@@ -72,6 +73,26 @@ def groupings_for_host(
         else:
             closed_groupings.append(grouping)
     return (open_groupings, closed_groupings)
+
+
+def get_grouping_state(
+        connection: Connection, grouping_key: GroupingKey) -> GroupingState:
+    """Return current state of given grouping."""
+    grouping = connection.get_grouping(grouping_key)
+    if grouping is None:
+        return GroupingState.UNKNOWN
+    state = grouping.get_state()
+    if state not in (GroupingState.FINAL, GroupingState.CLOSED):
+        return state
+    has_groups = connection.get_groups(grouping_key)
+    if has_groups:
+        has_regs = bool(connection.count_registrations_by_grouping(grouping_key))
+        if has_regs:
+            return GroupingState.GROUPED
+        if state == GroupingState.FINAL:
+            return GroupingState.FASTENED
+        return GroupingState.CLOSED
+    return GroupingState.FINAL
 
 
 def encode_preferences(preferences: UserPreferences) -> Optional[str]:

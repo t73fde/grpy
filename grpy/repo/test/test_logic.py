@@ -26,12 +26,14 @@ from unittest.mock import patch
 
 import pytest
 
-from ...core.models import (Grouping, Registration, User, UserKey,
-                            UserPreferences)
+from ...core import utils
+from ...core.models import (Grouping, GroupingKey, GroupingState, Registration,
+                            User, UserKey, UserPreferences)
 from ...core.preferences import get_code, register_preferences
 from ..base import Connection, DuplicateKey
 from ..logic import (decode_preferences, encode_preferences,
-                     groupings_for_host, set_grouping_new_code)
+                     get_grouping_state, groupings_for_host,
+                     set_grouping_new_code)
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:
@@ -134,6 +136,80 @@ def test_groupings_for_host_closed(connection: Connection, grouping: Grouping) -
     opened, closed = groupings_for_host(connection, grouping.host_key)
     assert opened == []
     assert closed == [grouping]
+
+
+def test_get_grouping_state_simple(connection: Connection, grouping: Grouping) -> None:
+    """
+    Check valid grouping state, for simple cases.
+
+    Simple cases are those, that can be calculated at most by comparing dates.
+    """
+    # If not stored -> state is unknown
+    assert not grouping.key
+    assert get_grouping_state(connection, GroupingKey(int=0)) == GroupingState.UNKNOWN
+
+    grouping = connection.set_grouping(grouping)
+    assert grouping.key
+    assert get_grouping_state(connection, grouping.key) == GroupingState.AVAILABLE
+
+    now = utils.now()
+    connection.set_grouping(dataclasses.replace(
+        grouping, begin_date=now + datetime.timedelta(seconds=600)))
+    assert get_grouping_state(connection, grouping.key) == GroupingState.NEW
+
+
+def assert_final_grouping_state(connection: Connection, grouping: Grouping) -> None:
+    """Test `get_grouping_state` for various states in the final category."""
+    assert grouping.key
+    assert get_grouping_state(connection, grouping.key) == GroupingState.FINAL
+    user = connection.set_user(User(None, "user"))
+    assert user.key
+    connection.set_registration(Registration(grouping.key, user.key, UserPreferences()))
+    assert get_grouping_state(connection, grouping.key) == GroupingState.FINAL
+    connection.set_groups(grouping.key, (frozenset([user.key]),))
+    assert get_grouping_state(connection, grouping.key) == GroupingState.GROUPED
+    connection.delete_registrations(grouping.key)
+    assert get_grouping_state(connection, grouping.key) == GroupingState.FASTENED
+
+
+def test_get_grouping_state_final_1(connection: Connection, grouping: Grouping) -> None:
+    """Test final category of grouping states."""
+    now = utils.now()
+    grouping_1 = connection.set_grouping(dataclasses.replace(
+        grouping, final_date=now - datetime.timedelta(seconds=900)))
+    assert_final_grouping_state(connection, grouping_1)
+
+
+def test_get_grouping_state_final_2(connection: Connection, grouping: Grouping) -> None:
+    """Test final category of grouping states."""
+    now = utils.now()
+    grouping_2 = connection.set_grouping(dataclasses.replace(
+        grouping,
+        final_date=now - datetime.timedelta(seconds=900),
+        close_date=now + datetime.timedelta(seconds=900)))
+    assert_final_grouping_state(connection, grouping_2)
+
+
+def test_get_grouping_state_close(connection: Connection, grouping: Grouping) -> None:
+    """Test close category of grouping states."""
+    now = utils.now()
+    grouping = connection.set_grouping(dataclasses.replace(
+        grouping,
+        final_date=now - datetime.timedelta(seconds=600),
+        close_date=now - datetime.timedelta(seconds=500)))
+    assert grouping.key
+    assert get_grouping_state(connection, grouping.key) == GroupingState.FINAL
+
+    user = connection.set_user(User(None, "user"))
+    assert user.key
+    connection.set_registration(Registration(grouping.key, user.key, UserPreferences()))
+    assert get_grouping_state(connection, grouping.key) == GroupingState.FINAL
+
+    connection.set_groups(grouping.key, (frozenset([user.key]),))
+    assert get_grouping_state(connection, grouping.key) == GroupingState.GROUPED
+
+    connection.delete_registrations(grouping.key)
+    assert get_grouping_state(connection, grouping.key) == GroupingState.CLOSED
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods

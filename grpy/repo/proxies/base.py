@@ -22,8 +22,8 @@
 
 from typing import Iterable, Optional, Sequence
 
-from ...core.models import (Grouping, GroupingKey, GroupingState, Groups,
-                            Registration, User, UserKey)
+from ...core.models import (Grouping, GroupingKey, Groups, Registration, User,
+                            UserKey)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 
@@ -77,10 +77,6 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
     def get_grouping_by_code(self, code: str) -> Optional[Grouping]:
         """Return grouping with given short code."""
         return self._delegate.get_grouping_by_code(code)
-
-    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
-        """Return current state of given grouping."""
-        return self._delegate.get_grouping_state(grouping_key)
 
     def iter_groupings(
             self,

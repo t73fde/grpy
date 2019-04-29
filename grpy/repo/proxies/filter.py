@@ -22,8 +22,8 @@
 from datetime import datetime
 from typing import Callable, Iterable, Optional, Sequence, cast
 
-from ...core.models import (Grouping, GroupingKey, GroupingState, Groups,
-                            Registration, User, UserKey, UserPreferences)
+from ...core.models import (Grouping, GroupingKey, Groups, Registration, User,
+                            UserKey, UserPreferences)
 from ..base import Connection, Message, OrderSpec, WhereSpec
 from ..models import UserGroup, UserRegistration
 from .base import BaseProxyConnection
@@ -96,11 +96,6 @@ class FilterProxyConnection(  # pylint: disable=too-many-public-methods
         """Return grouping with given short code."""
         return cast(Optional[Grouping], self._filter(
             super().get_grouping_by_code, None, code))
-
-    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
-        """Return current state of given grouping."""
-        return cast(GroupingState, self._filter(
-            super().get_grouping_state, GroupingState.UNKNOWN, grouping_key))
 
     def iter_groupings(
             self,

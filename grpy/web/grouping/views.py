@@ -30,7 +30,7 @@ from ...core.models import (Grouping, GroupingKey, GroupingState, Registration,
                             User, UserKey)
 from ...policies import get_policy
 from ...repo.base import Connection
-from ...repo.logic import set_grouping_new_code
+from ...repo.logic import get_grouping_state, set_grouping_new_code
 from ..policies import get_policy_names, get_registration_form
 from ..utils import login_required, make_model, update_model, value_or_404
 from . import forms
@@ -131,7 +131,7 @@ def grouping_detail(grouping_key: GroupingKey):
         flash("{} registered users removed.".format(count), category='info')
         return _redirect_to_detail(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     group_list = _get_group_list(grouping_key)
     return render_template(
         "grouping_detail.html",
@@ -170,7 +170,7 @@ def grouping_update(grouping_key: GroupingKey):
     """Update an existing grouping."""
     grouping = _get_grouping(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if state not in (GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL):
         flash("Update of grouping not allowed.", category='warning')
         return redirect(url_for('home'))
@@ -223,7 +223,7 @@ def grouping_start(grouping_key: GroupingKey):
     """Start the grouping process."""
     grouping = _get_grouping(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if state != GroupingState.FINAL:
         flash("Grouping is not final.", category="warning")
         return _redirect_to_detail(grouping_key)
@@ -253,7 +253,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     """Remove formed groups."""
     grouping = _get_grouping(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if state != GroupingState.GROUPED:
         flash("No groups to remove.", category="info")
         return _redirect_to_detail(grouping_key)
@@ -275,7 +275,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
 def grouping_final(grouping_key: GroupingKey):
     """Set the final date of the grouping to now."""
     grouping = _get_grouping(grouping_key)
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if not _can_set_final(state):
         flash("Final date cannot be set now.", category="warning")
     else:
@@ -307,7 +307,7 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
     """Fasten formed groups."""
     grouping = _get_grouping(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if state != GroupingState.GROUPED:
         flash("Grouping not performed recently.", category="warning")
         return _redirect_to_detail(grouping_key)
@@ -330,7 +330,7 @@ def grouping_delete(grouping_key: GroupingKey):
     """Delete the grouping."""
     grouping = _get_grouping(grouping_key)
 
-    state = get_connection().get_grouping_state(grouping_key)
+    state = get_grouping_state(get_connection(), grouping_key)
     if not _can_delete(state):
         flash("Grouping cannot be deleted.", category="warning")
         return _redirect_to_detail(grouping_key)

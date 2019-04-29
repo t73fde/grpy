@@ -28,8 +28,8 @@ from urllib.parse import urlparse
 
 from pytz import utc
 
-from ..core.models import (Grouping, GroupingKey, GroupingState, Groups,
-                           Permissions, Registration, User, UserKey)
+from ..core.models import (Grouping, GroupingKey, Groups, Permissions,
+                           Registration, User, UserKey)
 from .base import (Connection, DuplicateKey, Message, NothingToUpdate,
                    OrderSpec, Repository, WhereSpec)
 from .logic import decode_preferences, encode_preferences
@@ -323,34 +323,6 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         return Grouping(
             row[0], code, row[1], row[2], row[3], row[4], row[5],
             row[6], row[7], row[8], row[9]) if row else None
-
-    def get_grouping_state(self, grouping_key: GroupingKey) -> GroupingState:
-        """Return current state of given grouping."""
-        cursor = self._execute(
-            "SELECT begin_date, final_date, close_date FROM groupings WHERE key=?",
-            (grouping_key,))
-        row = cursor.fetchone()
-        cursor.close()
-        if not row:
-            return GroupingState.UNKNOWN
-        state = Grouping(
-            None, " code ", " name ", UserKey(int=0), row[0], row[1], row[2],
-            "RD", 7, 7, "").get_state()
-        if state not in (GroupingState.FINAL, GroupingState.CLOSED):
-            return state
-        has_regs = bool(self.count_registrations_by_grouping(grouping_key))
-        cursor = self._execute(
-            "SELECT COUNT(*) FROM groups WHERE grouping_key=?", (grouping_key,))
-        row = cursor.fetchone()
-        cursor.close()
-        has_groups = bool(row[0])
-        if has_groups:
-            if has_regs:
-                return GroupingState.GROUPED
-            if state == GroupingState.FINAL:
-                return GroupingState.FASTENED
-            return GroupingState.CLOSED
-        return GroupingState.FINAL
 
     def iter_groupings(
             self,
