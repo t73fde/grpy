@@ -50,6 +50,18 @@ def login_required(view):
     return wrapped_view
 
 
+def admin_required(view):
+    """Wrap a view to enforce an user who is logged in as an administrator."""
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if g.user is None:
+            abort(401)
+        if not g.user.is_admin:
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapped_view
+
+
 def redirect_to_login() -> Any:
     """Return a redirect to login view."""
     return redirect(url_for('auth.login', next_url=request.script_root + request.path))

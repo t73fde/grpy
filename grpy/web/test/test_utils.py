@@ -30,8 +30,9 @@ from ...core.models import GroupingKey, Permissions, User, UserKey
 from ...core.utils import now
 from ..app import create_app
 from ..middleware import PrefixMiddleware
-from ..utils import (datetimeformat, login_required, login_required_redirect,
-                     make_model, update_model, value_or_404)
+from ..utils import (admin_required, datetimeformat, login_required,
+                     login_required_redirect, make_model, update_model,
+                     value_or_404)
 
 
 def test_grouping_key_converter(app, client) -> None:
@@ -61,6 +62,27 @@ def test_login_required(app, client, auth) -> None:
     assert response.status_code == 401
 
     auth.login("user")
+    response = client.get('/test')
+    assert response.status_code == 200
+    assert response.data == b"Done"
+
+
+def test_admin_required(app, client, auth) -> None:
+    """If no administrator is logged in, raise 401."""
+    @admin_required
+    def just_a_view() -> bytes:
+        """This view is for testing only."""
+        return b"Done"
+
+    app.add_url_rule('/test', "test", just_a_view)
+    response = client.get('/test')
+    assert response.status_code == 401
+
+    auth.login("user")
+    response = client.get('/test')
+    assert response.status_code == 403
+
+    auth.login("admin")
     response = client.get('/test')
     assert response.status_code == 200
     assert response.data == b"Done"

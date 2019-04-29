@@ -68,6 +68,7 @@ def app(request):
         connection = grpy_app.get_connection()
         connection.set_user(User(None, "host", Permissions.HOST))
         connection.set_user(User(None, "host-0", Permissions.HOST))
+        connection.set_user(User(None, "admin", Permissions.ADMIN))
 
     yield grpy_app
     if with_tempfile:
