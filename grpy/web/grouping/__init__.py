@@ -40,6 +40,9 @@ def create_blueprint() -> Blueprint:
         "/<grouping:grouping_key>/register", "register",
         views.grouping_register, methods=('GET', 'POST'))
     blueprint.add_url_rule(
+        "/<grouping:grouping_key>/final", "final",
+        views.grouping_final)
+    blueprint.add_url_rule(
         "/<grouping:grouping_key>/close", "close",
         views.grouping_close)
     blueprint.add_url_rule(

@@ -33,7 +33,15 @@
 {{- render_data("Code", code_link) }}
 {% endif %}
 {{- render_data("Begin date", grouping.begin_date|datetimeformat("iso-short")) }}
-{{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
+
+{% set final_date %}
+{{ grouping.final_date|datetimeformat("iso-short") }}
+{%- if can_set_final -%}
+&nbsp;<a href="{{ url_for('.final', grouping_key=grouping.key) }}">&#x1f4c5;</a>
+{%- endif %}
+{%- endset %}
+{{- render_data("Final date", final_date) }}
+
 {% set close_date %}
 {{ grouping.close_date|datetimeformat("iso-short")|default("(None)") -}}
 {% if can_set_close -%}
@@ -41,6 +49,7 @@
 {%- endif %}
 {%- endset %}
 {{- render_data("Close date", close_date) }}
+
 {{- render_data("Policy", policy_name(grouping.policy)) }}
 {{- render_data("Maximum group size", grouping.max_group_size) }}
 {{- render_data("Member reserve", grouping.member_reserve) }}

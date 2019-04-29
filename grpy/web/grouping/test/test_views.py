@@ -491,6 +491,48 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     assert app.get_connection().get_groups(app_grouping.key) == ()
 
 
+def test_grouping_final(app, client, auth, app_grouping: Grouping) -> None:
+    """Final date can be set."""
+    url = url_for('grouping.final', grouping_key=app_grouping.key)
+    check_bad_host_requests(client, auth, url, False)
+
+    auth.login('host')
+    detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    assert url in response.data.decode('utf-8')
+    check_flash(
+        client, client.get(url), detail_url, "info", "Final date is now set.")
+
+    yet = utils.now()
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=yet - datetime.timedelta(seconds=600)))
+    user = app.get_connection().set_user(User(None, "uSer-42"))
+    assert app_grouping.key
+    assert user.key
+    app.get_connection().set_registration(Registration(
+        app_grouping.key, user.key, UserPreferences()))
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    assert url not in response.data.decode('utf-8')
+    check_flash(
+        client, client.get(url), detail_url,
+        "warning", "Final date cannot be set now.")
+
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        begin_date=yet + datetime.timedelta(seconds=3600),
+        final_date=yet + datetime.timedelta(seconds=7200)))
+    response = client.get(detail_url)
+    assert response.status_code == 200
+    assert url not in response.data.decode('utf-8')
+    check_flash(
+        client, client.get(url), detail_url,
+        "warning", "Final date cannot be set now.")
+
+
 def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
     """Close date can be set easily."""
     url = url_for('grouping.close', grouping_key=app_grouping.key)

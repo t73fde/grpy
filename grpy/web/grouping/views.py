@@ -51,6 +51,11 @@ def _can_delete(state: GroupingState) -> bool:
     return state in (GroupingState.NEW, GroupingState.CLOSED)
 
 
+def _can_set_final(state: GroupingState) -> bool:
+    """Determine if final date can be set to current datetime."""
+    return state in (GroupingState.AVAILABLE, GroupingState.FINAL)
+
+
 def _can_set_close(grouping: Grouping) -> bool:
     """Determine if close date can be set to current datetime."""
     if grouping.close_date is not None:
@@ -134,6 +139,7 @@ def grouping_detail(grouping_key: GroupingKey):
         group_list=group_list,
         user_registrations=user_registrations,
         can_show_link=state in (GroupingState.NEW, GroupingState.AVAILABLE),
+        can_set_final=_can_set_final(state),
         can_set_close=_can_set_close(grouping),
         can_update=(state in (
             GroupingState.NEW, GroupingState.AVAILABLE, GroupingState.FINAL)),
@@ -263,6 +269,20 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     return render_template(
         "grouping_remove_groups.html",
         grouping=grouping, group_list=group_list, form=form)
+
+
+@login_required
+def grouping_final(grouping_key: GroupingKey):
+    """Set the final date of the grouping to now."""
+    grouping = _get_grouping(grouping_key)
+    state = get_connection().get_grouping_state(grouping_key)
+    if not _can_set_final(state):
+        flash("Final date cannot be set now.", category="warning")
+    else:
+        get_connection().set_grouping(
+            dataclasses.replace(grouping, final_date=utils.now()))
+        flash("Final date is now set.", category="info")
+    return _redirect_to_detail(grouping_key)
 
 
 @login_required
