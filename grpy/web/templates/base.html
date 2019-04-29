@@ -36,9 +36,11 @@
   <a href="{{ url_for('about') }}" class="w3-bar-item w3-button">About</a>
   {%- if g.user %}
   <div class="w3-dropdown-hover">
-    <button class="w3-button">User</button>
+    <button class="w3-button">{{ g.user.ident|truncate(16) }}</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
-      <span class="w3-bar-item">{{ g.user.ident }}</span>
+      {%- if g.user.is_admin -%}
+      <a href="#" class="w3-bar-item w3-button">Admin</a>
+      {%- endif -%}
       <a href="{{ url_for('auth.logout')}}" class="w3-bar-item w3-button">Logout</a>
     </div>
   </div>

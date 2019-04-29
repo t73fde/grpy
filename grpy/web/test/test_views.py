@@ -45,7 +45,7 @@ def test_home_host(client, auth, app_grouping: Grouping) -> None:
     auth.login("host")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
-    assert "host</span>" in data
+    assert "host</" in data
     assert url_for('grouping.detail', grouping_key=app_grouping.key) in data
     assert app_grouping.name in data
     assert str(app_grouping.final_date.minute) in data
@@ -86,7 +86,7 @@ def test_home_user(client, auth) -> None:
     auth.login("user")
     response = client.get(url_for('home'))
     data = response.data.decode('utf-8')
-    assert "user</span>" in data
+    assert "user</" in data
     assert " valid grouping link " in data
 
 
