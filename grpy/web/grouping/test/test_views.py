@@ -31,6 +31,13 @@ from ....core.models import (Grouping, GroupingKey, Registration, User,
 from ....repo.base import Connection
 
 
+def check_get(client, url: str, status_code: int = 200):
+    """Check GET request and return response."""
+    response = client.get(url)
+    assert response.status_code == status_code
+    return response
+
+
 def check_requests(client, url: str, status_code: int, do_post: bool = True) -> None:
     """Check GET/POST requests for status code."""
     assert client.get(url).status_code == status_code
@@ -81,7 +88,7 @@ def test_grouping_create(app, client, auth) -> None:
     check_bad_requests(client, auth, url)
 
     auth.login('host')
-    assert client.get(url).status_code == 200
+    check_get(client, url)
 
     response = client.post(url, data={})
     assert response.status_code == 200
@@ -114,19 +121,14 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     check_bad_requests(client, auth, url, False)
 
     auth.login("host")
-    response = client.get(url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = check_get(client, url).data.decode('utf-8')
     assert app_grouping.code in data
     assert url_for('shortlink', code=app_grouping.code) in data
     assert app_grouping.note in data
 
     auth.login("user")
-    response = client.get(url)
-    assert response.status_code == 403
-
-    assert client.get(
-        url_for('grouping.detail', grouping_key=GroupingKey())).status_code == 404
+    check_get(client, url, 403)
+    check_get(client, url_for('grouping.detail', grouping_key=GroupingKey()), 404)
 
 
 def test_grouping_detail_no_code(app, client, auth, app_grouping: Grouping) -> None:
@@ -135,9 +137,7 @@ def test_grouping_detail_no_code(app, client, auth, app_grouping: Grouping) -> N
         app_grouping, final_date=utils.now() - datetime.timedelta(seconds=600)))
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login("host")
-    response = client.get(url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = check_get(client, url).data.decode('utf-8')
     assert app_grouping.code not in data
     assert url_for('shortlink', code=app_grouping.code) not in data
 
@@ -190,9 +190,7 @@ def test_grouping_detail_remove_grouped(
     app.get_connection().set_groups(app_grouping.key, (users_as_group,))
     auth.login("host")
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(url)
-    assert response.status_code == 200
-    assert b"registered users" not in response.data.lower()
+    assert b"registered users" not in check_get(client, url).data.lower()
 
 
 def test_grouping_detail_remove_illegal(client, auth, app_grouping: Grouping) -> None:
@@ -253,8 +251,7 @@ def test_grouping_update(app, client, auth, app_grouping: Grouping) -> None:
     check_bad_host_requests(client, auth, url)
 
     auth.login('host')
-    assert client.get(url).status_code == 200
-
+    check_get(client, url)
     response = client.post(url, data={})
     assert response.status_code == 200
     assert response.data.count(b'This field is required') == 5
@@ -289,12 +286,11 @@ def test_grouping_register(client, auth, app_grouping: Grouping) -> None:
     check_bad_anon_requests(client, auth, url)
 
     auth.login('host')
-    assert client.get(url).status_code == 403
+    check_get(client, url, 403)
     assert client.post(url).status_code == 403
 
     auth.login('student')
-    assert client.get(url).status_code == 200
-
+    check_get(client, url)
     check_flash(
         client,
         client.post(url, data={'submit_register': "submit_register"}),
@@ -305,9 +301,7 @@ def test_grouping_register(client, auth, app_grouping: Grouping) -> None:
         client.post(url, data={'submit_register': "submit_register"}),
         "/", "info", "Registration for '{}' is updated.".format(app_grouping.name))
 
-    response = client.get(url_for('home'))
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = check_get(client, url_for('home')).data.decode('utf-8')
     assert "Registered Groupings" in data
     assert app_grouping.name in data
     assert "Welcome!" not in data
@@ -356,11 +350,7 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
     user = app.get_connection().get_user_by_ident("user")
     app.get_connection().set_registration(
         Registration(new_grouping.key, user.key, UserPreferences()))
-
-    response = client.get(url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
-    assert "Start" in data
+    assert "Start" in check_get(client, url).data.decode('utf-8')
 
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     check_flash(
@@ -370,11 +360,8 @@ def test_grouping_start(app, client, auth, app_grouping: Grouping) -> None:
 def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     """A fresh grouping has no calculated groups."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(url)
     auth.login("host")
-    response = client.get(url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = check_get(client, url).data.decode('utf-8')
     assert "Groups" not in data
     assert "Member</td>" not in data
 
@@ -416,9 +403,7 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
         start_grouping(client, auth, app.get_connection(), app_grouping),
         detail_url)
 
-    response = client.get(detail_url)
-    assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = check_get(client, detail_url).data.decode('utf-8')
     assert "Groups" in data
     assert "Member</td>" in data
     for user in users:
@@ -427,9 +412,7 @@ def test_grouping_build(app, client, auth, app_grouping: Grouping) -> None:
     home_url = url_for('home')
     for user in users:
         auth.login(user.ident)
-        response = client.get(home_url)
-        assert response.status_code == 200
-        data = response.data.decode('utf-8')
+        data = check_get(client, home_url).data.decode('utf-8')
         assert data.count(user.ident) > 1
         assert data.count(app_grouping.name) == 1
 
@@ -479,11 +462,8 @@ def test_remove_groups(app, client, auth, app_grouping: Grouping) -> None:
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    response = client.get(url)
-    assert response.status_code == 200
-
+    check_get(client, url)
     check_redirect(client.post(url, data={}), location_url)
-
     check_flash(
         client,
         client.post(url, data={'submit_remove': "submit_remove"}),
@@ -498,9 +478,7 @@ def test_grouping_final(app, client, auth, app_grouping: Grouping) -> None:
 
     auth.login('host')
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(detail_url)
-    assert response.status_code == 200
-    assert url in response.data.decode('utf-8')
+    assert url in check_get(client, detail_url).data.decode('utf-8')
     check_flash(
         client, client.get(url), detail_url, "info", "Final date is now set.")
 
@@ -514,9 +492,7 @@ def test_grouping_final(app, client, auth, app_grouping: Grouping) -> None:
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    response = client.get(detail_url)
-    assert response.status_code == 200
-    assert url not in response.data.decode('utf-8')
+    assert url not in check_get(client, detail_url).data.decode('utf-8')
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Final date cannot be set now.")
@@ -525,9 +501,7 @@ def test_grouping_final(app, client, auth, app_grouping: Grouping) -> None:
         app_grouping,
         begin_date=yet + datetime.timedelta(seconds=3600),
         final_date=yet + datetime.timedelta(seconds=7200)))
-    response = client.get(detail_url)
-    assert response.status_code == 200
-    assert url not in response.data.decode('utf-8')
+    assert url not in check_get(client, detail_url).data.decode('utf-8')
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Final date cannot be set now.")
@@ -540,10 +514,7 @@ def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
 
     auth.login('host')
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    response = client.get(detail_url)
-    assert response.status_code == 200
-    assert url not in response.data.decode('utf-8')
-
+    assert url not in check_get(client, detail_url).data.decode('utf-8')
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Close date cannot be set now.")
@@ -581,9 +552,7 @@ def test_fasten_groups(app, client, auth, app_grouping: Grouping) -> None:
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    response = client.get(url)
-    assert response.status_code == 200
-    assert response.data.count(user.ident.encode('utf-8')) == 1
+    assert check_get(client, url).data.count(user.ident.encode('utf-8')) == 1
 
     check_redirect(client.post(url, data={}), location_url)
 
@@ -622,9 +591,7 @@ def test_delete_grouping(app, client, auth, app_grouping: Grouping) -> None:
     url = url_for('grouping.delete', grouping_key=app_grouping.key)
 
     auth.login('host')
-    response = client.get(url)
-    assert response.status_code == 200
-
+    check_get(client, url)
     check_redirect(
         client.post(url, data={'submit_cancel': "submit_cancel"}),
         url_for('grouping.detail', grouping_key=app_grouping.key))
