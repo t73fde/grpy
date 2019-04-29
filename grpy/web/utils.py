@@ -79,9 +79,12 @@ def make_model(model_class, form_data: Dict, additional_values: Dict) -> Model:
     """Create a new model based on form data."""
     data = dict(form_data)
     data.update(additional_values)
+    fields = dataclasses.fields(model_class)
+    default_dict = {
+        f.name: f.default for f in fields if f.default != dataclasses.MISSING}
     return cast(Model, model_class(*tuple(map(
-        lambda f: data.get(f, None),
-        (field.name for field in dataclasses.fields(model_class))))))
+        lambda name: data.get(name, default_dict.get(name, None)),
+        (field.name for field in fields)))))
 
 
 def update_model(model: Model, form_data):

@@ -111,7 +111,8 @@ class SqliteRepository(Repository):
 CREATE TABLE users(
     key USER_KEY PRIMARY KEY,
     ident TEXT UNIQUE NOT NULL,
-    permissions INT)
+    permissions INT NOT NULL,
+    last_login DATETIME)
 """)
             if "groupings" not in tables:
                 cursor.execute("""
@@ -212,8 +213,8 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
                 raise NothingToUpdate("Missing user", user.key)
             try:
                 self._execute(
-                    "UPDATE users SET ident=?, permissions=? WHERE key=?",
-                    (user.ident, user.permissions.value, user.key))
+                    "UPDATE users SET ident=?,permissions=?,last_login=? WHERE key=?",
+                    (user.ident, user.permissions.value, user.last_login, user.key))
             except sqlite3.IntegrityError as exc:
                 if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                     raise DuplicateKey("User.ident", user.ident)
@@ -223,8 +224,8 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         user_key = UserKey()
         try:
             self._execute(
-                "INSERT INTO users VALUES(?,?,?)",
-                (user_key, user.ident, user.permissions.value))
+                "INSERT INTO users(key,ident,permissions,last_login) VALUES(?,?,?,?)",
+                (user_key, user.ident, user.permissions.value, user.last_login))
         except sqlite3.IntegrityError as exc:
             if exc.args[0] == 'UNIQUE constraint failed: users.ident':
                 raise DuplicateKey("User.ident", user.ident)
@@ -234,18 +235,18 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
     def get_user(self, user_key: UserKey) -> Optional[User]:
         """Return user with given key or None."""
         cursor = self._execute(
-            "SELECT ident, permissions FROM users WHERE key=?", (user_key,))
+            "SELECT ident,permissions,last_login FROM users WHERE key=?", (user_key,))
         row = cursor.fetchone()
         cursor.close()
-        return User(user_key, row[0], Permissions(row[1])) if row else None
+        return User(user_key, row[0], Permissions(row[1]), row[2]) if row else None
 
     def get_user_by_ident(self, ident: str) -> Optional[User]:
         """Return user with given ident, or None."""
         cursor = self._execute(
-            "SELECT key, permissions FROM users WHERE ident=?", (ident,))
+            "SELECT key,permissions,last_login FROM users WHERE ident=?", (ident,))
         row = cursor.fetchone()
         cursor.close()
-        return User(row[0], ident, Permissions(row[1])) if row else None
+        return User(row[0], ident, Permissions(row[1]), row[2]) if row else None
 
     def iter_users(
             self,
@@ -254,10 +255,11 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         """Return an iterator of all or some users."""
         where_sql, where_vals = where_clause(where)
         cursor = self._execute(
-            "SELECT key, ident, permissions FROM users" +  # nosec
+            "SELECT key,ident,permissions,last_login FROM users" +  # nosec
             where_sql + order_clause(order), where_vals)
         result = [
-            User(row[0], row[1], Permissions(row[2])) for row in cursor.fetchall()]
+            User(row[0], row[1], Permissions(row[2]), row[3])
+            for row in cursor.fetchall()]
         cursor.close()
         return result
 

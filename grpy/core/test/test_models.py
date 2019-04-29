@@ -42,6 +42,12 @@ def test_keytype_operations() -> None:
     assert GroupingKey(key=user_key) == grouping_key
 
 
+def test_user_is_active() -> None:
+    """Test method .is_active."""
+    assert not User(None, "name", Permissions.INACTIVE).is_active
+    assert User(None, "name").is_active
+
+
 def test_user_is_host() -> None:
     """Test method .is_host."""
     assert User(None, "name", Permissions.HOST).is_host

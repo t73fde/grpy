@@ -23,10 +23,12 @@ import unittest.mock
 
 import requests
 
+from ....core.models import Permissions, User
+from ...app import GrpyApp
 from ..logic import authenticate, check_pw
 
 
-def test_check_pw(app, monkeypatch, caplog) -> None:
+def test_check_pw(app: GrpyApp, monkeypatch, caplog) -> None:
     """Test password check."""
     assert check_pw(app, None, "", "") is True
     assert check_pw(app, "", "", "") is False
@@ -63,9 +65,11 @@ def test_check_pw(app, monkeypatch, caplog) -> None:
         "Unable to get authentication from 'http://example.com' for 'user'"
 
 
-def test_authenticate(app, monkeypatch) -> None:
+def test_authenticate(app: GrpyApp, monkeypatch) -> None:
     """Test authentication."""
-    assert authenticate("host", "1") is not None
+    user = authenticate("user", "1")
+    assert user is not None
+    assert user.is_active
 
     # Set URL to something that is non-existing
     app.config['AUTH_URL'] = "http://this.is.sparta:480/"
@@ -85,3 +89,10 @@ def test_authenticate(app, monkeypatch) -> None:
 
     monkeypatch.setattr(requests, 'head', requests_head_raise)
     assert authenticate("user", "1") is None
+
+
+def test_authenticate_inactive(app: GrpyApp) -> None:
+    """An inactive user must not be authenticated."""
+    app.get_connection().set_user(
+        User(None, "inactive", permissions=Permissions.INACTIVE))
+    assert authenticate("inactive", "1") is None

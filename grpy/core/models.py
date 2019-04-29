@@ -79,6 +79,7 @@ class UserKey(KeyType):
 class Permissions(enum.Flag):
     """User permissions."""
 
+    INACTIVE = 1
     HOST = 2
 
 
@@ -89,6 +90,12 @@ class User(Model):
     key: Optional[UserKey]
     ident: str
     permissions: Permissions = Permissions(0)
+    last_login: Optional[datetime.datetime] = None
+
+    @property
+    def is_active(self) -> bool:
+        """Return True if user is an active user."""
+        return not bool(self.permissions & Permissions.INACTIVE)
 
     @property
     def is_host(self) -> bool:

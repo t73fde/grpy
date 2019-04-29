@@ -19,12 +19,15 @@
 
 """Authentication logic."""
 
-from typing import Optional, cast
+import dataclasses
+from typing import Optional
 
 import requests
 from flask import current_app
 
+from ...core import utils
 from ...core.models import User
+from ...repo.base import Connection
 
 
 def check_pw(app, url: Optional[str], username: str, password: str) -> bool:
@@ -50,10 +53,12 @@ def authenticate(username: str, password: str) -> Optional[User]:
     app = current_app
     url = app.config.get("AUTH_URL", "http://localhost:9876/")
     if check_pw(app, url, username, password):
-        connection = app.get_connection()
+        connection: Connection = app.get_connection()
         user = connection.get_user_by_ident(username)
         if not user:
             user = connection.set_user(User(None, username))
-        app.login(user)
-        return cast(User, user)
+        if user.is_active:
+            app.login(user)
+            connection.set_user(dataclasses.replace(user, last_login=utils.now()))
+            return user
     return None

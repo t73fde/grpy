@@ -152,7 +152,7 @@ def setup_users(connection: Connection, count: int) -> List[User]:
     result = []
     permissions = Permissions(0)
     for i in range(count):
-        user = connection.set_user(User(None, "user-%d" % i, permissions))
+        user = connection.set_user(User(None, "user-%d" % i, permissions, utils.now()))
         result.append(user)
         permissions = Permissions(0) if permissions else Permissions.HOST
     return result
@@ -176,10 +176,11 @@ def test_iter_users_where(connection: Connection) -> None:
 
     for field in dataclasses.fields(User):
         field_name = field.name
-        where = {field_name + "__eq": None}
+        field_value = None
+        where = {field_name + "__eq": field_value}
         lazy_users = utils.LazyList(connection.iter_users(where=where))
         assert not lazy_users
-        where = {field_name + "__ne": None}
+        where = {field_name + "__ne": field_value}
         lazy_users = utils.LazyList(connection.iter_users(where=where))
         assert set(lazy_users) == set(all_users)
 
