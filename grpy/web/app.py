@@ -77,18 +77,18 @@ class GrpyApp(Flask):
             return
         self.logger.setLevel(log_level.upper())  # pylint: disable=no-member
 
-    def setup_logging(self) -> None:
+    def _setup_logging(self) -> None:
         """Set-up application logging."""
         self._set_log_level(self.config.get('LOG_LEVEL'))
         log_handlers = self.config.get('LOG_HANDLERS')
         if log_handlers:
             self.logger.handlers = log_handlers
 
-    def setup_version(self) -> None:
+    def _setup_version(self) -> None:
         """Provide version information."""
         self.version = get_version(read_version_file(self.root_path, 3))
 
-    def setup_repository(self) -> None:
+    def _setup_repository(self) -> None:
         """Add a repository to the application."""
         self._repository = create_repository(self.config['REPOSITORY'])
         self.log_info("Repository URL = '" + self._repository.url + "'")
@@ -129,13 +129,13 @@ class GrpyApp(Flask):
         return cast(Connection, g.connection)
 
     @staticmethod
-    def clear_session() -> None:
+    def _clear_session() -> None:
         """Clear the session object, but not some keys."""
         keys = set(session.keys()) - {'connection_messages'}
         for key in keys:
             del session[key]
 
-    def setup_user_handling(self) -> None:
+    def _setup_user_handling(self) -> None:
         """Prepare application to work with user data."""
 
         def load_logged_in_user() -> None:
@@ -146,24 +146,24 @@ class GrpyApp(Flask):
                 if user:
                     g.user = user
                     return None
-                self.clear_session()
+                self._clear_session()
             g.user = None
             return None
 
         self.before_request(load_logged_in_user)
 
-    def setup_babel(self) -> None:
+    def _setup_babel(self) -> None:
         """Prepare application to work with Babel."""
         self.babel = Babel(self, configure_jinja=True)
         self.jinja_env.filters.update(  # pylint: disable=no-member
             datetimeformat=utils.datetimeformat,
         )
 
-    def setup_werkzeug(self) -> None:
+    def _setup_werkzeug(self) -> None:
         """Add some globals for Werkzeug."""
         self.url_map.converters['grouping'] = utils.GroupingKeyConverter
 
-    def setup_jinja(self) -> None:
+    def _setup_jinja(self) -> None:
         """Add some filters / globals for Jinja2."""
         self.jinja_env.globals.update(  # pylint: disable=no-member
             get_all_messages=utils.get_all_messages,
@@ -173,12 +173,12 @@ class GrpyApp(Flask):
 
     def login(self, user: User) -> None:
         """Log in the given user."""
-        self.clear_session()
+        self._clear_session()
         session['user_identifier'] = user.ident
 
     def logout(self):
         """Log out the current user."""
-        self.clear_session()
+        self._clear_session()
 
     def log_debug(self, message: str, *args, **kwargs) -> None:
         """Emit a debug message."""
@@ -192,18 +192,22 @@ class GrpyApp(Flask):
         """Emit an error message."""
         self.logger.error(message, *args, **kwargs)  # pylint: disable=no-member
 
+    def setup(self) -> None:
+        """Set-up the app."""
+        self._setup_logging()
+        self._setup_version()
+        self._setup_repository()
+        self._setup_user_handling()
+        self._setup_babel()
+        self._setup_werkzeug()
+        self._setup_jinja()
+
 
 def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
     """Create a new web application."""
     app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
-    app.setup_logging()
-    app.setup_version()
-    app.setup_repository()
-    app.setup_user_handling()
-    app.setup_babel()
-    app.setup_werkzeug()
-    app.setup_jinja()
+    app.setup()
 
     for code in (401, 403, 404):
         app.register_error_handler(code, handle_client_error)
