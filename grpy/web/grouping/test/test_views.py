@@ -544,9 +544,8 @@ def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
     assert response.status_code == 200
     assert url not in response.data.decode('utf-8')
 
-    location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     check_flash(
-        client, client.get(url), location_url,
+        client, client.get(url), detail_url,
         "warning", "Close date cannot be set now.")
 
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
@@ -554,11 +553,11 @@ def test_grouping_close(app, client, auth, app_grouping: Grouping) -> None:
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
 
     check_flash(
-        client, client.get(url), location_url, "info", "Close date is now set.")
+        client, client.get(url), detail_url, "info", "Close date is now set.")
     assert app.get_connection().get_grouping(app_grouping.key).close_date is not None
 
     check_flash(
-        client, client.get(url), location_url, "info", "Close date removed.")
+        client, client.get(url), detail_url, "info", "Close date removed.")
     assert app.get_connection().get_grouping(app_grouping.key).close_date is None
 
 
