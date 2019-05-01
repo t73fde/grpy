@@ -59,9 +59,13 @@ class GrpyApp(Flask):
             new_value = os.environ.get(key, None)
             if new_value is None:
                 continue
-            if not isinstance(value, str):
-                continue
-            self.config[key] = new_value
+            if isinstance(value, str):
+                self.config[key] = new_value
+            elif isinstance(value, bool):
+                self.config[key] = utils.to_bool(new_value)
+
+        # Ensure that specific values are of specific types
+        self.config['AUTH_CASE'] = utils.to_bool(self.config.get('AUTH_CASE', None))
 
     def _set_log_level(self, log_level: Any) -> None:
         """Set the log level to a specific value."""

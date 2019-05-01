@@ -57,10 +57,20 @@ def test_config() -> None:
 # pylint: disable=protected-access
 def test_env_config(monkeypatch) -> None:
     """Test overwriting config by environments vars."""
-    assert "ram:" in create_app()._repository.url
+    app = create_app()
+    assert "ram:" in app._repository.url
+    assert not app.testing
+    assert app.config['AUTH_CASE'] is False
+
     monkeypatch.setitem(os.environ, 'REPOSITORY', "invalid")
     monkeypatch.setitem(os.environ, 'TESTING', "True")
-    assert "dummy:" in create_app()._repository.url
+    monkeypatch.setitem(os.environ, 'AUTH_CASE', "Yes")
+    monkeypatch.setitem(os.environ, 'ANY_NUM', "17")
+    app = create_app(config_mapping={'ANY_NUM': 3})
+    assert "dummy:" in app._repository.url
+    assert app.testing
+    assert app.config['AUTH_CASE'] is True
+    assert app.config['ANY_NUM'] == 3
 # pylint: enable=protected-access
 
 

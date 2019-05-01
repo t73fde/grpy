@@ -27,3 +27,6 @@ SECRET_KEY = "".join(tuple(platform.uname()._asdict().values()) +
 REPOSITORY = "ram://"
 
 LOG_LEVEL = "NOTSET"
+
+# Per default, user names are not case sensitive
+AUTH_CASE = False
