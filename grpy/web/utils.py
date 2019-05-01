@@ -40,6 +40,29 @@ class GroupingKeyConverter(UUIDConverter):
         return GroupingKey(value)
 
 
+def to_bool(value: Any) -> bool:
+    """
+    Convert value to boolean value.
+
+    This function is used mostly for configuration values, that should be
+    interpreted as a boolean value. Since configuration values could be
+    specified via environment variables that are string, some kind of
+    conversion is needed.
+
+    All values except string values are converted via `bool` function.
+    A string value of `""`, `"0"` is converted to `False`, also any string
+    value that starts with `"F"` or `"f"`. All other values are converted to
+    `True`.
+    """
+    if not isinstance(value, str):
+        return bool(value)
+    if value:
+        if value == "0" or value[0] == "F" or value[0] == "f":
+            return False
+        return True
+    return False
+
+
 def login_required(view):
     """Wrap a view to enforce an user who is logged in."""
     @wraps(view)

@@ -31,8 +31,8 @@ from ...core.utils import now
 from ..app import create_app
 from ..middleware import PrefixMiddleware
 from ..utils import (admin_required, datetimeformat, login_required,
-                     login_required_redirect, make_model, update_model,
-                     value_or_404)
+                     login_required_redirect, make_model, to_bool,
+                     update_model, value_or_404)
 
 
 def test_grouping_key_converter(app, client) -> None:
@@ -48,6 +48,24 @@ def test_grouping_key_converter(app, client) -> None:
     response = client.get(url_for("test_view", grouping_key=str(GroupingKey(int=1017))))
     assert response.status_code == 200
     assert response.data == b"Done"
+
+
+def test_to_bool() -> None:
+    """The `to_bool` function should deliver useful values."""
+    assert to_bool(None) is False
+    assert to_bool(True) is True
+    assert to_bool(False) is False
+
+    assert to_bool(0) is False
+    assert to_bool(1) is True
+
+    assert to_bool("") is False
+    assert to_bool("0") is False
+    assert to_bool("falsch") is False
+    assert to_bool("False") is False
+
+    assert to_bool("1") is True
+    assert to_bool("Yes") is True
 
 
 def test_login_required(app, client, auth) -> None:
