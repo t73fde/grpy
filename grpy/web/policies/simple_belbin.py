@@ -56,7 +56,7 @@ class SimpleBelbinPolicyForm(RegistrationForm):
         answers = cast(SimpleBelbinPreferences, preferences).answers
         return cls(answers=answers)
 
-    def get_user_preferences(self) -> UserPreferences:
+    def get_user_preferences(self, _config) -> UserPreferences:
         """Read user preferences from form."""
         if len(self.answers.data) == SIMPLE_BELBIN_ANSWER_COUNT and \
                 self.answers.data != [None] * SIMPLE_BELBIN_ANSWER_COUNT:

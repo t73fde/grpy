@@ -63,5 +63,5 @@ def test_get_registration_form(app) -> None:  # pylint: disable=unused-argument
 
 def test_empty_policy_form(app) -> None:  # pylint: disable=unused-argument
     """The empty policy form does nothing, mostly."""
-    assert isinstance(EmptyPolicyForm().get_user_preferences(), UserPreferences)
+    assert isinstance(EmptyPolicyForm().get_user_preferences({}), UserPreferences)
     assert isinstance(EmptyPolicyForm.create(UserPreferences()), EmptyPolicyForm)

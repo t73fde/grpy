@@ -36,7 +36,7 @@ def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
     """The preferred policy form communicates via PreferredPreferences."""
     for i in range(5):
         PreferredPolicyForm = create_preferred_policy_form(i)
-        preferences = PreferredPolicyForm().get_user_preferences()
+        preferences = PreferredPolicyForm().get_user_preferences({})
         assert isinstance(preferences, PreferredPreferences)
         assert preferences.preferred == []
 
@@ -48,7 +48,7 @@ def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
         assert isinstance(form, PreferredPolicyForm)
         assert form.idents.data == [None] * i
 
-        preferences = PreferredPolicyForm(idents=["user"]).get_user_preferences()
+        preferences = PreferredPolicyForm(idents=["user"]).get_user_preferences({})
         assert isinstance(preferences, PreferredPreferences)
         assert preferences.preferred == ["user"]
 
@@ -75,3 +75,18 @@ def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
         form = PreferredPolicyForm.create(PreferredPreferences(["", "1", "", "3"]))
         assert isinstance(form, PreferredPolicyForm)
         assert_idents(form.idents.data, i, ["1", "3"])
+
+
+def test_preferred_policy_form_case(app) -> None:  # pylint: disable=unused-argument
+    """Preferred policy form respects config variable 'AUTH_CASE'."""
+    ident = "uSeRE"
+    PreferredPolicyForm = create_preferred_policy_form(1)
+    preferences = PreferredPolicyForm(idents=[ident]).get_user_preferences({})
+    assert isinstance(preferences, PreferredPreferences)
+    assert preferences.preferred == [ident.lower()]
+
+    PreferredPolicyForm = create_preferred_policy_form(1)
+    preferences = PreferredPolicyForm(idents=[ident]).get_user_preferences(
+        {'AUTH_CASE': True})
+    assert isinstance(preferences, PreferredPreferences)
+    assert preferences.preferred == [ident]

@@ -51,9 +51,12 @@ def create_preferred_policy_form(num_entries: int):
                 return cls()
             return cls(idents=preferred[:num_entries])
 
-        def get_user_preferences(self) -> UserPreferences:
+        def get_user_preferences(self, config) -> UserPreferences:
             """Read user preferences from form."""
-            idents = [ident for ident in self.idents.data if ident]
+            if config.get('AUTH_CASE', False):
+                idents = [ident for ident in self.idents.data if ident]
+            else:
+                idents = [ident.lower() for ident in self.idents.data if ident]
             if idents:
                 return PreferredPreferences(idents)
             return PreferredPreferences([])

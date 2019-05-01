@@ -202,7 +202,7 @@ def grouping_register(grouping_key: GroupingKey):
 
     form = get_registration_form(grouping.policy, registration)
     if form.validate_on_submit():
-        user_preferences = form.get_user_preferences()
+        user_preferences = form.get_user_preferences(current_app.config)
         get_connection().set_registration(
             Registration(grouping_key, g.user.key, user_preferences))
         if registration:

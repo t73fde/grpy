@@ -27,7 +27,7 @@ from ..simple_belbin import SimpleBelbinPolicyForm
 
 def test_simple_belbin_policy_form(app) -> None:  # pylint: disable=unused-argument
     """The simple belbin form contains 8 answers."""
-    preferences = SimpleBelbinPolicyForm().get_user_preferences()
+    preferences = SimpleBelbinPolicyForm().get_user_preferences({})
     assert isinstance(preferences, SimpleBelbinPreferences)
     assert preferences.answers == DEFAULT_SIMPLE_BELBIN_ANSWER
 
@@ -39,6 +39,6 @@ def test_simple_belbin_policy_form(app) -> None:  # pylint: disable=unused-argum
         answers=(0, 1, 2, 3, 0, 1, 2, 3)))
     assert isinstance(form, SimpleBelbinPolicyForm)
     assert form.answers.data == [0, 1, 2, 3, 0, 1, 2, 3]
-    preferences = form.get_user_preferences()
+    preferences = form.get_user_preferences({})
     assert isinstance(preferences, SimpleBelbinPreferences)
     assert preferences.answers == (0, 1, 2, 3, 0, 1, 2, 3)

@@ -35,6 +35,6 @@ class RegistrationForm(FlaskForm):
         """Create a filled form."""
         raise NotImplementedError("RegistrationForm.create")
 
-    def get_user_preferences(self) -> UserPreferences:
+    def get_user_preferences(self, config) -> UserPreferences:
         """Read user preferences from form."""
         raise NotImplementedError("RegistrationForm.get_user_preferences")

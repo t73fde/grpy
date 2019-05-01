@@ -35,7 +35,7 @@ class EmptyPolicyForm(RegistrationForm):
         """Create a filled form."""
         return cls()
 
-    def get_user_preferences(self) -> UserPreferences:
+    def get_user_preferences(self, _config) -> UserPreferences:
         """Read user preferences from form."""
         return UserPreferences()
 
