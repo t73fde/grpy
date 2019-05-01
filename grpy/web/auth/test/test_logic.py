@@ -67,9 +67,11 @@ def test_check_pw(app: GrpyApp, monkeypatch, caplog) -> None:
 
 def test_authenticate(app: GrpyApp, monkeypatch) -> None:
     """Test authentication."""
+    assert app.config['AUTH_CASE'] is False
     user = authenticate("user", "1")
     assert user is not None
     assert user.is_active
+    assert app.get_connection().get_user_by_ident("user") is not None
 
     # Set URL to something that is non-existing
     app.config['AUTH_URL'] = "http://this.is.sparta:480/"
@@ -96,3 +98,22 @@ def test_authenticate_inactive(app: GrpyApp) -> None:
     app.get_connection().set_user(
         User(None, "inactive", permissions=Permissions.INACTIVE))
     assert authenticate("inactive", "1") is None
+
+
+def test_authenticate_case(app: GrpyApp) -> None:
+    """If auth is case sensitive, different cases matter."""
+    assert app.config['AUTH_CASE'] is False
+    ident = "UsERe"
+    user = authenticate(ident, "1")
+    assert user is not None
+    assert user.is_active
+    assert app.get_connection().get_user_by_ident(ident.lower()) is not None
+    assert app.get_connection().get_user_by_ident(ident) is None
+
+    app.config['AUTH_CASE'] = True
+    ident = "hOSteR"
+    host = authenticate(ident, "1")
+    assert host is not None
+    assert host.is_active
+    assert app.get_connection().get_user_by_ident(ident.lower()) is None
+    assert app.get_connection().get_user_by_ident(ident) is not None
