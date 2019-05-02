@@ -20,7 +20,7 @@
 """Proxy connection that implements WHERE and ORDER."""
 
 import random
-from typing import Any, Callable, Iterable, Optional, TypeVar, cast
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, cast
 
 from ...core.models import Grouping, GroupingKey, Model, User, UserKey
 from ..base import OrderSpec, WhereSpec
@@ -141,6 +141,14 @@ def process_where(
     return result
 
 
+def _value_to_sort(obj: Any, name: str) -> Tuple[bool, Any]:
+    """Produce a value that can be sorted even if value is None."""
+    value = getattr(obj, name)
+    if value is None:
+        return (False, None)
+    return (True, value)
+
+
 def process_order(
         result: Iterable[ModelT], order: Optional[OrderSpec]) -> Iterable[ModelT]:
     """Sort result with respect to order specifications."""
@@ -156,7 +164,7 @@ def process_order(
                     order_field = order_field[1:]
 
             list_result.sort(
-                key=lambda obj: getattr(
+                key=lambda obj: _value_to_sort(
                     obj, order_field),  # pylint: disable=cell-var-from-loop
                 reverse=reverse)
     else:

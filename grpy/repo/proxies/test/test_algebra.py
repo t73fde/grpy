@@ -58,6 +58,7 @@ class MockConnection(BaseProxyConnection):
             User(UserKey(int=1), "host", Permissions.HOST),
             User(UserKey(int=3), "user"),
             User(UserKey(int=2), "tsoh", Permissions.HOST),
+            User(UserKey(int=4), "active", Permissions.HOST, now()),
         )
 
     def iter_groupings(
@@ -122,19 +123,20 @@ def get_connection(with_spec: bool = True) -> AlgebraConnection:
 
 def test_iter_users_where() -> None:
     """Test the WhereSpec for iterating users."""
-    assert len(list(get_connection(False).iter_users())) == 3
+    assert len(list(get_connection(False).iter_users())) == 4
     connection = get_connection()
     users = list(connection.iter_users(where={'permissions__ne': Permissions.HOST}))
     assert len(users) == 1
     assert users[0].ident == "user"
     hosts = connection.iter_users(where={'permissions__eq': Permissions.HOST})
-    assert len(list(hosts)) == 2
+    assert len(list(hosts)) == 3
     users = list(connection.iter_users(where={'ident__eq': "tsoh"}))
     assert len(users) == 1
     assert users[0].ident == "tsoh"
-    assert list(connection.iter_users(where={'ident__lt': "host"})) == []
+    assert list(connection.iter_users(where={'ident__lt': "active"})) == []
     assert list(connection.iter_users(where={'ident__gt': "user"})) == []
-    assert list(connection.iter_users(where={'ident__le': "host"}))[0].ident == "host"
+    assert list(connection.iter_users(
+        where={'ident__le': "active"}))[0].ident == "active"
     assert list(connection.iter_users(where={'ident__ge': "user"}))[0].ident == "user"
 
 
@@ -142,16 +144,18 @@ def test_iter_users_order() -> None:
     """Test the OrderSpec for iterating users."""
     connection = get_connection()
     users = connection.iter_users(order=['ident'])
-    assert [user.ident for user in users] == ["host", "tsoh", "user"]
+    assert [user.ident for user in users] == ["active", "host", "tsoh", "user"]
     users = connection.iter_users(order=['-ident'])
-    assert [user.ident for user in users] == ["user", "tsoh", "host"]
+    assert [user.ident for user in users] == ["user", "tsoh", "host", "active"]
+    users = connection.iter_users(order=['last_login', 'ident'])
+    assert [user.ident for user in users] == ["host", "tsoh", "user", "active"]
 
 
 def test_iter_users_where_order() -> None:
     """Test the WhereSpec together with OrderSpec for iterating users."""
     connection = get_connection()
     users = connection.iter_users(where={'ident__lt': "user"}, order=['+ident'])
-    assert [user.ident for user in users] == ["host", "tsoh"]
+    assert [user.ident for user in users] == ["active", "host", "tsoh"]
 
 
 def test_iter_groupings() -> None:
