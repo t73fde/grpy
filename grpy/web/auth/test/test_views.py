@@ -23,6 +23,8 @@ import dataclasses
 
 from flask import g, session, url_for
 
+from ...app import GrpyApp
+
 
 def test_login(client) -> None:
     """Test login view."""
@@ -34,7 +36,7 @@ def test_login(client) -> None:
     assert session['user_identifier'] == "host"
 
 
-def test_login_new_user(app, client) -> None:
+def test_login_new_user(app: GrpyApp, client) -> None:
     """Test login view for new user."""
     response = client.post(
         url_for('auth.login'), data={'username': "new_user", 'password': "1"})
@@ -44,7 +46,7 @@ def test_login_new_user(app, client) -> None:
     assert app.get_connection().get_user_by_ident("new_user") is not None
 
 
-def test_invalid_login(app, client) -> None:
+def test_invalid_login(app: GrpyApp, client) -> None:
     """Test login view for invalid login."""
     app.config['AUTH_URL'] = ""
     url = url_for('auth.login')
@@ -64,17 +66,18 @@ def test_double_login(client, auth) -> None:
     assert session['user_identifier'] == "host"
 
 
-def test_name_change_after_login(app, client, auth) -> None:
+def test_name_change_after_login(app: GrpyApp, client, auth) -> None:
     """Username is changed after login."""
     auth.login("host")
     connection = app.get_connection()
     user = connection.get_user_by_ident("host")
+    assert user is not None
     connection.set_user(dataclasses.replace(user, ident="tsoh"))
     client.get("/")
     assert g.user is None
 
 
-def test_login_with_redirect(app, client) -> None:
+def test_login_with_redirect(app: GrpyApp, client) -> None:
     """Test login view when redirect after successful login."""
     url = url_for('auth.login', next_url="/ABCDEF/")
     response = client.get(url)
@@ -107,3 +110,23 @@ def test_logout_without_login(client) -> None:
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     assert 'user_identifier' not in session
+
+
+def test_admin_users(app: GrpyApp, client, auth) -> None:
+    """Only an admistrator is allowed to get this page."""
+    url = url_for('auth.admin_users')
+    assert client.get(url).status_code == 401
+
+    auth.login("host")
+    assert client.get(url).status_code == 403
+
+    auth.login("user")
+    assert client.get(url).status_code == 403
+
+    auth.login("admin")
+    response = client.get(url)
+    assert response.status_code == 200
+    data = response.data.decode("utf-8")
+    assert url in data
+    for user in app.get_connection().iter_users():
+        assert user.ident in data

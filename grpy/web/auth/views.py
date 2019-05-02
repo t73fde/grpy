@@ -19,10 +19,19 @@
 
 """Web views for grpy.auth."""
 
+from typing import cast
+
 from flask import (current_app, flash, g, redirect, render_template, request,
                    url_for)
 
+from ...repo.base import Connection
+from ..utils import admin_required
 from . import forms, logic
+
+
+def get_connection() -> Connection:
+    """Return an open connection, specific for this request."""
+    return cast(Connection, current_app.get_connection())
 
 
 def login():
@@ -51,3 +60,10 @@ def logout():
     """Logout current user."""
     current_app.logout()
     return redirect(url_for("home"))
+
+
+@admin_required
+def admin_users():
+    """Show the list of users."""
+    user_list = get_connection().iter_users(order=['-last_login', 'ident'])
+    return render_template("admin_users.html", user_list=user_list)
