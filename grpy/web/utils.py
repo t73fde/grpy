@@ -67,7 +67,7 @@ def login_required(view):
     """Wrap a view to enforce an user who is logged in."""
     @wraps(view)
     def wrapped_view(*args, **kwargs):
-        if g.user is None:
+        if g.user is None or not g.user.is_active:
             abort(401)
         return view(*args, **kwargs)
     return wrapped_view
@@ -77,7 +77,7 @@ def admin_required(view):
     """Wrap a view to enforce an user who is logged in as an administrator."""
     @wraps(view)
     def wrapped_view(*args, **kwargs):
-        if g.user is None:
+        if g.user is None or not g.user.is_active:
             abort(401)
         if not g.user.is_admin:
             abort(403)
@@ -96,6 +96,8 @@ def login_required_redirect(view):
     def wrapped_view(*args, **kwargs):
         if g.user is None:
             return redirect_to_login()
+        if not g.user.is_active:
+            abort(401)
         return view(*args, **kwargs)
     return wrapped_view
 

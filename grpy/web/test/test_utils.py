@@ -19,6 +19,7 @@
 
 """Test the web utils."""
 
+import dataclasses
 import datetime
 
 import pytest
@@ -28,14 +29,14 @@ from werkzeug.test import Client
 
 from ...core.models import GroupingKey, Permissions, User, UserKey
 from ...core.utils import now
-from ..app import create_app
+from ..app import GrpyApp, create_app
 from ..middleware import PrefixMiddleware
 from ..utils import (admin_required, datetimeformat, login_required,
                      login_required_redirect, make_model, to_bool,
                      update_model, value_or_404)
 
 
-def test_grouping_key_converter(app, client) -> None:
+def test_grouping_key_converter(app: GrpyApp, client) -> None:
     """Make sure that the URL converter 'grouping' works as expected."""
 
     def just_a_view(grouping_key: GroupingKey) -> bytes:
@@ -68,7 +69,16 @@ def test_to_bool() -> None:
     assert to_bool("Yes") is True
 
 
-def test_login_required(app, client, auth) -> None:
+def _make_user_inactive(app: GrpyApp, ident: str) -> None:
+    """Make user with given ident inactive."""
+    user = app.get_connection().get_user_by_ident(ident)
+    assert user is not None
+    app.get_connection().set_user(dataclasses.replace(
+        user,
+        permissions=user.permissions | Permissions.INACTIVE))
+
+
+def test_login_required(app: GrpyApp, client, auth) -> None:
     """If no user is logged in, raise 401."""
     @login_required
     def just_a_view() -> bytes:
@@ -84,8 +94,12 @@ def test_login_required(app, client, auth) -> None:
     assert response.status_code == 200
     assert response.data == b"Done"
 
+    _make_user_inactive(app, "user")
+    response = client.get('/test')
+    assert response.status_code == 401
 
-def test_admin_required(app, client, auth) -> None:
+
+def test_admin_required(app: GrpyApp, client, auth) -> None:
     """If no administrator is logged in, raise 401."""
     @admin_required
     def just_a_view() -> bytes:
@@ -100,13 +114,21 @@ def test_admin_required(app, client, auth) -> None:
     response = client.get('/test')
     assert response.status_code == 403
 
+    _make_user_inactive(app, "user")
+    response = client.get('/test')
+    assert response.status_code == 401
+
     auth.login("admin")
     response = client.get('/test')
     assert response.status_code == 200
     assert response.data == b"Done"
 
+    _make_user_inactive(app, "admin")
+    response = client.get('/test')
+    assert response.status_code == 401
 
-def test_login_required_redirect(app, client, auth) -> None:
+
+def test_login_required_redirect(app: GrpyApp, client, auth) -> None:
     """If no user is logged in, redirect to login page."""
     @login_required_redirect
     def just_a_view() -> bytes:
@@ -123,6 +145,10 @@ def test_login_required_redirect(app, client, auth) -> None:
     response = client.get('/test')
     assert response.status_code == 200
     assert response.data == b"redirect"
+
+    _make_user_inactive(app, "user")
+    response = client.get('/test')
+    assert response.status_code == 401
 
 
 def test_login_required_redirect_prefix() -> None:
