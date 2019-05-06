@@ -39,7 +39,7 @@
     <button class="w3-button">{{ g.user.ident|truncate(16) }}</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
       {%- if g.user.is_admin -%}
-      <a href="{{ url_for('auth.admin_users') }}" class="w3-bar-item w3-button">Admin</a>
+      <a href="{{ url_for('auth.users') }}" class="w3-bar-item w3-button">Admin</a>
       {%- endif -%}
       <a href="{{ url_for('auth.logout')}}" class="w3-bar-item w3-button">Logout</a>
     </div>

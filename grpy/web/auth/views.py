@@ -63,7 +63,7 @@ def logout():
 
 
 @admin_required
-def admin_users():
+def users():
     """Show the list of users."""
     user_list = get_connection().iter_users(order=['-last_login', 'ident'])
-    return render_template("admin_users.html", user_list=user_list)
+    return render_template("auth_users.html", user_list=user_list)

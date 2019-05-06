@@ -29,5 +29,5 @@ def create_blueprint() -> Blueprint:
     blueprint = Blueprint("auth", __name__)
     blueprint.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
     blueprint.add_url_rule("/logout", "logout", views.logout)
-    blueprint.add_url_rule("/admin_users", "admin_users", views.admin_users)
+    blueprint.add_url_rule("/users", "users", views.users)
     return blueprint
