@@ -114,7 +114,7 @@ def test_logout_without_login(client) -> None:
 
 def test_admin_users(app: GrpyApp, client, auth) -> None:
     """Only an admistrator is allowed to get this page."""
-    url = url_for('auth.admin_users')
+    url = url_for('auth.users')
     assert client.get(url).status_code == 401
 
     auth.login("host")
