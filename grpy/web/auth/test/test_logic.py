@@ -117,3 +117,14 @@ def test_authenticate_case(app: GrpyApp) -> None:
     assert host.is_active
     assert app.get_connection().get_user_by_ident(ident.lower()) is None
     assert app.get_connection().get_user_by_ident(ident) is not None
+
+
+def test_authenticate_spaces(app: GrpyApp) -> None:
+    """Spaces around a user name are not relevant."""
+    assert app.config['AUTH_CASE'] is False
+    ident = " SpaCe "
+    user = authenticate(ident, "1")
+    assert user is not None
+    assert user.is_active
+    assert app.get_connection().get_user_by_ident(ident.strip().lower()) is not None
+    assert app.get_connection().get_user_by_ident(ident.strip()) is None

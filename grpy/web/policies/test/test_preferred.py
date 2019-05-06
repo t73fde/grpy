@@ -90,3 +90,12 @@ def test_preferred_policy_form_case(app) -> None:  # pylint: disable=unused-argu
         {'AUTH_CASE': True})
     assert isinstance(preferences, PreferredPreferences)
     assert preferences.preferred == [ident]
+
+
+def test_preferred_policy_form_space(app) -> None:  # pylint: disable=unused-argument
+    """Preferred policy form ignores spaces."""
+    ident = " sPACe "
+    PreferredPolicyForm = create_preferred_policy_form(1)
+    preferences = PreferredPolicyForm(idents=[ident]).get_user_preferences({})
+    assert isinstance(preferences, PreferredPreferences)
+    assert preferences.preferred == [ident.strip().lower()]

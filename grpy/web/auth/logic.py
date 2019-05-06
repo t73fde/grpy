@@ -51,7 +51,9 @@ def authenticate(username: str, password: str) -> Optional[User]:
     """Authenticate by user name and password, and return user found."""
     app = current_app
     if not app.config.get('AUTH_CASE', False):
-        username = username.lower()
+        username = username.strip().lower()
+    else:
+        username = username.strip()
     url = app.config.get("AUTH_URL", "http://localhost:9876/")
     if check_pw(app, url, username, password):
         connection: Connection = app.get_connection()
