@@ -23,33 +23,15 @@ import dataclasses
 import datetime
 from typing import List, cast
 
-from flask import get_flashed_messages, url_for
+from flask import url_for
 
 from ....core import utils
 from ....core.models import (Grouping, GroupingKey, Permissions, Registration,
                              User, UserKey, UserPreferences)
 from ....repo.base import Connection
 from ...app import GrpyApp
-
-
-def check_get(client, url: str, status_code: int = 200):
-    """Check GET request and return response."""
-    response = client.get(url)
-    assert response.status_code == status_code
-    return response
-
-
-def check_requests(client, url: str, status_code: int, do_post: bool = True) -> None:
-    """Check GET/POST requests for status code."""
-    assert client.get(url).status_code == status_code
-    if do_post:
-        assert client.post(url).status_code == status_code
-
-
-def check_bad_anon_requests(client, auth, url: str, do_post: bool = True) -> None:
-    """Assert that anonymous users cannot access ressource."""
-    auth.logout()
-    check_requests(client, url, 401, do_post)
+from ...test.common import (check_bad_anon_requests, check_flash, check_get,
+                            check_redirect, check_requests)
 
 
 def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
@@ -68,23 +50,6 @@ def check_bad_host_requests(
     auth.login('host-0')
     check_requests(client, url, 403, do_post)
     check_bad_requests(client, auth, url, do_post)
-
-
-def check_redirect(response, location_url: str):
-    """Assert that a redirect without flash message will happen."""
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost" + location_url
-    assert get_flashed_messages(with_categories=True) == []
-    return response
-
-
-def check_flash(client, response, location_url: str, category: str, message: str):
-    """Assert that flash message will occur."""
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost" + location_url
-    assert get_flashed_messages(with_categories=True) == [(category, message)]
-    client.get(url_for('home'))  # Clean flash message
-    return response
 
 
 def test_grouping_create(app: GrpyApp, client, auth) -> None:

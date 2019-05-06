@@ -30,4 +30,6 @@ def create_blueprint() -> Blueprint:
     blueprint.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
     blueprint.add_url_rule("/logout", "logout", views.logout)
     blueprint.add_url_rule("/users", "users", views.users)
+    blueprint.add_url_rule(
+        "/<user:user_key>/", "user_detail", views.user_detail, methods=('GET', 'POST'))
     return blueprint

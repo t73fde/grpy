@@ -29,7 +29,7 @@ from flask import (abort, current_app, g, get_flashed_messages, redirect,
 from flask_babel import format_datetime
 from werkzeug.routing import UUIDConverter
 
-from ..core.models import GroupingKey, Model
+from ..core.models import GroupingKey, Model, UserKey
 
 
 class GroupingKeyConverter(UUIDConverter):
@@ -38,6 +38,14 @@ class GroupingKeyConverter(UUIDConverter):
     def to_python(self, value: str) -> GroupingKey:
         """Convert the already parsed URL string into a GroupingKey."""
         return GroupingKey(value)
+
+
+class UserKeyConverter(UUIDConverter):
+    """An URL converter for UserKeys."""
+
+    def to_python(self, value: str) -> UserKey:
+        """Convert the already parsed URL string into a UserKey."""
+        return UserKey(value)
 
 
 def to_bool(value: Any) -> bool:

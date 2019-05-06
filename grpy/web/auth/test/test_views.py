@@ -24,6 +24,16 @@ import dataclasses
 from flask import g, session, url_for
 
 from ...app import GrpyApp
+from ...test.common import check_bad_anon_requests, check_get, check_requests
+
+
+def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
+    """Assert that others cannot access resource."""
+    auth.login('user')
+    check_requests(client, url, 403, do_post)
+    auth.login('host')
+    check_requests(client, url, 403, do_post)
+    check_bad_anon_requests(client, auth, url, do_post)
 
 
 def test_login(client) -> None:
@@ -115,18 +125,29 @@ def test_logout_without_login(client) -> None:
 def test_admin_users(app: GrpyApp, client, auth) -> None:
     """Only an admistrator is allowed to get this page."""
     url = url_for('auth.users')
-    assert client.get(url).status_code == 401
-
-    auth.login("host")
-    assert client.get(url).status_code == 403
-
-    auth.login("user")
-    assert client.get(url).status_code == 403
+    check_bad_requests(client, auth, url, False)
 
     auth.login("admin")
-    response = client.get(url)
-    assert response.status_code == 200
+    response = check_get(client, url)
     data = response.data.decode("utf-8")
     assert url in data
     for user in app.get_connection().iter_users():
+        assert str(user.key) in data
         assert user.ident in data
+
+
+def test_admin_user_detail(app: GrpyApp, client, auth) -> None:
+    """Only an administrator is allowed to read all user details."""
+    admin_user = app.get_connection().get_user_by_ident("admin")
+    assert admin_user is not None
+    assert admin_user.key is not None
+
+    for user in app.get_connection().iter_users():
+        url = url_for('auth.user_detail', user_key=user.key)
+        check_bad_requests(client, auth, url, False)
+        auth.login("admin")
+        response = check_get(client, url)
+        data = response.data.decode('utf-8')
+        assert ": " + user.ident in data
+        if user.key == admin_user.key:
+            assert " (You)" in data

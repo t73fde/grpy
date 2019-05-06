@@ -52,6 +52,21 @@ def test_grouping_key_converter(ram_app: GrpyApp, ram_client) -> None:
     assert response.data == b"Done"
 
 
+def test_user_key_converter(ram_app: GrpyApp, ram_client) -> None:
+    """Make sure that the URL converter 'user' works as expected."""
+
+    def just_a_view(user_key: UserKey) -> bytes:
+        """This view is for testing only."""
+        assert isinstance(user_key, UserKey)
+        assert user_key.int == 1019
+        return b"Done"
+
+    ram_app.add_url_rule('/test<user:user_key>/', "test_view", just_a_view)
+    response = ram_client.get(url_for("test_view", user_key=str(UserKey(int=1019))))
+    assert response.status_code == 200
+    assert response.data == b"Done"
+
+
 def test_to_bool() -> None:
     """The `to_bool` function should deliver useful values."""
     assert to_bool(None) is False

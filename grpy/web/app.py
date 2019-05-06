@@ -166,6 +166,7 @@ class GrpyApp(Flask):
     def _setup_werkzeug(self) -> None:
         """Add some globals for Werkzeug."""
         self.url_map.converters['grouping'] = utils.GroupingKeyConverter
+        self.url_map.converters['user'] = utils.UserKeyConverter
 
     def _setup_jinja(self) -> None:
         """Add some filters / globals for Jinja2."""

@@ -24,9 +24,19 @@ from typing import cast
 from flask import (current_app, flash, g, redirect, render_template, request,
                    url_for)
 
+from ...core.models import User, UserKey
 from ...repo.base import Connection
-from ..utils import admin_required
+from ..utils import admin_required, value_or_404
 from . import forms, logic
+
+
+def _get_user(user_key: UserKey) -> User:
+    """
+    Retrieve user with given key.
+
+    Abort with HTTP code 404 if there is no such user.
+    """
+    return value_or_404(get_connection().get_user(user_key))
 
 
 def get_connection() -> Connection:
@@ -67,3 +77,10 @@ def users():
     """Show the list of users."""
     user_list = get_connection().iter_users(order=['-last_login', 'ident'])
     return render_template("auth_users.html", user_list=user_list)
+
+
+@admin_required
+def user_detail(user_key: UserKey):
+    """Show details of given user."""
+    user = _get_user(user_key)
+    return render_template("user_detail.html", user=user)

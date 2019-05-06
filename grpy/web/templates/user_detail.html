@@ -17,24 +17,11 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% block title %}User Administration{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
 <div class="w3-container w3-light-gray">
-  <h1>User Administration</h1>
+  <h1>{% block title%}User Details: {{ user.ident }}{% endblock %}{% if user.key == g.user.key %} (You){% endif %}</h1>
 </div>
-<table class="w3-table w3-bordered">
-  <tr><th>Identifier</th><th>Last Login</th><th>Active</th><th>Host</th><th>Admin</th></tr>
-{%- for user in user_list -%}
-<tr>
-  <td><a href="{{ url_for("auth.user_detail", user_key=user.key) }}">{{ user.ident }}</a></td>
-  <td>{{ user.last_login|datetimeformat("iso-short")|default("", True) }}</td>
-  <td>{% if user.is_active %}&#9746;{% endif %}</td>
-  <td>{% if user.is_host %}&#9746;{% endif %}</td>
-  <td>{% if user.is_admin %}&#9746;{% endif %}</td>
-</tr>
-{%- endfor %}
-</table>
 </div>
 {% endblock %}
