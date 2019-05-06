@@ -56,6 +56,8 @@ def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
     """Assert that others cannot access resource."""
     auth.login('user')
     check_requests(client, url, 403, do_post)
+    auth.login('admin')
+    check_requests(client, url, 403, do_post)
     check_bad_anon_requests(client, auth, url, do_post)
 
 
