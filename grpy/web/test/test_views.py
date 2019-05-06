@@ -25,7 +25,9 @@ import datetime
 from flask import url_for
 
 from ...core import utils
-from ...core.models import Grouping, Registration, UserPreferences
+from ...core.models import (Grouping, Permissions, Registration, User,
+                            UserPreferences)
+from ..app import GrpyApp
 
 
 def test_home_anonymous(client) -> None:
@@ -73,8 +75,9 @@ def test_home_host_closed(app, client, auth, app_grouping: Grouping) -> None:
     assert closed_pos < data.find(app_grouping.name)
 
 
-def test_home_host_without_groupings(client, auth) -> None:
+def test_home_host_without_groupings(app: GrpyApp, client, auth) -> None:
     """Test home view as a host without groupings."""
+    app.get_connection().set_user(User(None, "host-0", Permissions.HOST))
     auth.login("host-0")
     response = client.get(url_for('home'))
     assert b'(None)' in response.data

@@ -46,7 +46,7 @@ def test_get_policy_name() -> None:
     assert get_policy_name("") == ""
 
 
-def test_get_registration_form(app) -> None:  # pylint: disable=unused-argument
+def test_get_registration_form(ram_app) -> None:  # pylint: disable=unused-argument
     """The right form class must be delivered."""
     empty_policies = {'RD', 'ID'}
     for code, _ in get_policy_names():
@@ -61,7 +61,7 @@ def test_get_registration_form(app) -> None:  # pylint: disable=unused-argument
     assert isinstance(get_registration_form('RD', registration), EmptyPolicyForm)
 
 
-def test_empty_policy_form(app) -> None:  # pylint: disable=unused-argument
+def test_empty_policy_form(ram_app) -> None:  # pylint: disable=unused-argument
     """The empty policy form does nothing, mostly."""
     assert isinstance(EmptyPolicyForm().get_user_preferences({}), UserPreferences)
     assert isinstance(EmptyPolicyForm.create(UserPreferences()), EmptyPolicyForm)

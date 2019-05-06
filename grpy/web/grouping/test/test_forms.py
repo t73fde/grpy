@@ -35,7 +35,7 @@ class FormData(dict):
         return cast(Sequence[Any], value)
 
 
-def test_grouping_form(app) -> None:  # pylint: disable=unused-argument
+def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
     """Validate some forms."""
     form = GroupingForm()
     form.policy.choices = [('RD', "Random")]

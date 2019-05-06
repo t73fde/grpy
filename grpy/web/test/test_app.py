@@ -58,6 +58,7 @@ def test_config() -> None:
 def test_env_config(monkeypatch) -> None:
     """Test overwriting config by environments vars."""
     app = create_app()
+    assert app._repository is not None
     assert "ram:" in app._repository.url
     assert not app.testing
     assert app.config['AUTH_CASE'] is False
@@ -67,6 +68,7 @@ def test_env_config(monkeypatch) -> None:
     monkeypatch.setitem(os.environ, 'AUTH_CASE', "Yes")
     monkeypatch.setitem(os.environ, 'ANY_NUM', "17")
     app = create_app(config_mapping={'ANY_NUM': 3})
+    assert app._repository is not None
     assert "dummy:" in app._repository.url
     assert app.testing
     assert app.config['AUTH_CASE'] is True

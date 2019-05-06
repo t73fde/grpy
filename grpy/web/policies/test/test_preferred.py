@@ -32,7 +32,7 @@ def assert_idents(
     assert data == values[:size] + [None] * (size - len(values))
 
 
-def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
+def test_preferred_policy_form(ram_app) -> None:  # pylint: disable=unused-argument
     """The preferred policy form communicates via PreferredPreferences."""
     for i in range(5):
         PreferredPolicyForm = create_preferred_policy_form(i)
@@ -77,7 +77,7 @@ def test_preferred_policy_form(app) -> None:  # pylint: disable=unused-argument
         assert_idents(form.idents.data, i, ["1", "3"])
 
 
-def test_preferred_policy_form_case(app) -> None:  # pylint: disable=unused-argument
+def test_preferred_policy_form_case(ram_app) -> None:  # pylint: disable=unused-argument
     """Preferred policy form respects config variable 'AUTH_CASE'."""
     ident = "uSeRE"
     PreferredPolicyForm = create_preferred_policy_form(1)
@@ -92,7 +92,8 @@ def test_preferred_policy_form_case(app) -> None:  # pylint: disable=unused-argu
     assert preferences.preferred == [ident]
 
 
-def test_preferred_policy_form_space(app) -> None:  # pylint: disable=unused-argument
+def test_preferred_policy_form_space(
+        ram_app) -> None:  # pylint: disable=unused-argument
     """Preferred policy form ignores spaces."""
     ident = " sPACe "
     PreferredPolicyForm = create_preferred_policy_form(1)

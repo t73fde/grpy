@@ -36,7 +36,7 @@ from ..utils import (admin_required, datetimeformat, login_required,
                      update_model, value_or_404)
 
 
-def test_grouping_key_converter(app: GrpyApp, client) -> None:
+def test_grouping_key_converter(ram_app: GrpyApp, ram_client) -> None:
     """Make sure that the URL converter 'grouping' works as expected."""
 
     def just_a_view(grouping_key: GroupingKey) -> bytes:
@@ -45,8 +45,9 @@ def test_grouping_key_converter(app: GrpyApp, client) -> None:
         assert grouping_key.int == 1017
         return b"Done"
 
-    app.add_url_rule('/test<grouping:grouping_key>/', "test_view", just_a_view)
-    response = client.get(url_for("test_view", grouping_key=str(GroupingKey(int=1017))))
+    ram_app.add_url_rule('/test<grouping:grouping_key>/', "test_view", just_a_view)
+    response = ram_client.get(url_for(
+        "test_view", grouping_key=str(GroupingKey(int=1017))))
     assert response.status_code == 200
     assert response.data == b"Done"
 
@@ -69,85 +70,85 @@ def test_to_bool() -> None:
     assert to_bool("Yes") is True
 
 
-def _make_user_inactive(app: GrpyApp, ident: str) -> None:
+def _make_user_inactive(ram_app: GrpyApp, ident: str) -> None:
     """Make user with given ident inactive."""
-    user = app.get_connection().get_user_by_ident(ident)
+    user = ram_app.get_connection().get_user_by_ident(ident)
     assert user is not None
-    app.get_connection().set_user(dataclasses.replace(
+    ram_app.get_connection().set_user(dataclasses.replace(
         user,
         permissions=user.permissions | Permissions.INACTIVE))
 
 
-def test_login_required(app: GrpyApp, client, auth) -> None:
+def test_login_required(ram_app: GrpyApp, ram_client, ram_auth) -> None:
     """If no user is logged in, raise 401."""
     @login_required
     def just_a_view() -> bytes:
         """This view is for testing only."""
         return b"Done"
 
-    app.add_url_rule('/test', "test", just_a_view)
-    response = client.get('/test')
+    ram_app.add_url_rule('/test', "test", just_a_view)
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
-    auth.login("user")
-    response = client.get('/test')
+    ram_auth.login("user")
+    response = ram_client.get('/test')
     assert response.status_code == 200
     assert response.data == b"Done"
 
-    _make_user_inactive(app, "user")
-    response = client.get('/test')
+    _make_user_inactive(ram_app, "user")
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
 
-def test_admin_required(app: GrpyApp, client, auth) -> None:
+def test_admin_required(ram_app: GrpyApp, ram_client, ram_auth) -> None:
     """If no administrator is logged in, raise 401."""
     @admin_required
     def just_a_view() -> bytes:
         """This view is for testing only."""
         return b"Done"
 
-    app.add_url_rule('/test', "test", just_a_view)
-    response = client.get('/test')
+    ram_app.add_url_rule('/test', "test", just_a_view)
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
-    auth.login("user")
-    response = client.get('/test')
+    ram_auth.login("user")
+    response = ram_client.get('/test')
     assert response.status_code == 403
 
-    _make_user_inactive(app, "user")
-    response = client.get('/test')
+    _make_user_inactive(ram_app, "user")
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
-    auth.login("admin")
-    response = client.get('/test')
+    ram_auth.login("admin")
+    response = ram_client.get('/test')
     assert response.status_code == 200
     assert response.data == b"Done"
 
-    _make_user_inactive(app, "admin")
-    response = client.get('/test')
+    _make_user_inactive(ram_app, "admin")
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
 
-def test_login_required_redirect(app: GrpyApp, client, auth) -> None:
+def test_login_required_redirect(ram_app: GrpyApp, ram_client, ram_auth) -> None:
     """If no user is logged in, redirect to login page."""
     @login_required_redirect
     def just_a_view() -> bytes:
         """For testing only."""
         return b"redirect"
 
-    app.add_url_rule('/test', "test", just_a_view)
-    response = client.get('/test')
+    ram_app.add_url_rule('/test', "test", just_a_view)
+    response = ram_client.get('/test')
     assert response.status_code == 302
     assert response.headers['Location'] == \
         "http://localhost" + url_for('auth.login', next_url='/test')
 
-    auth.login("user")
-    response = client.get('/test')
+    ram_auth.login("user")
+    response = ram_client.get('/test')
     assert response.status_code == 200
     assert response.data == b"redirect"
 
-    _make_user_inactive(app, "user")
-    response = client.get('/test')
+    _make_user_inactive(ram_app, "user")
+    response = ram_client.get('/test')
     assert response.status_code == 401
 
 
@@ -194,7 +195,7 @@ def test_update_model() -> None:
     assert user == User(key, "user")
 
 
-def test_datetime_format(app) -> None:  # pylint: disable=unused-argument
+def test_datetime_format(ram_app) -> None:  # pylint: disable=unused-argument
     """Return a datetime according to given format."""
     assert datetimeformat() is None
     assert datetimeformat(None, None, False) is None

@@ -25,7 +25,7 @@ from ....policies.simple_belbin import (DEFAULT_SIMPLE_BELBIN_ANSWER,
 from ..simple_belbin import SimpleBelbinPolicyForm
 
 
-def test_simple_belbin_policy_form(app) -> None:  # pylint: disable=unused-argument
+def test_simple_belbin_policy_form(ram_app) -> None:  # pylint: disable=unused-argument
     """The simple belbin form contains 8 answers."""
     preferences = SimpleBelbinPolicyForm().get_user_preferences({})
     assert isinstance(preferences, SimpleBelbinPreferences)

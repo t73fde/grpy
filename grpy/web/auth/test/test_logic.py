@@ -28,10 +28,10 @@ from ...app import GrpyApp
 from ..logic import authenticate, check_pw
 
 
-def test_check_pw(app: GrpyApp, monkeypatch, caplog) -> None:
+def test_check_pw(ram_app: GrpyApp, monkeypatch, caplog) -> None:
     """Test password check."""
-    assert check_pw(app, None, "", "") is True
-    assert check_pw(app, "", "", "") is False
+    assert check_pw(ram_app, None, "", "") is True
+    assert check_pw(ram_app, "", "", "") is False
 
     url = "http://example.com"
 
@@ -42,7 +42,7 @@ def test_check_pw(app: GrpyApp, monkeypatch, caplog) -> None:
         return result
 
     monkeypatch.setattr(requests, 'head', requests_head_ok)
-    assert check_pw(app, url, "host", "1") is True
+    assert check_pw(ram_app, url, "host", "1") is True
 
     def requests_head(_url, auth):  # pylint: disable=unused-argument
         """Must return a "good" status code > 300."""
@@ -51,30 +51,30 @@ def test_check_pw(app: GrpyApp, monkeypatch, caplog) -> None:
         return result
 
     monkeypatch.setattr(requests, 'head', requests_head)
-    assert check_pw(app, url, "host", "1") is False
+    assert check_pw(ram_app, url, "host", "1") is False
 
     def requests_head_raise(_url, auth):
         """Must raise an RequestException."""
         raise requests.RequestException()
 
     monkeypatch.setattr(requests, 'head', requests_head_raise)
-    assert check_pw(app, url, "user", "1") is False
+    assert check_pw(ram_app, url, "user", "1") is False
     record = caplog.records[0]
     assert record.levelname == "ERROR"
     assert record.message == \
         "Unable to get authentication from 'http://example.com' for 'user'"
 
 
-def test_authenticate(app: GrpyApp, monkeypatch) -> None:
+def test_authenticate(ram_app: GrpyApp, monkeypatch) -> None:
     """Test authentication."""
-    assert app.config['AUTH_CASE'] is False
+    assert ram_app.config['AUTH_CASE'] is False
     user = authenticate("user", "1")
     assert user is not None
     assert user.is_active
-    assert app.get_connection().get_user_by_ident("user") is not None
+    assert ram_app.get_connection().get_user_by_ident("user") is not None
 
     # Set URL to something that is non-existing
-    app.config['AUTH_URL'] = "http://this.is.sparta:480/"
+    ram_app.config['AUTH_URL'] = "http://this.is.sparta:480/"
 
     def requests_head(_url, auth):  # pylint: disable=unused-argument
         """Must return a "good" status code > 300."""
@@ -93,38 +93,38 @@ def test_authenticate(app: GrpyApp, monkeypatch) -> None:
     assert authenticate("user", "1") is None
 
 
-def test_authenticate_inactive(app: GrpyApp) -> None:
+def test_authenticate_inactive(ram_app: GrpyApp) -> None:
     """An inactive user must not be authenticated."""
-    app.get_connection().set_user(
+    ram_app.get_connection().set_user(
         User(None, "inactive", permissions=Permissions.INACTIVE))
     assert authenticate("inactive", "1") is None
 
 
-def test_authenticate_case(app: GrpyApp) -> None:
+def test_authenticate_case(ram_app: GrpyApp) -> None:
     """If auth is case sensitive, different cases matter."""
-    assert app.config['AUTH_CASE'] is False
+    assert ram_app.config['AUTH_CASE'] is False
     ident = "UsERe"
     user = authenticate(ident, "1")
     assert user is not None
     assert user.is_active
-    assert app.get_connection().get_user_by_ident(ident.lower()) is not None
-    assert app.get_connection().get_user_by_ident(ident) is None
+    assert ram_app.get_connection().get_user_by_ident(ident.lower()) is not None
+    assert ram_app.get_connection().get_user_by_ident(ident) is None
 
-    app.config['AUTH_CASE'] = True
+    ram_app.config['AUTH_CASE'] = True
     ident = "hOSteR"
     host = authenticate(ident, "1")
     assert host is not None
     assert host.is_active
-    assert app.get_connection().get_user_by_ident(ident.lower()) is None
-    assert app.get_connection().get_user_by_ident(ident) is not None
+    assert ram_app.get_connection().get_user_by_ident(ident.lower()) is None
+    assert ram_app.get_connection().get_user_by_ident(ident) is not None
 
 
-def test_authenticate_spaces(app: GrpyApp) -> None:
+def test_authenticate_spaces(ram_app: GrpyApp) -> None:
     """Spaces around a user name are not relevant."""
-    assert app.config['AUTH_CASE'] is False
+    assert ram_app.config['AUTH_CASE'] is False
     ident = " SpaCe "
     user = authenticate(ident, "1")
     assert user is not None
     assert user.is_active
-    assert app.get_connection().get_user_by_ident(ident.strip().lower()) is not None
-    assert app.get_connection().get_user_by_ident(ident.strip()) is None
+    assert ram_app.get_connection().get_user_by_ident(ident.strip().lower()) is not None
+    assert ram_app.get_connection().get_user_by_ident(ident.strip()) is None

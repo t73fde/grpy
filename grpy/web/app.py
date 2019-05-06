@@ -207,7 +207,7 @@ class GrpyApp(Flask):
         self._setup_jinja()
 
 
-def create_app(config_mapping: Dict[str, Any] = None) -> Flask:
+def create_app(config_mapping: Dict[str, Any] = None) -> GrpyApp:
     """Create a new web application."""
     app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
