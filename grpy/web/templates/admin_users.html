@@ -30,9 +30,9 @@
 <tr>
   <td>{{ user.ident }}</td>
   <td>{{ user.last_login|datetimeformat("iso-short")|default("", True) }}</td>
-  <td>{{ user.is_active|default("", True) }}</td>
-  <td>{{ user.is_host|default("", True) }}</td>
-  <td>{{ user.is_admin|default("", True) }}</td>
+  <td>{% if user.is_active %}&#9746;{% endif %}</td>
+  <td>{% if user.is_host %}&#9746;{% endif %}</td>
+  <td>{% if user.is_admin %}&#9746;{% endif %}</td>
 </tr>
 {%- endfor %}
 </table>
