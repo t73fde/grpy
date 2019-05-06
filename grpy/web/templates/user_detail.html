@@ -17,11 +17,24 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
+{% from "macros.html" import render_checkbox %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-<div class="w3-container w3-light-gray">
-  <h1>{% block title%}User Details: {{ user.ident }}{% endblock %}{% if user.key == g.user.key %} (You){% endif %}</h1>
+  <div class="w3-container {{ color("heading") }}">
+  <h1>{% block title%}User Details: {{ user.ident }}{% endblock %}{% if not is_other %} (You){% endif %}</h1>
+</div>
+<div class="w3-card-4">
+  <div class="w3-container {{ color("form") }}">
+  <h2>Permissions</h2>
+</div>
+<form class="w3-container" method="post">
+  {{- form.csrf_token }}
+  {% if is_other %}{{- render_checkbox(form.active) }}{% endif %}
+  {{- render_checkbox(form.host) }}
+  {% if is_other %}{{- render_checkbox(form.admin) }}{% endif %}
+  <p>{{- form.submit_update(class="w3-btn " + color("primary")) }}</p>
+</form>
 </div>
 </div>
 {% endblock %}

@@ -22,6 +22,10 @@
 {{- field(class=class,autofocus=autofocus)|safe }}
 {% endmacro %}
 
+{% macro render_checkbox(field) %}
+<p>{{- field() }}&nbsp;{{ field.label }}</p>
+{% endmacro %}
+
 {% macro render_field(field, autofocus=False) %}
 <div class="w3-panel">
 <strong>{{- field.label }}:</strong>

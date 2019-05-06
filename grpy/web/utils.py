@@ -169,6 +169,8 @@ def colormap(color_description: str, prefix: str = "w3-") -> str:
         'warning': "yellow",
         'info': "cyan",
         'message': "cyan",
+        'heading': "light-gray",
+        'form': "blue",
     }.get(color_description, color_description)
 
 

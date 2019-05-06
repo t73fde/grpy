@@ -19,6 +19,8 @@
 
 """Common helper functions."""
 
+from typing import cast
+
 from flask import get_flashed_messages, url_for
 
 
@@ -27,6 +29,11 @@ def check_get(client, url: str, status_code: int = 200):
     response = client.get(url)
     assert response.status_code == status_code
     return response
+
+
+def check_get_data(client, url: str) -> str:
+    """Retrieve data from URL and return it as a string."""
+    return cast(str, check_get(client, url).data.decode('utf-8'))
 
 
 def check_requests(client, url: str, status_code: int, do_post: bool = True) -> None:

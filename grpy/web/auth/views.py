@@ -19,12 +19,13 @@
 
 """Web views for grpy.auth."""
 
+import dataclasses
 from typing import cast
 
 from flask import (current_app, flash, g, redirect, render_template, request,
                    url_for)
 
-from ...core.models import User, UserKey
+from ...core.models import Permissions, User, UserKey
 from ...repo.base import Connection
 from ..utils import admin_required, value_or_404
 from . import forms, logic
@@ -83,4 +84,28 @@ def users():
 def user_detail(user_key: UserKey):
     """Show details of given user."""
     user = _get_user(user_key)
-    return render_template("user_detail.html", user=user)
+    is_other = user.key != g.user.key
+    if request.method == 'POST':
+        form = forms.UserPermissionsForm()
+        if is_other:
+            new_permissions = \
+                Permissions(0) if form.active.data else Permissions.INACTIVE
+            if form.admin.data:
+                new_permissions |= Permissions.ADMIN
+        else:
+            # Current user cannot make himself inactive or non-admin
+            new_permissions = Permissions.ADMIN
+        if form.host.data:
+            new_permissions |= Permissions.HOST
+
+        get_connection().set_user(dataclasses.replace(
+            user, permissions=new_permissions))
+        flash("Permissions of '{}' updated.".format(user.ident), category="info")
+        return redirect(url_for('auth.users'))
+
+    form = forms.UserPermissionsForm(data={
+        'active': user.is_active,
+        'host': user.is_host,
+        'admin': user.is_admin})
+    return render_template(
+        "user_detail.html", user=user, form=form, is_other=is_other)

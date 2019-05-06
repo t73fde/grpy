@@ -20,11 +20,13 @@
 """Test the web views for auth blueprint."""
 
 import dataclasses
+import itertools
 
 from flask import g, session, url_for
 
 from ...app import GrpyApp
-from ...test.common import check_bad_anon_requests, check_get, check_requests
+from ...test.common import (check_bad_anon_requests, check_flash,
+                            check_get_data, check_requests)
 
 
 def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
@@ -128,8 +130,7 @@ def test_admin_users(app: GrpyApp, client, auth) -> None:
     check_bad_requests(client, auth, url, False)
 
     auth.login("admin")
-    response = check_get(client, url)
-    data = response.data.decode("utf-8")
+    data = check_get_data(client, url)
     assert url in data
     for user in app.get_connection().iter_users():
         assert str(user.key) in data
@@ -146,8 +147,47 @@ def test_admin_user_detail(app: GrpyApp, client, auth) -> None:
         url = url_for('auth.user_detail', user_key=user.key)
         check_bad_requests(client, auth, url, False)
         auth.login("admin")
-        response = check_get(client, url)
-        data = response.data.decode('utf-8')
+        data = check_get_data(client, url)
         assert ": " + user.ident in data
         if user.key == admin_user.key:
             assert " (You)" in data
+
+
+def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
+    """An administrator can change permissions."""
+    admin_user = app.get_connection().get_user_by_ident("admin")
+    assert admin_user is not None
+    assert admin_user.key is not None
+
+    userlist_url = url_for('auth.users')
+    auth.login("admin")
+    for user in app.get_connection().iter_users():
+        assert user.key is not None
+        url = url_for('auth.user_detail', user_key=user.key)
+        data = check_get_data(client, url)
+        if user.key == admin_user.key:
+            assert "Active" not in data
+            assert "Administrator" not in data
+        else:
+            assert "Active" in data
+            assert "Administrator" in data
+        assert "Host" in data
+
+        for is_active, is_host, is_admin in itertools.product((True, False), repeat=3):
+            response = client.post(url, data={
+                'active': "y" if is_active else "",
+                'host': "y" if is_host else "",
+                'admin': "y" if is_admin else "",
+            })
+            check_flash(
+                client, response, userlist_url,
+                "info", "Permissions of '{}' updated.".format(user.ident))
+            new_user = app.get_connection().get_user(user.key)
+            assert new_user is not None
+            if user.key == admin_user.key:
+                assert new_user.is_active
+                assert new_user.is_admin
+            else:
+                assert new_user.is_active == is_active
+                assert new_user.is_admin == is_admin
+            assert new_user.is_host == is_host

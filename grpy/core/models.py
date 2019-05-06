@@ -101,12 +101,12 @@ class User(Model):
     @property
     def is_host(self) -> bool:
         """Return True if user is a host."""
-        return bool(self.permissions & Permissions.HOST) and self.is_active
+        return bool(self.permissions & Permissions.HOST)
 
     @property
     def is_admin(self) -> bool:
         """Return True if user is an administrator."""
-        return bool(self.permissions & Permissions.ADMIN) and self.is_active
+        return bool(self.permissions & Permissions.ADMIN)
 
     def validate(self) -> None:
         """Check model for consistency."""
