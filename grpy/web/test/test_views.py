@@ -28,12 +28,12 @@ from ...core import utils
 from ...core.models import (Grouping, Permissions, Registration, User,
                             UserPreferences)
 from ..app import GrpyApp
+from .common import check_get_data
 
 
 def test_home_anonymous(client) -> None:
     """Test home view as an anonymous user."""
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert ": Home</title>" in data
     assert "Welcome!" in data
     assert url_for('home') in data
@@ -45,8 +45,7 @@ def test_home_anonymous(client) -> None:
 def test_home_host(client, auth, app_grouping: Grouping) -> None:
     """Test home view as a host."""
     auth.login("host")
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "host</" in data
     assert url_for('grouping.detail', grouping_key=app_grouping.key) in data
     assert app_grouping.name in data
@@ -58,7 +57,7 @@ def test_home_host_closed(app, client, auth, app_grouping: Grouping) -> None:
     """A closed grouping will be presented after active groupings."""
     url = url_for('home')
     auth.login("host")
-    data = client.get(url).data.decode('utf-8')
+    data = check_get_data(client, url)
     active_pos = data.find("Active Group")
     assert active_pos > 0
     assert active_pos < data.find(app_grouping.name)
@@ -67,7 +66,7 @@ def test_home_host_closed(app, client, auth, app_grouping: Grouping) -> None:
         app_grouping,
         final_date=app_grouping.begin_date + datetime.timedelta(seconds=60),
         close_date=app_grouping.begin_date + datetime.timedelta(seconds=61)))
-    data = client.get(url).data.decode('utf-8')
+    data = check_get_data(client, url)
     active_pos = data.find("Active Group")
     assert active_pos > 0
     closed_pos = data.find("Closed Group")
@@ -87,8 +86,7 @@ def test_home_host_without_groupings(app: GrpyApp, client, auth) -> None:
 def test_home_user(client, auth) -> None:
     """Test home view as a participant."""
     auth.login("user")
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "user</" in data
     assert " valid grouping link " in data
 
@@ -104,8 +102,7 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
 
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "Registered Groupings" in data
     assert register_url in data
     assert client.get(register_url).status_code == 200
@@ -114,8 +111,7 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         final_date=app_grouping.begin_date + datetime.timedelta(seconds=60)))
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "Registered Groupings" in data
     assert register_url not in data
     assert client.get(register_url).status_code == 302
@@ -134,16 +130,14 @@ def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> Non
     assert user.key is not None
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
 
-    response = client.get(url_for('home'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "Groups" not in data
     assert "Member" not in data
 
 
 def test_about_anonymous(client) -> None:
     """Test about view as an anonymous user."""
-    response = client.get(url_for('about'))
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url_for('about'))
     assert ": About</title>" in data
     assert url_for('home') in data
     assert url_for('about') in data
@@ -156,19 +150,13 @@ def test_shortlink_host(client, auth, app_grouping: Grouping) -> None:
     url = url_for('shortlink', code=app_grouping.code)
 
     auth.login("host")
-    response = client.get(url)
-    assert response.status_code == 200
-    assert response.data.count(url.encode('utf-8')) == 1
-    assert response.data.count(b"scale(8)") == 1
+    data = check_get_data(client, url)
+    assert data.count(url) == 1
+    assert data.count("scale(8)") == 1
 
-    response = client.get(url + "?scale=A")
-    assert response.data.count(b"scale(8)") == 1
-
-    response = client.get(url + "?scale=16")
-    assert response.data.count(b"scale(16)") == 1
-
-    response = client.get(url + "?scale=1")
-    assert response.data.count(b"scale(2)") == 1
+    assert check_get_data(client, url + "?scale=A").count("scale(8)") == 1
+    assert check_get_data(client, url + "?scale=16").count("scale(16)") == 1
+    assert check_get_data(client, url + "?scale=1").count("scale(2)") == 1
 
 
 def test_shortlink(client, auth, app_grouping: Grouping) -> None:

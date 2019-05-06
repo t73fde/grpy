@@ -31,7 +31,7 @@ from ....core.models import (Grouping, GroupingKey, Permissions, Registration,
 from ....repo.base import Connection
 from ...app import GrpyApp
 from ...test.common import (check_bad_anon_requests, check_flash, check_get,
-                            check_redirect, check_requests)
+                            check_get_data, check_redirect, check_requests)
 
 
 def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
@@ -91,7 +91,7 @@ def test_grouping_detail(client, auth, app_grouping: Grouping) -> None:
     check_bad_requests(client, auth, url, False)
 
     auth.login("host")
-    data = check_get(client, url).data.decode('utf-8')
+    data = check_get_data(client, url)
     assert app_grouping.code in data
     assert url_for('shortlink', code=app_grouping.code) in data
     assert app_grouping.note in data
@@ -108,7 +108,7 @@ def test_grouping_detail_no_code(
         app_grouping, final_date=utils.now() - datetime.timedelta(seconds=600)))
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login("host")
-    data = check_get(client, url).data.decode('utf-8')
+    data = check_get_data(client, url)
     assert app_grouping.code not in data
     assert url_for('shortlink', code=app_grouping.code) not in data
 
@@ -132,8 +132,7 @@ def test_grouping_detail_remove(
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     users = add_user_registrations(app, app_grouping.key)
     auth.login("host")
-    response = client.get(url)
-    data = response.data.decode('utf-8')
+    data = check_get_data(client, url)
     for user in users:
         assert user.ident in data
         assert str(user.key) in data
@@ -205,18 +204,17 @@ def test_grouping_detail_fasten(
 
     users_as_group = frozenset(cast(UserKey, user.key) for user in users)
     app.get_connection().set_groups(app_grouping.key, (users_as_group,))
-    response = client.get(url)
-    assert b"<h1>Groups</h1>" in response.data
-    assert b"Fasten" in response.data
-    fasten_url = url_for('grouping.fasten_groups', grouping_key=app_grouping.key)
-    assert fasten_url.encode('utf-8') in response.data
-    assert b"Remove Groups" in response.data
+    data = check_get_data(client, url)
+    assert "<h1>Groups</h1>" in data
+    assert "Fasten" in data
+    assert url_for('grouping.fasten_groups', grouping_key=app_grouping.key) in data
+    assert "Remove Groups" in data
 
     app.get_connection().delete_registrations(app_grouping.key)
-    response = client.get(url)
-    assert b"<h1>Groups</h1>" in response.data
-    assert b"Fasten" not in response.data
-    assert b"Remove Groups" not in response.data
+    data = check_get_data(client, url)
+    assert "<h1>Groups</h1>" in data
+    assert "Fasten" not in data
+    assert "Remove Groups" not in data
 
 
 def test_grouping_update(app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
@@ -277,7 +275,7 @@ def test_grouping_register(client, auth, app_grouping: Grouping) -> None:
         client.post(url, data={'submit_register': "submit_register"}),
         "/", "info", "Registration for '{}' is updated.".format(app_grouping.name))
 
-    data = check_get(client, url_for('home')).data.decode('utf-8')
+    data = check_get_data(client, url_for('home'))
     assert "Registered Groupings" in data
     assert app_grouping.name in data
     assert "Welcome!" not in data
@@ -330,7 +328,7 @@ def test_grouping_start(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
     assert user.key is not None
     app.get_connection().set_registration(
         Registration(new_grouping.key, user.key, UserPreferences()))
-    assert "Start" in check_get(client, url).data.decode('utf-8')
+    assert "Start" in check_get_data(client, url)
 
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     check_flash(
@@ -341,7 +339,7 @@ def test_grouping_detail_no_group(client, auth, app_grouping: Grouping) -> None:
     """A fresh grouping has no calculated groups."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     auth.login("host")
-    data = check_get(client, url).data.decode('utf-8')
+    data = check_get_data(client, url)
     assert "Groups" not in data
     assert "Member</td>" not in data
 
@@ -383,7 +381,7 @@ def test_grouping_build(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
         start_grouping(client, auth, app.get_connection(), app_grouping),
         detail_url)
 
-    data = check_get(client, detail_url).data.decode('utf-8')
+    data = check_get_data(client, detail_url)
     assert "Groups" in data
     assert "Member</td>" in data
     for user in users:
@@ -392,7 +390,7 @@ def test_grouping_build(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
     home_url = url_for('home')
     for user in users:
         auth.login(user.ident)
-        data = check_get(client, home_url).data.decode('utf-8')
+        data = check_get_data(client, home_url)
         assert data.count(user.ident) > 1
         assert data.count(app_grouping.name) == 1
 
@@ -461,7 +459,7 @@ def test_grouping_final(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
 
     auth.login('host')
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    assert url in check_get(client, detail_url).data.decode('utf-8')
+    assert url in check_get_data(client, detail_url)
     check_flash(
         client, client.get(url), detail_url, "info", "Final date is now set.")
 
@@ -475,7 +473,7 @@ def test_grouping_final(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    assert url not in check_get(client, detail_url).data.decode('utf-8')
+    assert url not in check_get_data(client, detail_url)
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Final date cannot be set now.")
@@ -484,7 +482,7 @@ def test_grouping_final(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
         app_grouping,
         begin_date=yet + datetime.timedelta(seconds=3600),
         final_date=yet + datetime.timedelta(seconds=7200)))
-    assert url not in check_get(client, detail_url).data.decode('utf-8')
+    assert url not in check_get_data(client, detail_url)
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Final date cannot be set now.")
@@ -498,7 +496,7 @@ def test_grouping_close(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
 
     auth.login('host')
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    assert url not in check_get(client, detail_url).data.decode('utf-8')
+    assert url not in check_get_data(client, detail_url)
     check_flash(
         client, client.get(url), detail_url,
         "warning", "Close date cannot be set now.")
@@ -541,7 +539,7 @@ def test_fasten_groups(app: GrpyApp, client, auth, app_grouping: Grouping) -> No
     app.get_connection().set_registration(Registration(
         app_grouping.key, user.key, UserPreferences()))
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
-    assert check_get(client, url).data.count(user.ident.encode('utf-8')) == 1
+    assert check_get_data(client, url).count(user.ident) == 1
 
     check_redirect(client.post(url, data={}), location_url)
 
