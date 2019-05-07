@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "home.html" %}
 {#
- # Copyright (c) 2018,2019 Detlef Stern
+ # Copyright (c) 2019 Detlef Stern
  #
  # This file is part of grpy - user grouping.
  #
@@ -17,5 +17,9 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% block title %}Home{% endblock %}
-{% block heading %}{% endblock %}
+{% block content %}
+<div class="w3-panel">
+  <h1>Welcome!</h1>
+  <p>Please <a href="{{ url_for('auth.login') }}">login</a> to use this software.<p>
+</div>
+{% endblock %}

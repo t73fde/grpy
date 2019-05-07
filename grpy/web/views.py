@@ -21,16 +21,16 @@
 
 import dataclasses
 import io
-from typing import List, Sequence, cast
+from typing import Sequence, cast
 
 import pyqrcode
 from flask import (abort, current_app, g, redirect, render_template, request,
                    url_for)
 
 from ..core import utils
-from ..core.models import Grouping, GroupingKey, GroupingState
+from ..core.models import GroupingKey, GroupingState
 from ..repo.base import Connection
-from ..repo.logic import GroupingCount, get_grouping_state, groupings_for_host
+from ..repo.logic import get_grouping_state, groupings_for_host
 from .utils import redirect_to_login, value_or_404
 
 
@@ -50,50 +50,45 @@ class UserGroup:
 
 def home():
     """Show home page."""
-    open_groupings: Sequence[GroupingCount] = []
-    closed_groupings: Sequence[Grouping] = []
-    registrations: List[Grouping] = []
-    group_list: List[UserGroup] = []
-    show_welcome = True
+    if g.user is None:
+        return render_template("home_anon.html")
     if g.user and not g.user.is_active:
         current_app.logout()
         g.user = None
+        return render_template("home_anon.html")
 
-    if g.user:
-        if g.user.is_host:
-            show_welcome = False
-        open_groupings, closed_groupings = groupings_for_host(
-            get_connection(), g.user.key)
+    open_groupings, closed_groupings = groupings_for_host(
+        get_connection(), g.user.key)
 
-        group_list = []
-        assigned_groupings = set()
-        for group in get_connection().iter_groups_by_user(
-                g.user.key,
-                order=["grouping_name"]):
-            if group.grouping_close_date is not None and \
-                    group.grouping_close_date < utils.now():
-                continue
-            group_list.append(UserGroup(
-                group.grouping_key,
-                group.grouping_name,
-                sorted(m.user_ident for m in group.group)))
-            assigned_groupings.add(group.grouping_key)
-        grouping_iterator = get_connection().iter_groupings_by_user(
+    group_list = []
+    assigned_groupings = set()
+    for group in get_connection().iter_groups_by_user(
             g.user.key,
-            where={"close_date__ge": utils.now()},
-            order=["final_date"])
-        registrations = [
-            grouping for grouping in grouping_iterator
-            if grouping.key not in assigned_groupings]
+            order=["grouping_name"]):
+        if group.grouping_close_date is not None and \
+                group.grouping_close_date < utils.now():
+            continue
+        group_list.append(UserGroup(
+            group.grouping_key,
+            group.grouping_name,
+            sorted(m.user_ident for m in group.group)))
+        assigned_groupings.add(group.grouping_key)
 
-        show_welcome = show_welcome and not (
-            open_groupings or closed_groupings or registrations or group_list)
+    grouping_iterator = get_connection().iter_groupings_by_user(
+        g.user.key,
+        where={"close_date__ge": utils.now()},
+        order=["final_date"])
+    registrations = [
+        grouping for grouping in grouping_iterator
+        if grouping.key not in assigned_groupings]
 
-    return render_template(
-        "home.html",
-        show_welcome=show_welcome, open_groupings=open_groupings,
-        closed_groupings=closed_groupings,
-        registrations=registrations, group_list=group_list)
+    if (g.user.is_host or
+            open_groupings or closed_groupings or registrations or group_list):
+        return render_template(
+            "home_content.html",
+            open_groupings=open_groupings, closed_groupings=closed_groupings,
+            registrations=registrations, group_list=group_list)
+    return render_template("home_welcome.html")
 
 
 def about():

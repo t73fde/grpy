@@ -1,0 +1,84 @@
+{% extends "home.html" %}
+{#
+ # Copyright (c) 2018,2019 Detlef Stern
+ #
+ # This file is part of grpy - user grouping.
+ #
+ # Grpy is free software: you can redistribute it and/or modify it under the
+ # terms of the GNU Affero General Public License as published by the Free
+ # Software Foundation, either version 3 of the License, or (at your option)
+ # any later version.
+ #
+ # Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+ # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ # details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with grpy. If not, see <https://www.gnu.org/licenses/>.
+ #}
+{% block content %}
+<div class="w3-panel">
+
+{%- if open_groupings or g.user.is_host %}
+<h1>Active Groupings</h1>
+<table class="w3-table w3-bordered">
+  <tr><th>Name</th><th>Final date</th><th>Registrations</th></tr>
+  {%- for grouping, count in open_groupings %}
+  <tr>
+    <td><a href="{{ url_for('grouping.detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+    <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {%- else -%}
+  <tr><td>(None)</td><td></td><td></td></tr>
+  {%- endfor %}
+</table>
+{%- endif -%}
+
+{% if g.user.is_host %}
+<p><a href="{{ url_for('grouping.create') }}" class="w3-button {{ color('primary') }}">Create</a></p>
+{%- endif -%}
+
+{%- if closed_groupings -%}
+<h1>Closed Groupings</h1>
+<table class="w3-table w3-bordered">
+  <tr><th>Name</th><th>Final date</th><th>Close Date</th></tr>
+  {% for grouping in closed_groupings %}
+  <tr>
+    <td><a href="{{ url_for('grouping.detail', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+    <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+    <td>{{ grouping.close_date|datetimeformat("iso-short") }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{%- endif -%}
+
+{%- if registrations -%}
+<h1>Registered Groupings</h1>
+<table class="w3-table w3-bordered">
+  <tr><th>Name</th><th>Final date</th></tr>
+  {%- for grouping in registrations -%}
+  <tr>
+    {%- if grouping.can_register() %}
+    <td><a href="{{ url_for('grouping.register', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+    {%- else -%}
+    <td>{{ grouping.name }}</td>
+    {%- endif -%}
+    <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+  </tr>
+  {%- endfor %}
+</table>
+{%- endif -%}
+
+{%- if group_list -%}
+<h1>Groups</h1>
+<table class="w3-table w3-bordered">
+<tr><td>Name</td><td>Member</td></tr>
+{%- for group in group_list %}
+<tr><td>{{ group.grouping_name }}</td><td>{{ group.named_group|join(', ') }}</td></tr>
+{%- endfor %}
+</table>
+{%- endif %}
+</div>
+{%- endblock %}
