@@ -55,11 +55,15 @@ def home():
     registrations: List[Grouping] = []
     group_list: List[UserGroup] = []
     show_welcome = True
+    if g.user and not g.user.is_active:
+        current_app.logout()
+        g.user = None
+
     if g.user:
         if g.user.is_host:
-            open_groupings, closed_groupings = groupings_for_host(
-                get_connection(), g.user.key)
             show_welcome = False
+        open_groupings, closed_groupings = groupings_for_host(
+            get_connection(), g.user.key)
 
         group_list = []
         assigned_groupings = set()
@@ -83,7 +87,7 @@ def home():
             if grouping.key not in assigned_groupings]
 
         show_welcome = show_welcome and not (
-            open_groupings or registrations or group_list)
+            open_groupings or closed_groupings or registrations or group_list)
 
     return render_template(
         "home.html",

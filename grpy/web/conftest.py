@@ -32,6 +32,8 @@ from ..core.utils import now
 from ..repo.logic import set_grouping_new_code
 from .app import GrpyApp, create_app
 
+pytest.register_assert_rewrite("grpy.web.test.common")
+
 # pylint: disable=redefined-outer-name
 
 

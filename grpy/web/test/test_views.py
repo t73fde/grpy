@@ -51,6 +51,25 @@ def test_home_host(client, auth, app_grouping: Grouping) -> None:
     assert app_grouping.name in data
     assert str(app_grouping.final_date.minute) in data
     assert "Closed Groupings" not in data
+    assert data.count(url_for('grouping.create')) == 2
+
+
+def test_home_host_user(app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
+    """An user that was previously a host can view its groupings."""
+    auth.login("host")
+
+    # Make host a non-host
+    connection = app.get_connection()
+    user = connection.get_user_by_ident("host")
+    assert user is not None
+    user = connection.set_user(dataclasses.replace(user, permissions=Permissions(0)))
+    assert user.is_active
+    assert not user.is_host
+
+    data = check_get_data(client, url_for('home'))
+    assert url_for('grouping.detail', grouping_key=app_grouping.key) in data
+    assert data.count(url_for('grouping.create')) == 1
+    assert "Create" not in data
 
 
 def test_home_host_closed(app, client, auth, app_grouping: Grouping) -> None:
@@ -133,6 +152,23 @@ def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> Non
     data = check_get_data(client, url_for('home'))
     assert "Groups" not in data
     assert "Member" not in data
+
+
+def test_home_inactive(app: GrpyApp, client, auth) -> None:
+    """An inactive user must be logged out."""
+    url = url_for('home')
+    login_url = url_for('auth.login')
+    assert check_get_data(client, url).count(login_url) == 2
+    auth.login("inactive")
+    assert check_get_data(client, url).count(login_url) == 0
+
+    # Make user inactive
+    user = app.get_connection().get_user_by_ident("inactive")
+    assert user is not None
+    user = app.get_connection().set_user(dataclasses.replace(
+        user, permissions=user.permissions | Permissions.INACTIVE))
+
+    assert check_get_data(client, url).count(login_url) == 2
 
 
 def test_about_anonymous(client) -> None:
