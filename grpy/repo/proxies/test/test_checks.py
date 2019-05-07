@@ -161,21 +161,28 @@ def test_catch_has_errors(catch_proxy: MockedCatchProxyConnection) -> None:
 
 def test_catch_set_user_excs(catch_proxy: MockedCatchProxyConnection) -> None:
     """Add / update the given user."""
-    catch_proxy.mock.set_user.side_effect = DuplicateKey("User.ident", "123")
+    # For DuplicateKey use "User.name" instead of "User.ident", because
+    # "User.ident" will raise the exception instead of add a message
+    catch_proxy.mock.set_user.side_effect = DuplicateKey("User.name", "123")
     catch_proxy.set_user(User(None, "ident"))
     assert catch_proxy.mock.set_user.call_count == 1
     assert catch_proxy.get_messages()[0].text == \
-        "Duplicate key for field 'User.ident' with value '123'"
+        "Duplicate key for field 'User.name' with value '123'"
+
+    catch_proxy.mock.set_user.side_effect = DuplicateKey("User.ident", "123")
+    with pytest.raises(DuplicateKey):
+        catch_proxy.set_user(User(None, "ident"))
+    assert catch_proxy.mock.set_user.call_count == 2
 
     catch_proxy.mock.set_user.side_effect = NothingToUpdate("User.ident", "123")
     catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 2
+    assert catch_proxy.mock.set_user.call_count == 3
     assert catch_proxy.get_messages()[0].text == \
         "User.ident: try to update key 123"
 
     catch_proxy.mock.set_user.side_effect = ValidationFailed("User.ident")
     catch_proxy.set_user(User(None, "ident"))
-    assert catch_proxy.mock.set_user.call_count == 3
+    assert catch_proxy.mock.set_user.call_count == 4
     assert catch_proxy.get_messages()[0].text == \
         "Internal validation failed: User.ident"
 

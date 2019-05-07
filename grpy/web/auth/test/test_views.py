@@ -24,9 +24,11 @@ import itertools
 
 from flask import g, session, url_for
 
+from ....core.models import Permissions
 from ...app import GrpyApp
-from ...test.common import (check_bad_anon_requests, check_flash,
-                            check_get_data, check_requests)
+from ...test.common import (check_bad_anon_requests, check_flash, check_get,
+                            check_get_data, check_message, check_redirect,
+                            check_requests)
 
 
 def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
@@ -135,6 +137,30 @@ def test_admin_users(app: GrpyApp, client, auth) -> None:
     for user in app.get_connection().iter_users():
         assert str(user.key) in data
         assert user.ident in data
+
+
+def test_admin_user_create(app: GrpyApp, client, auth) -> None:
+    """Test the creation of new users."""
+    url = url_for('auth.user_create')
+    check_bad_requests(client, auth, url)
+
+    auth.login('admin')
+    check_get(client, url)
+
+    response = client.post(url, data={})
+    assert response.status_code == 200
+    assert response.data.count(b'This field is required') == 1
+
+    list_url = url_for('auth.users')
+    check_redirect(client.post(url, data={'ident': "name3"}), list_url)
+    user = app.get_connection().get_user_by_ident("name3")
+    assert user is not None
+    assert user.permissions == Permissions(0)
+    assert user.last_login is None
+
+    response = client.post(url, data={'ident': "name3"})
+    assert response.status_code == 200
+    check_message(client, "error", "Ident 'name3' is already in use.")
 
 
 def test_admin_user_detail(app: GrpyApp, client, auth) -> None:

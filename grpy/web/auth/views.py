@@ -26,7 +26,7 @@ from flask import (current_app, flash, g, redirect, render_template, request,
                    url_for)
 
 from ...core.models import Permissions, User, UserKey
-from ...repo.base import Connection
+from ...repo.base import Connection, DuplicateKey
 from ..utils import admin_required, value_or_404
 from . import forms, logic
 
@@ -78,6 +78,21 @@ def users():
     """Show the list of users."""
     user_list = get_connection().iter_users(order=['-last_login', 'ident'])
     return render_template("auth_users.html", user_list=user_list)
+
+
+@admin_required
+def user_create():
+    """Create a new user."""
+    form = forms.UserForm()
+    if form.validate_on_submit():
+        ident = form.ident.data.strip()
+        user = User(None, ident)
+        try:
+            get_connection().set_user(user)
+            return redirect(url_for("auth.users"))
+        except DuplicateKey:
+            flash("Ident '{}' is already in use.".format(ident), category="error")
+    return render_template("user_create.html", form=form)
 
 
 @admin_required

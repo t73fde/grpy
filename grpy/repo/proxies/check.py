@@ -84,12 +84,13 @@ class CatchingProxyConnection(FilterProxyConnection):
                 "critical",
                 "Internal validation failed: " + " ".join(str(arg) for arg in exc.args))
         except DuplicateKey as exc:
-            if exc.args[0] == "Grouping.code":
+            if exc.args[0] in ("User.ident", "Grouping.code"):
                 raise
             self._add_message(
                 "critical",
                 "Duplicate key for field '%s' with value '%s'" % (
-                    exc.args[0], exc.args[1]))
+                    exc.args[0], exc.args[1]),
+                exc)
         except NothingToUpdate as exc:
             self._add_message(
                 "critical", "%s: try to update key %s" % (exc.args[0], exc.args[1]))

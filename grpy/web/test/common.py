@@ -57,10 +57,15 @@ def check_redirect(response, location_url: str):
     return response
 
 
-def check_flash(client, response, location_url: str, category: str, message: str):
+def check_message(client, category: str, message: str) -> None:
     """Assert that flash message will occur."""
-    assert response.status_code == 302
-    assert response.headers['Location'] == "http://localhost" + location_url
     assert get_flashed_messages(with_categories=True) == [(category, message)]
     client.get(url_for('home'))  # Clean flash message
+
+
+def check_flash(client, response, location_url: str, category: str, message: str):
+    """Assert that a redirection with a flash message will occur."""
+    assert response.status_code == 302
+    assert response.headers['Location'] == "http://localhost" + location_url
+    check_message(client, category, message)
     return response

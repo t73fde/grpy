@@ -41,3 +41,11 @@ class UserPermissionsForm(FlaskForm):
     host = BooleanField("Host")
     admin = BooleanField("Administrator")
     submit_update = SubmitField("Update")
+
+
+class UserForm(FlaskForm):
+    """User data."""
+
+    ident = StringField(
+        "Ident", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+    submit_create = SubmitField("Create")
