@@ -112,6 +112,13 @@ def test_iter_users(filter_proxy: MockedFilterProxyConnection) -> None:
     assert filter_proxy.filter_count == 1
 
 
+def test_delete_user(filter_proxy: MockedFilterProxyConnection) -> None:
+    """Delete a user."""
+    filter_proxy.delete_user(UserKey(int=0))
+    assert filter_proxy.mock.delete_user.call_count == 1
+    assert filter_proxy.filter_count == 1
+
+
 def test_set_grouping(
         filter_proxy: MockedFilterProxyConnection, grouping: Grouping) -> None:
     """Add / update the given grouping."""

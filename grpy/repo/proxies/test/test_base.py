@@ -84,6 +84,12 @@ def test_iter_users(base_proxy: MockedBaseProxyConnection) -> None:
     assert base_proxy.mock.iter_users.call_count == 1
 
 
+def test_delete_user(base_proxy: MockedBaseProxyConnection) -> None:
+    """Delete user with given key."""
+    base_proxy.delete_user(UserKey(int=0))
+    assert base_proxy.mock.delete_user.call_count == 1
+
+
 def test_set_grouping(
         base_proxy: MockedBaseProxyConnection, grouping: Grouping) -> None:
     """Add / update the given grouping."""
@@ -107,6 +113,12 @@ def test_iter_groupings(base_proxy: MockedBaseProxyConnection) -> None:
     """Return an iterator of all or some groupings."""
     base_proxy.iter_groupings()
     assert base_proxy.mock.iter_groupings.call_count == 1
+
+
+def test_delete_grouping(base_proxy: MockedBaseProxyConnection) -> None:
+    """Delete grouping with given key."""
+    base_proxy.delete_grouping(GroupingKey(int=0))
+    assert base_proxy.mock.delete_grouping.call_count == 1
 
 
 def test_set_registration(base_proxy: MockedBaseProxyConnection) -> None:

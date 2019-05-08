@@ -95,6 +95,10 @@ class Connection:  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError("Connection.iter_users")
 
+    def delete_user(self, user_key: UserKey) -> None:
+        """Delete the user object referenced by the given key."""
+        raise NotImplementedError("Connection.delete_user")
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         raise NotImplementedError("Connection.set_grouping")

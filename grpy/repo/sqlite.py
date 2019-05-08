@@ -263,6 +263,11 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         cursor.close()
         return result
 
+    def delete_user(self, user_key: UserKey) -> None:
+        """Delete the user object referenced by the given key."""
+        cursor = self._execute("DELETE FROM users WHERE key=?", (user_key,))
+        cursor.close()
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         if grouping.key:

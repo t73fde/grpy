@@ -66,6 +66,10 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
         """Return an iterator of all or some users."""
         return self._delegate.iter_users(where, order)
 
+    def delete_user(self, user_key: UserKey) -> None:
+        """Delete the user object referenced by the given key."""
+        self._delegate.delete_user(user_key)
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         return self._delegate.set_grouping(grouping)

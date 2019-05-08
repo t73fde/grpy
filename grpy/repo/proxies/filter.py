@@ -82,6 +82,10 @@ class FilterProxyConnection(  # pylint: disable=too-many-public-methods
         return cast(Iterable[User], self._filter(
             super().iter_users, (), where, order))
 
+    def delete_user(self, user_key: UserKey) -> None:
+        """Delete the user object referenced by the given key."""
+        self._filter(super().delete_user, None, user_key)
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         return cast(Grouping, self._filter(

@@ -220,6 +220,23 @@ def test_iter_users_order(connection: Connection) -> None:
     assert users == list(reversed(all_users))
 
 
+def test_delete_user(connection: Connection) -> None:
+    """A deleted grouping cannot be retrieved afterwards."""
+    user = connection.set_user(User(None, "delete"))
+    assert user.key is not None
+
+    assert connection.get_user(user.key) == user
+    assert connection.get_user_by_ident(user.ident) == user
+    assert list(connection.iter_users()) == [user]
+
+    connection.delete_user(user.key)
+    assert connection.get_user(user.key) is None
+    assert connection.get_user_by_ident(user.ident) is None
+    assert list(connection.iter_users()) == []
+
+    connection.delete_user(UserKey(int=0))
+
+
 def test_insert_grouping(connection: Connection, grouping: Grouping) -> None:
     """Check that inserting a new grouping works."""
     new_grouping = connection.set_grouping(grouping)

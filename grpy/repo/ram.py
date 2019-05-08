@@ -126,6 +126,13 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
         """Return an iterator of all or some users."""
         return self._state.users.values()
 
+    def delete_user(self, user_key: UserKey) -> None:
+        """Delete the user object referenced by the given key."""
+        user = self._state.users.get(user_key, None)
+        if user is not None:
+            del self._state.users_ident[user.ident]
+            del self._state.users[user_key]
+
     def set_grouping(self, grouping: Grouping) -> Grouping:
         """Add / update the given grouping."""
         if grouping.key:
