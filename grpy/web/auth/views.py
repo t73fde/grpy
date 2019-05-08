@@ -133,8 +133,29 @@ def user_detail(user_key: UserKey):
         grouping for grouping in
         connection.iter_groupings_by_user(user_key, order=["final_date"])
         if grouping.key not in user_keys]
+    can_delete = not (host_groupings or user_groups or user_groupings)
 
     return render_template(
         "user_detail.html", user=user, form=form, is_other=is_other,
         host_groupings=host_groupings, user_groups=user_groups,
-        user_groupings=user_groupings)
+        user_groupings=user_groupings, can_delete=can_delete)
+
+
+@admin_required
+def user_delete(user_key: UserKey):
+    """Delete the given user."""
+    user = _get_user(user_key)
+    detail_url = url_for('auth.user_detail', user_key=user_key)
+    if g.user.key == user_key:
+        flash("You're not allowed to delete your own account.", category="warning")
+        return redirect(detail_url)
+    connection = get_connection()
+    if connection.iter_groupings_by_user(user_key) or \
+            connection.iter_groups_by_user(user_key) or \
+            connection.iter_groupings(where={'host_key__eq': user_key}):
+        flash("User is referenced by at least one grouping.", category="warning")
+        return redirect(detail_url)
+
+    connection.delete_user(user_key)
+    flash("User '{}' deleted.".format(user.ident), category="info")
+    return redirect(url_for('auth.users'))

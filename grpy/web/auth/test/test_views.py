@@ -231,9 +231,17 @@ def test_admin_user_detail_lists(
     url = url_for('auth.user_detail', user_key=users[0].key)
     auth.login("admin")
 
+    data = check_get_data(client, url)
+    assert "Delete User" in data
+    assert "Hosted Groupings" not in data
+    assert "Groups" not in data
+    assert "Registered Groupings" not in data
+    assert app_grouping.name not in data
+
     app.get_connection().set_registration(Registration(
         app_grouping.key, users[0].key, UserPreferences()))
     data = check_get_data(client, url)
+    assert "Delete User" not in data
     assert "Hosted Groupings" not in data
     assert "Groups" not in data
     assert "Registered Groupings" in data
@@ -242,6 +250,7 @@ def test_admin_user_detail_lists(
     app.get_connection().set_groups(
         app_grouping.key, (frozenset([cast(UserKey, user.key) for user in users]),))
     data = check_get_data(client, url)
+    assert "Delete User" not in data
     assert "Hosted Groupings" not in data
     assert "Groups" in data
     assert "Registered Groupings" not in data
@@ -254,7 +263,68 @@ def test_admin_user_detail_lists(
     app.get_connection().set_grouping(dataclasses.replace(
         app_grouping, host_key=users[0].key))
     data = check_get_data(client, url)
+    assert "Delete User" not in data
     assert "Hosted Groupings" in data
     assert "Groups" not in data
     assert "Registered Groupings" not in data
     assert app_grouping.name in data
+
+
+def check_has_groupings(client, delete_url: str, location_url: str) -> None:
+    """Ensure that user cannot be deleted because of groupings."""
+    assert check_flash(
+        client, client.post(delete_url), location_url,
+        "warning", "User is referenced by at least one grouping.")
+
+
+def test_admin_user_delete(app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
+    """Only an administrator is allowed to delete users (except itself)."""
+    assert app_grouping.key is not None
+    admin_user = app.get_connection().get_user_by_ident("admin")
+    assert admin_user is not None
+    assert admin_user.key is not None
+    admin_url = url_for('auth.user_delete', user_key=admin_user.key)
+
+    assert client.get(admin_url).status_code == 405
+    assert client.post(admin_url).status_code == 401
+    auth.login("user")
+    assert client.get(admin_url).status_code == 405
+    assert client.post(admin_url).status_code == 403
+    auth.login("host")
+    assert client.get(admin_url).status_code == 405
+    assert client.post(admin_url).status_code == 403
+
+    auth.login("admin")
+    assert client.get(admin_url).status_code == 405
+    assert check_flash(
+        client, client.post(admin_url),
+        url_for('auth.user_detail', user_key=admin_user.key),
+        "warning", "You're not allowed to delete your own account.")
+
+    user = app.get_connection().get_user_by_ident("user")
+    assert user is not None
+    assert user.key is not None
+    url = url_for('auth.user_delete', user_key=user.key)
+    location_url = url_for('auth.user_detail', user_key=user.key)
+
+    app.get_connection().set_registration(Registration(
+        app_grouping.key, user.key, UserPreferences()))
+    check_has_groupings(client, url, location_url)
+    app.get_connection().delete_registrations(app_grouping.key)
+
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+    check_has_groupings(client, url, location_url)
+    app.get_connection().set_groups(app_grouping.key, ())
+
+    host_key = app_grouping.host_key
+    app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping, host_key=user.key))
+    check_has_groupings(client, url, location_url)
+    app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping, host_key=host_key))
+
+    check_flash(
+        client, client.post(url), url_for('auth.users'),
+        "info", "User '%s' deleted." % user.ident)
+    assert client.post(
+        url_for('auth.user_delete', user_key=UserKey(int=0))).status_code == 404

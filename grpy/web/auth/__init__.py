@@ -35,4 +35,7 @@ def create_blueprint() -> Blueprint:
     blueprint.add_url_rule(
         "/users/<user:user_key>/", "user_detail", views.user_detail,
         methods=('GET', 'POST'))
+    blueprint.add_url_rule(
+        "/users/<user:user_key>/delete", "user_delete", views.user_delete,
+        methods=('POST',))
     return blueprint
