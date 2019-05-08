@@ -21,8 +21,8 @@
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-  <div class="w3-container {{ color("heading") }}">
-  <h1>{% block title%}User Details: {{ user.ident }}{% endblock %}{% if not is_other %} (You){% endif %}</h1>
+<div class="w3-container {{ color("heading") }}">
+  <h1>{% block title%}User {{ user.ident }}{% endblock %}{% if not is_other %} (You){% endif %}</h1>
 </div>
 <div class="w3-card-4">
   <div class="w3-container {{ color("form") }}">
@@ -30,11 +30,65 @@
 </div>
 <form class="w3-container" method="post">
   {{- form.csrf_token }}
-  {% if is_other %}{{- render_checkbox(form.active) }}{% endif %}
+  {%- if is_other %}{{- render_checkbox(form.active) }}{% endif -%}
   {{- render_checkbox(form.host) }}
-  {% if is_other %}{{- render_checkbox(form.admin) }}{% endif %}
+  {%- if is_other %}{{- render_checkbox(form.admin) }}{% endif -%}
   <p>{{- form.submit_update(class="w3-btn " + color("primary")) }}</p>
 </form>
 </div>
 </div>
-{% endblock %}
+
+{%- if host_groupings -%}
+<div class="w3-panel">
+<div class="w3-container {{ color("heading") }}">
+  <h2>Hosted Groupings</h2>
+</div>
+<table class="w3-table w3-bordered">
+<tr><th>Name</th><th>Final date</th><th>Close date</th></tr>
+{%- for grouping in host_groupings %}
+<tr>
+  <td>{{ grouping.name }}</td>
+  <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+  <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
+</tr>
+{%- endfor %}
+</table>
+</div>
+{%- endif %}
+
+{%- if user_groups -%}
+<div class="w3-panel">
+<div class="w3-container {{ color("heading") }}">
+  <h2>Groups</h2>
+</div>
+<table class="w3-table w3-bordered">
+<tr><th>Name</th><th>Close date</th><th>Members</th></tr>
+{%- for group in user_groups %}
+<tr>
+  <td>{{ group.grouping_name }}</td>
+  <td>{{ group.grouping_close_date|datetimeformat("iso-short")|default("", True) }}</td>
+  <td>{{ group.group|sort|map(attribute="user_ident")|join(", ") }}</td>
+</tr>
+{%- endfor %}
+</table>
+</div>
+{%- endif %}
+
+{%- if user_groupings -%}
+<div class="w3-panel">
+<div class="w3-container {{ color("heading") }}">
+  <h2>Registered Groupings</h2>
+</div>
+<table class="w3-table w3-bordered">
+<tr><th>Name</th><th>Final date</th><th>Close date</th></tr>
+{%- for grouping in user_groupings %}
+<tr>
+  <td>{{ grouping.name }}</td>
+  <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
+  <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
+</tr>
+{%- endfor %}
+</table>
+</div>
+{%- endif %}
+{%- endblock %}

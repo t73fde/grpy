@@ -21,10 +21,12 @@
 
 import dataclasses
 import itertools
+from typing import cast
 
 from flask import g, session, url_for
 
-from ....core.models import Permissions
+from ....core.models import (Grouping, Permissions, Registration, User,
+                             UserKey, UserPreferences)
 from ...app import GrpyApp
 from ...test.common import (check_bad_anon_requests, check_flash, check_get,
                             check_get_data, check_message, check_redirect,
@@ -174,7 +176,7 @@ def test_admin_user_detail(app: GrpyApp, client, auth) -> None:
         check_bad_requests(client, auth, url, False)
         auth.login("admin")
         data = check_get_data(client, url)
-        assert ": " + user.ident in data
+        assert "User " + user.ident in data
         if user.key == admin_user.key:
             assert " (You)" in data
 
@@ -217,3 +219,42 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
                 assert new_user.is_active == is_active
                 assert new_user.is_admin == is_admin
             assert new_user.is_host == is_host
+
+
+def test_admin_user_detail_lists(
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
+    """Show that all user details are displayed."""
+    assert app_grouping.key is not None
+    users = [
+        app.get_connection().set_user(User(None, "user-%d" % i)) for i in range(5)]
+    assert users[0].key is not None
+    url = url_for('auth.user_detail', user_key=users[0].key)
+    auth.login("admin")
+
+    app.get_connection().set_registration(Registration(
+        app_grouping.key, users[0].key, UserPreferences()))
+    data = check_get_data(client, url)
+    assert "Hosted Groupings" not in data
+    assert "Groups" not in data
+    assert "Registered Groupings" in data
+    assert app_grouping.name in data
+
+    app.get_connection().set_groups(
+        app_grouping.key, (frozenset([cast(UserKey, user.key) for user in users]),))
+    data = check_get_data(client, url)
+    assert "Hosted Groupings" not in data
+    assert "Groups" in data
+    assert "Registered Groupings" not in data
+    assert app_grouping.name in data
+    for user in users:
+        assert user.ident in data
+
+    app.get_connection().set_groups(app_grouping.key, ())
+    app.get_connection().delete_registrations(app_grouping.key)
+    app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping, host_key=users[0].key))
+    data = check_get_data(client, url)
+    assert "Hosted Groupings" in data
+    assert "Groups" not in data
+    assert "Registered Groupings" not in data
+    assert app_grouping.name in data

@@ -240,7 +240,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
             for group in groups:
                 if user_key in group:
                     named_group = frozenset(
-                        NamedUser(g, self._state.users[g].ident) for g in group)
+                        NamedUser(self._state.users[g].ident, g) for g in group)
                     result.append(UserGroup(
                         grouping, grouping_obj.name, grouping_obj.close_date,
                         named_group))

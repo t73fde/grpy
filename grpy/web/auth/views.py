@@ -122,5 +122,19 @@ def user_detail(user_key: UserKey):
         'active': user.is_active,
         'host': user.is_host,
         'admin': user.is_admin})
+
+    connection = get_connection()
+    host_groupings = connection.iter_groupings(
+        where={"host_key__eq": user_key}, order=["final_date"])
+    user_groups = connection.iter_groups_by_user(
+        user_key, order=["grouping_name"])
+    user_keys = {group.grouping_key for group in user_groups}
+    user_groupings = [
+        grouping for grouping in
+        connection.iter_groupings_by_user(user_key, order=["final_date"])
+        if grouping.key not in user_keys]
+
     return render_template(
-        "user_detail.html", user=user, form=form, is_other=is_other)
+        "user_detail.html", user=user, form=form, is_other=is_other,
+        host_groupings=host_groupings, user_groups=user_groups,
+        user_groupings=user_groupings)

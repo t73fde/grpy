@@ -500,7 +500,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         result = []
         for grouping_key, name, close_date, group_no in cursor.fetchall():
             cursor_2 = self._execute(
-                "SELECT user_key, ident FROM groups,users "
+                "SELECT ident, user_key FROM groups,users "
                 "WHERE grouping_key=? AND group_no=? AND user_key=key",
                 (grouping_key, group_no))
             result.append(UserGroup(

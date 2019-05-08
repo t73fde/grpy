@@ -34,12 +34,13 @@ class UserRegistration:
     preferences: UserPreferences
 
 
-@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+@dataclasses.dataclass(  # pylint: disable=too-few-public-methods
+    order=True, frozen=True)
 class NamedUser:
     """The identifying data of an user."""
 
-    user_key: UserKey
     user_ident: str
+    user_key: UserKey
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
