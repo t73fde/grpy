@@ -1,9 +1,10 @@
 stages:
+  - source
   - test
   - build
 
 check:
-  stage: test
+  stage: source
   only:
   - master
   - deploy
@@ -11,6 +12,14 @@ check:
   script:
   - pipenv install --dev
   - pipenv run python proctor.py -v full-check
+
+test:
+  stage: test
+  only:
+  - deploy
+  image: hshnwinps/dev
+  script:
+  - pipenv install --dev
   - pipenv run tox -e py37
 
 build:
