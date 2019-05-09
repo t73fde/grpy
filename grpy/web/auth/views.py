@@ -113,9 +113,10 @@ def user_detail(user_key: UserKey):
         if form.host.data:
             new_permissions |= Permissions.HOST
 
-        get_connection().set_user(dataclasses.replace(
-            user, permissions=new_permissions))
-        flash("Permissions of '{}' updated.".format(user.ident), category="info")
+        if user.permissions != new_permissions:
+            get_connection().set_user(dataclasses.replace(
+                user, permissions=new_permissions))
+            flash("Permissions of '{}' updated.".format(user.ident), category="info")
         return redirect(url_for('auth.users'))
 
     form = forms.UserPermissionsForm(data={

@@ -207,9 +207,10 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
                 'host': "y" if is_host else "",
                 'admin': "y" if is_admin else "",
             })
-            check_flash(
-                client, response, userlist_url,
-                "info", "Permissions of '{}' updated.".format(user.ident))
+            if user.key != admin_user.key:
+                check_flash(
+                    client, response, userlist_url,
+                    "info", "Permissions of '{}' updated.".format(user.ident))
             new_user = app.get_connection().get_user(user.key)
             assert new_user is not None
             if user.key == admin_user.key:
@@ -219,6 +220,12 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
                 assert new_user.is_active == is_active
                 assert new_user.is_admin == is_admin
             assert new_user.is_host == is_host
+
+    # If no change was done, no flash will be displayed
+    client.post(url, data=dict(active="y", host="y", admin="y"))
+    client.get(url_for('home'))
+    assert check_redirect(
+        client.post(url, data=dict(active="y", host="y", admin="y")), userlist_url)
 
 
 def test_admin_user_detail_lists(
