@@ -153,12 +153,12 @@ def test_admin_user_create(app: GrpyApp, client, auth) -> None:
     assert response.status_code == 200
     assert response.data.count(b'This field is required') == 1
 
-    list_url = url_for('auth.users')
-    check_redirect(client.post(url, data={'ident': "name3"}), list_url)
+    response = client.post(url, data={'ident': "name3"})
     user = app.get_connection().get_user_by_ident("name3")
     assert user is not None
     assert user.permissions == Permissions(0)
     assert user.last_login is None
+    check_redirect(response, url_for('auth.user_detail', user_key=user.key))
 
     response = client.post(url, data={'ident': "name3"})
     assert response.status_code == 200

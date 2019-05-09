@@ -88,8 +88,8 @@ def user_create():
         ident = form.ident.data.strip()
         user = User(None, ident)
         try:
-            get_connection().set_user(user)
-            return redirect(url_for("auth.users"))
+            user = get_connection().set_user(user)
+            return redirect(url_for("auth.user_detail", user_key=user.key))
         except DuplicateKey:
             flash("Ident '{}' is already in use.".format(ident), category="error")
     return render_template("user_create.html", form=form)
