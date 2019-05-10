@@ -112,6 +112,8 @@ def user_detail(user_key: UserKey):
             new_permissions = Permissions.ADMIN
         if form.host.data:
             new_permissions |= Permissions.HOST
+        if form.manager.data:
+            new_permissions |= Permissions.MANAGER
 
         if user.permissions != new_permissions:
             get_connection().set_user(dataclasses.replace(

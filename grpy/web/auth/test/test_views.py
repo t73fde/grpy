@@ -39,6 +39,8 @@ def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
     check_requests(client, url, 403, do_post)
     auth.login('host')
     check_requests(client, url, 403, do_post)
+    auth.login('manager')
+    check_requests(client, url, 403, do_post)
     check_bad_anon_requests(client, auth, url, do_post)
 
 
@@ -218,11 +220,14 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
             assert "Active" in data
             assert "Administrator" in data
         assert "Host" in data
+        assert "Manager" in data
 
-        for is_active, is_host, is_admin in itertools.product((True, False), repeat=3):
+        for is_active, is_host, is_manager, is_admin in itertools.product(
+                (True, False), repeat=4):
             response = client.post(url, data={
                 'active': "y" if is_active else "",
                 'host': "y" if is_host else "",
+                'manager': "y" if is_manager else "",
                 'admin': "y" if is_admin else "",
             })
             if user.key != admin_user.key:
@@ -238,6 +243,7 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
                 assert new_user.is_active == is_active
                 assert new_user.is_admin == is_admin
             assert new_user.is_host == is_host
+            assert new_user.is_manager == is_manager
 
     # If no change was done, no flash will be displayed
     client.post(url, data=dict(active="y", host="y", admin="y"))
@@ -316,6 +322,9 @@ def test_admin_user_delete(app: GrpyApp, client, auth, app_grouping: Grouping) -
     assert client.get(admin_url).status_code == 405
     assert client.post(admin_url).status_code == 403
     auth.login("host")
+    assert client.get(admin_url).status_code == 405
+    assert client.post(admin_url).status_code == 403
+    auth.login("manager")
     assert client.get(admin_url).status_code == 405
     assert client.post(admin_url).status_code == 403
 

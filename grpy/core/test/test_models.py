@@ -56,11 +56,20 @@ def test_user_is_host() -> None:
 
 
 def test_user_is_admin() -> None:
-    """Test method .is_host."""
+    """Test method .is_admin."""
     assert User(None, "name", Permissions.ADMIN).is_admin
     assert User(None, "name", Permissions.ADMIN | Permissions.HOST).is_admin
     assert not User(None, "name").is_admin
     assert User(None, "name", Permissions.ADMIN | Permissions.INACTIVE).is_admin
+
+
+def test_user_is_manager() -> None:
+    """Test method .is_manager."""
+    assert User(None, "name", Permissions.MANAGER).is_manager
+    assert User(None, "name", Permissions.MANAGER | Permissions.HOST).is_manager
+    assert not User(None, "name").is_manager
+    assert User(None, "name", Permissions.MANAGER | Permissions.INACTIVE).is_manager
+    assert User(None, "name", Permissions.MANAGER | Permissions.ADMIN).is_manager
 
 
 def test_user_validation() -> None:
