@@ -28,7 +28,7 @@ from wtforms.validators import DataRequired
 class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     """Login data."""
 
-    username = StringField("Username", [DataRequired()])
+    ident = StringField("Identifier", [DataRequired()])
     password = PasswordField("Password", [DataRequired()])
     next_url = HiddenField()
     submit_login = SubmitField("Login")

@@ -54,7 +54,7 @@ def test_login(app: GrpyApp, client) -> None:
     """Test login view."""
     url = url_for('auth.login')
     assert client.get(url).status_code == 200
-    response = client.post(url, data={'username': "host", 'password': "1"})
+    response = client.post(url, data={'ident': "host", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     check_user_login(app, "host")
@@ -63,7 +63,7 @@ def test_login(app: GrpyApp, client) -> None:
 def test_login_new_user(app: GrpyApp, client) -> None:
     """Test login view for new user."""
     response = client.post(
-        url_for('auth.login'), data={'username': "new_user", 'password': "1"})
+        url_for('auth.login'), data={'ident': "new_user", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
     check_user_login(app, "new_user")
@@ -73,7 +73,7 @@ def test_invalid_login(app: GrpyApp, client) -> None:
     """Test login view for invalid login."""
     app.config['AUTH_URL'] = ""
     url = url_for('auth.login')
-    response = client.post(url, data={'username': "xunknown", 'password': "1"})
+    response = client.post(url, data={'ident': "xunknown", 'password': "1"})
     assert response.status_code == 200
     assert b"Cannot authenticate user" in response.data
     assert 'user' not in session
@@ -121,7 +121,7 @@ def test_login_with_redirect(app: GrpyApp, client) -> None:
 
     response = client.post(
         url_for('auth.login'),
-        data={'username': "new_user", 'password': "1", 'next_url': "/ABCDEF/"})
+        data={'ident': "new_user", 'password': "1", 'next_url': "/ABCDEF/"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/ABCDEF/"
     check_user_login(app, "new_user")

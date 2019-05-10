@@ -28,7 +28,7 @@
 </div>
 <form method="post">
   {{- form.csrf_token }}
-  {{- render_field(form.username, autofocus=True) }}
+  {{- render_field(form.ident, autofocus=True) }}
   {{- render_field(form.password) }}
   {{- form.next_url }}
 <div class="w3-panel">

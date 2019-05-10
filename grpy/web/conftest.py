@@ -103,10 +103,10 @@ class AuthenticationActions:
         """Initialize the object."""
         self.client = client
 
-    def login(self, username: str, password: str = 'test') -> None:
+    def login(self, ident: str, password: str = 'test') -> None:
         """Perform the login."""
         response = self.client.post(
-            url_for('auth.login'), data={'username': username, 'password': password})
+            url_for('auth.login'), data={'ident': ident, 'password': password})
         assert response.status_code == 302
 
     def logout(self) -> None:

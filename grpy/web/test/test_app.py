@@ -111,7 +111,7 @@ def do_login(grpy_app: Flask) -> Client:
     client = Client(grpy_app)
     with grpy_app.test_request_context():
         _iter_data, status, headers = client.post(  # type: ignore
-            url_for('auth.login'), data={'username': "host", 'password': "1"})
+            url_for('auth.login'), data={'ident': "host", 'password': "1"})
     assert status == "302 FOUND"
     assert headers['Location'] == "http://localhost/"
     return client
