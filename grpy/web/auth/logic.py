@@ -30,38 +30,38 @@ from ...core.models import User
 from ...repo.base import Connection
 
 
-def check_pw(app, url: Optional[str], username: str, password: str) -> bool:
-    """Check username / password."""
+def check_pw(app, url: Optional[str], ident: str, password: str) -> bool:
+    """Check ident / password."""
     if url is None:
         return True
     if url == "":
         return False
 
     try:
-        response = requests.head(url, auth=(username, password))
+        response = requests.head(url, auth=(ident, password))
         status_code = response.status_code
     except requests.RequestException:
         app.log_error(
-            "Unable to get authentication from '%s' for '%s'", url, username)
+            "Unable to get authentication from '%s' for '%s'", url, ident)
         status_code = 600
     return 200 <= status_code <= 299
 
 
-def authenticate(username: str, password: str) -> Optional[User]:
-    """Authenticate by user name and password, and return user found."""
+def authenticate(ident: str, password: str) -> Optional[User]:
+    """Authenticate by ident and password, and return user found."""
     app = current_app
     if not app.config.get('AUTH_CASE', False):
-        username = username.strip().lower()
+        ident = ident.strip().lower()
     else:
-        username = username.strip()
+        ident = ident.strip()
     url = app.config.get("AUTH_URL", "http://localhost:9876/")
-    if check_pw(app, url, username, password):
+    if check_pw(app, url, ident, password):
         connection: Connection = app.get_connection()
-        user = connection.get_user_by_ident(username)
+        user = connection.get_user_by_ident(ident)
         if not user:
-            user = connection.set_user(User(None, username))
+            user = connection.set_user(User(None, ident))
         if user.is_active:
-            app.login(user)
+            app.login(user.key)
             connection.set_user(dataclasses.replace(user, last_login=utils.now()))
             return user
     return None

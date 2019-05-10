@@ -42,14 +42,22 @@ def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
     check_bad_anon_requests(client, auth, url, do_post)
 
 
-def test_login(client) -> None:
+def check_user_login(app: GrpyApp, ident: str):
+    """Assert that user with given ident is logged in."""
+    user = app.get_connection().get_user_by_ident(ident)
+    assert user is not None
+    assert user.key is not None
+    assert session['user'] == user.key.int
+
+
+def test_login(app: GrpyApp, client) -> None:
     """Test login view."""
     url = url_for('auth.login')
     assert client.get(url).status_code == 200
     response = client.post(url, data={'username': "host", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert session['user_identifier'] == "host"
+    check_user_login(app, "host")
 
 
 def test_login_new_user(app: GrpyApp, client) -> None:
@@ -58,8 +66,7 @@ def test_login_new_user(app: GrpyApp, client) -> None:
         url_for('auth.login'), data={'username': "new_user", 'password': "1"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert session['user_identifier'] == "new_user"
-    assert app.get_connection().get_user_by_ident("new_user") is not None
+    check_user_login(app, "new_user")
 
 
 def test_invalid_login(app: GrpyApp, client) -> None:
@@ -69,26 +76,38 @@ def test_invalid_login(app: GrpyApp, client) -> None:
     response = client.post(url, data={'username': "xunknown", 'password': "1"})
     assert response.status_code == 200
     assert b"Cannot authenticate user" in response.data
-    assert 'user_identifier' not in session
+    assert 'user' not in session
 
 
-def test_double_login(client, auth) -> None:
+def test_double_login(app: GrpyApp, client, auth) -> None:
     """A double login makes the last user to be logged in."""
     auth.login("user")
-    assert session['user_identifier'] == "user"
+    check_user_login(app, "user")
     assert b"User &#39;user&#39; was logged out." in client.get(
         url_for('auth.login')).data
     auth.login("host")
-    assert session['user_identifier'] == "host"
+    check_user_login(app, "host")
 
 
-def test_name_change_after_login(app: GrpyApp, client, auth) -> None:
-    """Username is changed after login."""
+def test_ident_change_after_login(app: GrpyApp, client, auth) -> None:
+    """Ident is changed after login."""
     auth.login("host")
     connection = app.get_connection()
     user = connection.get_user_by_ident("host")
     assert user is not None
     connection.set_user(dataclasses.replace(user, ident="tsoh"))
+    client.get("/")
+    assert g.user.ident == "tsoh"
+
+
+def test_user_delete_after_login(app: GrpyApp, client, auth) -> None:
+    """Ident is changed after login."""
+    auth.login("userdelete")
+    connection = app.get_connection()
+    user = connection.get_user_by_ident("userdelete")
+    assert user is not None
+    assert user.key is not None
+    connection.delete_user(user.key)
     client.get("/")
     assert g.user is None
 
@@ -105,27 +124,26 @@ def test_login_with_redirect(app: GrpyApp, client) -> None:
         data={'username': "new_user", 'password': "1", 'next_url': "/ABCDEF/"})
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/ABCDEF/"
-    assert session['user_identifier'] == "new_user"
-    assert app.get_connection().get_user_by_ident("new_user") is not None
+    check_user_login(app, "new_user")
 
 
-def test_logout(client, auth) -> None:
+def test_logout(app: GrpyApp, client, auth) -> None:
     """Test login/logout sequence."""
     auth.login("host")
-    assert session['user_identifier'] == "host"
+    check_user_login(app, "host")
     response = client.get(url_for('auth.logout'))
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert 'user_identifier' not in session
+    assert 'user' not in session
 
 
 def test_logout_without_login(client) -> None:
     """A logout without previous login is ignored."""
-    assert 'user_identifier' not in session
+    assert 'user' not in session
     response = client.get(url_for('auth.logout'))
     assert response.status_code == 302
     assert response.headers['Location'] == "http://localhost/"
-    assert 'user_identifier' not in session
+    assert 'user' not in session
 
 
 def test_admin_users(app: GrpyApp, client, auth) -> None:

@@ -144,9 +144,9 @@ class GrpyApp(Flask):
 
         def load_logged_in_user() -> None:
             """Set user attribute pased on session data."""
-            ident = session.get('user_identifier', None)
-            if ident:
-                user = self.get_connection().get_user_by_ident(ident)
+            user_key_int = session.get('user', None)
+            if user_key_int:
+                user = self.get_connection().get_user(UserKey(int=user_key_int))
                 if user:
                     g.user = user
                     return None
@@ -176,10 +176,10 @@ class GrpyApp(Flask):
             policy_name=policies.get_policy_name,
         )
 
-    def login(self, user: User) -> None:
+    def login(self, user_key: UserKey) -> None:
         """Log in the given user."""
         self._clear_session()
-        session['user_identifier'] = user.ident
+        session['user'] = user_key.int
 
     def logout(self):
         """Log out the current user."""
