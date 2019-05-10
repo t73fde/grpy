@@ -95,7 +95,8 @@ def _get_grouping(grouping_key: GroupingKey) -> Grouping:
     """
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
-        abort(403)
+        if not g.user.is_manager:
+            abort(403)
     return grouping
 
 
