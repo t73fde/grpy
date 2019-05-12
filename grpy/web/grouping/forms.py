@@ -21,8 +21,8 @@
 
 from flask_wtf import FlaskForm
 from pytz import UTC
-from wtforms.fields import (DateTimeField, IntegerField, SelectField,
-                            StringField, SubmitField)
+from wtforms.fields import (DateTimeField, HiddenField, IntegerField,
+                            SelectField, StringField, SubmitField)
 from wtforms.validators import (DataRequired, InputRequired, NumberRange,
                                 Optional, ValidationError)
 from wtforms.widgets import TextArea
@@ -96,6 +96,14 @@ class FastenGroupsForm(FlaskForm):
 
     submit_fasten = SubmitField("Fasten")
     submit_cancel = SubmitField("Cancel")
+
+
+class AssignGroupingForm(FlaskForm):
+    """Form to assign the grouping to a pecific user."""
+
+    new_host = SelectField("New Host", [DataRequired()])
+    submit_assign = SubmitField("Assign")
+    next_url = HiddenField()
 
 
 class DeleteGroupingForm(FlaskForm):

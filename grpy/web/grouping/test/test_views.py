@@ -624,19 +624,72 @@ def test_fasten_groups(
         "Grouping not performed recently.")
 
 
-def check_assign(client, auth, url: str, ident: str):
-    """Test grouping assignment for specific ident."""
-    auth.login(ident)
-    check_get(client, url)
-
-
 def test_assign_grouping(
         app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Assign grouping to another user."""
+    assert app_grouping.key is not None
     url = url_for('grouping.assign', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url, allow_manager=True)
-    check_assign(client, auth, url, host_ident(app, app_grouping))
-    check_assign(client, auth, url, "manager")
+    users = app.get_connection().iter_users()
+    new_host = app.get_connection().set_user(User(None, "NEWHOST"))
+    assert new_host is not None
+    assert new_host.key is not None
+    location_url = url_for('grouping.list')
+    for ident in ("manager", host_ident(app, app_grouping)):
+        auth.login(ident)
+        data = check_get_data(client, url)
+        for user in users:
+            if user.is_active:
+                assert user.key is not None
+                assert user.key.hex in data
+
+        response = client.post(url)
+        assert response.status_code == 200
+        assert "Not a valid choice" in response.data.decode('utf-8')
+
+        response = client.post(url, data={'new_host': "abcdef\0ghij"})
+        assert response.status_code == 200
+        assert "Not a valid choice" in response.data.decode('utf-8')
+
+        response = client.post(url, data={'new_host': ""})
+        assert response.status_code == 200
+        assert "This field is required" in response.data.decode('utf-8')
+
+        check_redirect(
+            client.post(url, data={'new_host': app_grouping.host_key.hex}),
+            location_url)
+
+        prev_host_key = app_grouping.host_key
+        check_flash(
+            client,
+            client.post(url, data={'new_host': new_host.key.hex}),
+            location_url, "info",
+            "Host of '{}' is now '{}'.".format(app_grouping.name, new_host.ident))
+        new_grouping = app.get_connection().get_grouping(app_grouping.key)
+        assert new_grouping is not None
+        assert new_grouping.host_key == new_host.key
+        app.get_connection().set_grouping(dataclasses.replace(
+            app_grouping, host_key=prev_host_key))
+
+
+def test_assign_grouping_deleted_new_host(
+        monkeypatch, app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
+    """Assign grouping to deleted user."""
+    auth.login("manager")
+    manager = app.get_connection().get_user_by_ident("manager")
+
+    def return_none(_self, user_key: UserKey):
+        assert manager is not None
+        assert manager.key is not None
+        if user_key == manager.key:
+            return manager
+        return None
+    monkeypatch.setattr(app.get_connection().__class__, "get_user", return_none)
+    url = url_for('grouping.assign', grouping_key=app_grouping.key)
+    location_url = url_for('grouping.list')
+    check_redirect(
+        client.post(url, data={'new_host': app_grouping.host_key.hex}),
+        location_url)
 
 
 def test_delete_grouping_auth(

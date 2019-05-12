@@ -75,6 +75,7 @@ class GroupingData:
     """Some data about a grouping."""
 
     host_ident: str
+    key: GroupingKey
     name: str
     final_date: datetime.datetime
     close_date: Optional[datetime.datetime]
@@ -91,6 +92,7 @@ def grouping_list():
         host = connection.get_user(grouping.host_key)
         groupings.append(GroupingData(
             host_ident=host.ident if host else "???",
+            key=cast(GroupingKey, grouping.key),
             name=grouping.name,
             final_date=grouping.final_date,
             close_date=grouping.close_date))
@@ -358,8 +360,31 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
 @login_required
 def grouping_assign(grouping_key: GroupingKey):
     """Assign grouping to another host."""
-    _get_grouping(grouping_key, allow_manager=True)
-    return ""
+    grouping = _get_grouping(grouping_key, allow_manager=True)
+    connection = get_connection()
+    users = [
+        user for user in connection.iter_users(order=["ident"]) if user.is_active]
+    users.sort(key=lambda u: (not u.is_host, u.ident))
+    form = forms.AssignGroupingForm()
+    form.new_host.choices = [('', '')] + [
+        (cast(UserKey, user.key).hex, user.ident) for user in users]
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # form.new_host.data must be a valid UUID hex value,
+            # because of form validation.
+            new_host_key = UserKey(form.new_host.data)
+            new_host = connection.get_user(new_host_key)
+            if new_host is not None:
+                if new_host_key != grouping.host_key:
+                    connection.set_grouping(dataclasses.replace(
+                        grouping, host_key=new_host_key))
+                    flash("Host of '{}' is now '{}'.".format(
+                        grouping.name, new_host.ident), category="info")
+            return redirect(url_for('grouping.list'))
+    else:
+        form.new_host.data = grouping.host_key.hex
+    return render_template(
+        "grouping_assign.html", grouping=grouping, form=form)
 
 
 @login_required

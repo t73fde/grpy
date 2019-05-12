@@ -17,20 +17,21 @@
  # You should have received a copy of the GNU Affero General Public License
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
-{% block title %}Groupings{% endblock %}
+{% from "macros.html" import render_data, render_field %}
+{% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-<h1>Groupings</h1>
-<table class="w3-table w3-bordered">
-<tr><th>Host</th><th>Name</th><th>Final date</th><th>Close Date</th></tr>
-{%- for grouping in groupings %}
-<tr>
-  <td>{{ grouping.host_ident }}
-  <td><a href="{{ url_for('grouping.assign', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
-  <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
-  <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
-</tr>
-{%- endfor %}
+<div class="w3-container {{ color("heading") }}">
+  <h1>Assign Grouping to Host</h1>
 </div>
-{%- endblock %}
+<form method="POST">
+{{- render_data("Name", grouping.name) }}
+{{- render_data("Final date", grouping.final_date|datetimeformat("iso-short")) }}
+{{- render_data("Close date", grouping.close_date|datetimeformat("iso-short")) }}
+{{- render_field(form.new_host, autofocus=True) }}
+{{- form.csrf_token }}
+<p class="w3-container">{{- form.submit_assign(class="w3-btn w3-ripple " + color("danger")) }}</p>
+</form>
+</div>
+{% endblock %}
