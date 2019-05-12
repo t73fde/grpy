@@ -20,7 +20,8 @@
 """Web views for groupings."""
 
 import dataclasses
-from typing import List, cast
+import datetime
+from typing import List, Optional, cast
 
 from flask import (abort, current_app, flash, g, redirect, render_template,
                    request, url_for)
@@ -67,6 +68,34 @@ def _can_set_close(grouping: Grouping) -> bool:
 def _remove_groups(grouping_key: GroupingKey) -> None:
     """Remove all groups of this grouping."""
     get_connection().set_groups(grouping_key, ())
+
+
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+class GroupingData:
+    """Some data about a grouping."""
+
+    host_ident: str
+    name: str
+    final_date: datetime.datetime
+    close_date: Optional[datetime.datetime]
+
+
+@login_required
+def grouping_list():
+    """Show list of all relevant groupings."""
+    if not g.user.is_manager:
+        abort(403)
+    connection = get_connection()
+    groupings = []
+    for grouping in connection.iter_groupings():
+        host = connection.get_user(grouping.host_key)
+        groupings.append(GroupingData(
+            host_ident=host.ident if host else "???",
+            name=grouping.name,
+            final_date=grouping.final_date,
+            close_date=grouping.close_date))
+    groupings.sort(key=lambda g: (g.host_ident, g.name, g.final_date))
+    return render_template("grouping_list.html", groupings=groupings)
 
 
 @login_required

@@ -51,7 +51,7 @@ def test_home_host(client, auth, app_grouping: Grouping) -> None:
     assert app_grouping.name in data
     assert str(app_grouping.final_date.minute) in data
     assert "Closed Groupings" not in data
-    assert data.count(url_for('grouping.create')) == 2
+    assert data.count(url_for('grouping.create')) == 1
 
 
 def test_home_host_user(app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
@@ -68,7 +68,7 @@ def test_home_host_user(app: GrpyApp, client, auth, app_grouping: Grouping) -> N
 
     data = check_get_data(client, url_for('home'))
     assert url_for('grouping.detail', grouping_key=app_grouping.key) in data
-    assert data.count(url_for('grouping.create')) == 1
+    assert data.count(url_for('grouping.create')) == 0
     assert "Create" not in data
 
 

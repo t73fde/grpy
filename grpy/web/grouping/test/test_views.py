@@ -63,6 +63,43 @@ def check_bad_host_requests(  # pylint: disable=too-many-arguments
     check_bad_requests(client, auth, url, do_post)
 
 
+def test_grouping_list(app: GrpyApp, client, auth) -> None:
+    """The list of groupings is shown to the manager."""
+    url = url_for('grouping.list')
+    check_bad_host_requests(app, client, auth, url, do_post=False, allow_manager=True)
+
+    hosts = [
+        app.get_connection().set_user(User(None, "HOST_%d" % i, Permissions.HOST))
+        for i in range(3)]
+    assert hosts[1].key is not None
+    assert hosts[2].key is not None
+
+    # Set up some groupings
+    yet = utils.now()
+    hour = datetime.timedelta(seconds=3600)
+    grouping_1 = app.get_connection().set_grouping(Grouping(
+        None, "g1", "code_1", hosts[1].key, yet - 2 * hour, yet - hour, None,
+        "RD", 7, 0, ""))
+    grouping_2a = app.get_connection().set_grouping(Grouping(
+        None, "g2a", "code2a", hosts[2].key, yet - hour, yet, yet + hour,
+        "RD", 7, 0, ""))
+    grouping_2b = app.get_connection().set_grouping(Grouping(
+        None, "g2b", "code2b", hosts[2].key, yet, yet + hour, yet + 2 * hour,
+        "RD", 7, 0, ""))
+    assert grouping_2b.key is not None
+    assert grouping_2b == app.get_connection().get_grouping(grouping_2b.key)
+
+    auth.login("manager")
+    data = check_get_data(client, url)
+    assert url in data
+    assert hosts[0].ident not in data
+    assert hosts[1].ident in data
+    assert hosts[2].ident in data
+    assert grouping_1.name in data
+    assert grouping_2a.name in data
+    assert grouping_2b.name in data
+
+
 def test_grouping_create(app: GrpyApp, client, auth) -> None:
     """Test the creation of new groupings."""
     url = url_for('grouping.create')

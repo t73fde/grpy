@@ -28,7 +28,9 @@ def create_blueprint() -> Blueprint:
     """Create the authentication blueprint."""
     blueprint = Blueprint("grouping", __name__)
     blueprint.add_url_rule(
-        "/", "create", views.grouping_create,
+        "/", "list", views.grouping_list)
+    blueprint.add_url_rule(
+        "/create", "create", views.grouping_create,
         methods=('GET', 'POST'))
     blueprint.add_url_rule(
         "/<grouping:grouping_key>/", "detail",

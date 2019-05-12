@@ -41,6 +41,9 @@
       {%- if g.user.is_admin -%}
       <a href="{{ url_for('auth.users') }}" class="w3-bar-item w3-button">Admin</a>
       {%- endif -%}
+      {%- if g.user.is_manager -%}
+      <a href="{{ url_for('grouping.list') }}" class="w3-bar-item w3-button">Groupings</a>
+      {%- endif -%}
       <a href="{{ url_for('auth.logout')}}" class="w3-bar-item w3-button">Logout</a>
     </div>
   </div>
