@@ -86,7 +86,7 @@ def grouping_create():
     return render_template("grouping_create.html", form=form)
 
 
-def _get_grouping(grouping_key: GroupingKey) -> Grouping:
+def _get_grouping(grouping_key: GroupingKey, allow_manager: bool = False) -> Grouping:
     """
     Retrieve grouping with given key.
 
@@ -95,7 +95,7 @@ def _get_grouping(grouping_key: GroupingKey) -> Grouping:
     """
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
-        if not g.user.is_manager:
+        if not (allow_manager and g.user.is_manager):
             abort(403)
     return grouping
 
@@ -324,6 +324,13 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
     return render_template(
         "grouping_fasten.html",
         grouping=grouping, group_list=group_list, form=form)
+
+
+@login_required
+def grouping_assign(grouping_key: GroupingKey):
+    """Assign grouping to another host."""
+    _get_grouping(grouping_key, allow_manager=True)
+    return ""
 
 
 @login_required

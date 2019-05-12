@@ -23,7 +23,6 @@ import dataclasses
 import datetime
 from typing import List, cast
 
-import pytest
 from flask import url_for
 
 from ....core import utils
@@ -34,24 +33,33 @@ from ...app import GrpyApp
 from ...test.common import (check_bad_anon_requests, check_flash, check_get,
                             check_get_data, check_redirect, check_requests)
 
-HOST_IDENTS = ["host", "manager"]
+
+def host_ident(app: GrpyApp, grouping: Grouping) -> str:
+    """Return the ident of the host of the given grouping."""
+    host = app.get_connection().get_user(grouping.host_key)
+    assert host is not None
+    return host.ident
 
 
 def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
     """Assert that others cannot access resource."""
-    auth.login('user')
+    auth.login("user")
     check_requests(client, url, 403, do_post)
-    auth.login('admin')
+    auth.login("admin")
     check_requests(client, url, 403, do_post)
     check_bad_anon_requests(client, auth, url, do_post)
 
 
-def check_bad_host_requests(
-        app: GrpyApp, client, auth, url: str, do_post: bool = True) -> None:
+def check_bad_host_requests(  # pylint: disable=too-many-arguments
+        app: GrpyApp, client, auth, url: str,
+        do_post: bool = True, allow_manager: bool = False) -> None:
     """Assert that other host and other users cannot access resource."""
     app.get_connection().set_user(User(None, "host-0", Permissions.HOST))
-    auth.login('host-0')
+    auth.login("host-0")
     check_requests(client, url, 403, do_post)
+    if not allow_manager:
+        auth.login("manager")
+        check_requests(client, url, 403, do_post)
     check_bad_requests(client, auth, url, do_post)
 
 
@@ -92,13 +100,13 @@ def test_grouping_create(app: GrpyApp, client, auth) -> None:
     assert len(list(groupings)) == 2
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
-def test_grouping_detail(client, auth, app_grouping: Grouping, ident: str) -> None:
+def test_grouping_detail(
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Test grouping detail view."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     check_bad_requests(client, auth, url, False)
 
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     data = check_get_data(client, url)
     assert app_grouping.code in data
     assert url_for('shortlink', code=app_grouping.code) in data
@@ -109,14 +117,13 @@ def test_grouping_detail(client, auth, app_grouping: Grouping, ident: str) -> No
     check_get(client, url_for('grouping.detail', grouping_key=GroupingKey()), 404)
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_no_code(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """When final date is reached, no short link / code should be visible."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping, final_date=utils.now() - datetime.timedelta(seconds=600)))
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     data = check_get_data(client, url)
     assert app_grouping.code not in data
     assert url_for('shortlink', code=app_grouping.code) not in data
@@ -134,14 +141,13 @@ def add_user_registrations(app: GrpyApp, grouping_key: GroupingKey) -> List[User
     return users
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_remove(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Test removal of registrations."""
     assert app_grouping.key is not None
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     users = add_user_registrations(app, app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     data = check_get_data(client, url)
     for user in users:
         assert user.ident in data
@@ -160,9 +166,8 @@ def test_grouping_detail_remove(
             url, "info", "{} registered users removed.".format(len(to_delete)))
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_remove_grouped(
-        app, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app, client, auth, app_grouping: Grouping) -> None:
     """Registered users are not shown when groups were formed."""
     assert app_grouping.key is not None
     users = add_user_registrations(app, app_grouping.key)
@@ -171,17 +176,16 @@ def test_grouping_detail_remove_grouped(
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     users_as_group = frozenset(user.key for user in users)
     app.get_connection().set_groups(app_grouping.key, (users_as_group,))
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
     assert b"registered users" not in check_get(client, url).data.lower()
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_remove_illegal(
-        client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """If illegal UUIDs are sent, nothing happens."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     for data in ("1,2,3", [str(app_grouping.key)]):
         check_flash(
             client,
@@ -189,9 +193,8 @@ def test_grouping_detail_remove_illegal(
             url, "info", "0 registered users removed.")
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_fasten(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """
     Test visibility of button 'Fasten groups'.
 
@@ -204,7 +207,7 @@ def test_grouping_detail_fasten(
         final_date=app_grouping.final_date - datetime.timedelta(seconds=90000)))
     assert app_grouping.key is not None
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     response = client.get(url)
     assert b"<h1>Groups</h1>" not in response.data
     assert b"Fasten" not in response.data
@@ -231,14 +234,13 @@ def test_grouping_detail_fasten(
     assert "Remove Groups" not in data
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_update(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Test the update of an existing grouping."""
     url = url_for('grouping.update', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url)
 
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_get(client, url)
     response = client.post(url, data={})
     assert response.status_code == 200
@@ -322,16 +324,15 @@ def test_grouping_register_out_of_time(
         "/", "warning", "Grouping '{}' is not available.".format(app_grouping.name))
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_start(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Test group building view."""
     assert app_grouping.key is not None
     url = url_for('grouping.start', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url)
 
     location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_flash(
         client, client.get(url), location_url, "warning", "Grouping is not final.")
 
@@ -356,12 +357,11 @@ def test_grouping_start(
         client, client.get(url), location_url, "warning", "Grouping is not final.")
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_detail_no_group(
-        client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """A fresh grouping has no calculated groups."""
     url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     data = check_get_data(client, url)
     assert "Groups" not in data
     assert "Member</td>" not in data
@@ -394,16 +394,17 @@ def start_grouping(
     return response
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_build(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Test the group building process."""
     assert app_grouping.key is not None
     users = create_registered_users(app.get_connection(), app_grouping.key)
 
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     check_redirect(
-        start_grouping(client, auth, app.get_connection(), app_grouping, ident),
+        start_grouping(
+            client, auth, app.get_connection(), app_grouping,
+            host_ident(app, app_grouping)),
         detail_url)
 
     data = check_get_data(client, detail_url)
@@ -420,14 +421,15 @@ def test_grouping_build(
         assert data.count(app_grouping.name) == 1
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_delete_after_build(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """User is deleted after groups are formed, it must be removed from group."""
     assert app_grouping.key is not None
     users = create_registered_users(app.get_connection(), app_grouping.key)
     check_redirect(
-        start_grouping(client, auth, app.get_connection(), app_grouping, ident),
+        start_grouping(
+            client, auth, app.get_connection(), app_grouping,
+            host_ident(app, app_grouping)),
         url_for('grouping.detail', grouping_key=app_grouping.key))
 
     # Now deregister one user
@@ -449,9 +451,8 @@ def test_grouping_delete_after_build(
     assert other_users == set()
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_remove_groups(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Groups can be removed after building them."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
@@ -461,7 +462,7 @@ def test_remove_groups(
     check_bad_host_requests(app, client, auth, url)
 
     location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_flash(
         client, client.get(url), location_url, "info", "No groups to remove.")
 
@@ -480,14 +481,13 @@ def test_remove_groups(
     assert app.get_connection().get_groups(app_grouping.key) == ()
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_final(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Final date can be set."""
     url = url_for('grouping.final', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url, False)
 
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     assert url in check_get_data(client, detail_url)
     check_flash(
@@ -518,15 +518,14 @@ def test_grouping_final(
         "warning", "Final date cannot be set now.")
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_grouping_close(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Close date can be set easily."""
     assert app_grouping.key is not None
     url = url_for('grouping.close', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url, False)
 
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     assert url not in check_get_data(client, detail_url)
     check_flash(
@@ -551,9 +550,8 @@ def test_grouping_close(
     assert grouping.close_date is None
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_fasten_groups(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Groups can be fastened after building them."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
@@ -562,7 +560,7 @@ def test_fasten_groups(
     check_bad_host_requests(app, client, auth, url)
 
     location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_flash(
         client, client.get(url), location_url, "warning",
         "Grouping not performed recently.")
@@ -589,23 +587,36 @@ def test_fasten_groups(
         "Grouping not performed recently.")
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
+def check_assign(client, auth, url: str, ident: str):
+    """Test grouping assignment for specific ident."""
+    auth.login(ident)
+    check_get(client, url)
+
+
+def test_assign_grouping(
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
+    """Assign grouping to another user."""
+    url = url_for('grouping.assign', grouping_key=app_grouping.key)
+    check_bad_host_requests(app, client, auth, url, allow_manager=True)
+    check_assign(client, auth, url, host_ident(app, app_grouping))
+    check_assign(client, auth, url, "manager")
+
+
 def test_delete_grouping_auth(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """A grouping cannot be deleted."""
     url = url_for('grouping.delete', grouping_key=app_grouping.key)
     check_bad_host_requests(app, client, auth, url)
 
     location_url = url_for('grouping.detail', grouping_key=app_grouping.key)
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_flash(
         client, client.get(url), location_url,
         "warning", "Grouping cannot be deleted.")
 
 
-@pytest.mark.parametrize("ident", HOST_IDENTS)
 def test_delete_grouping(
-        app: GrpyApp, client, auth, app_grouping: Grouping, ident: str) -> None:
+        app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """A grouping can be deleted."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
@@ -617,7 +628,7 @@ def test_delete_grouping(
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
     url = url_for('grouping.delete', grouping_key=app_grouping.key)
 
-    auth.login(ident)
+    auth.login(host_ident(app, app_grouping))
     check_get(client, url)
     check_redirect(
         client.post(url, data={'submit_cancel': "submit_cancel"}),

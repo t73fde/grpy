@@ -55,6 +55,9 @@ def create_blueprint() -> Blueprint:
         "/<grouping:grouping_key>/fasten_groups", "fasten_groups",
         views.grouping_fasten_groups, methods=('GET', 'POST'))
     blueprint.add_url_rule(
+        "/<grouping:grouping_key>/assign", "assign",
+        views.grouping_assign, methods=('GET', 'POST'))
+    blueprint.add_url_rule(
         "/<grouping:grouping_key>/delete", "delete",
         views.grouping_delete, methods=('GET', 'POST'))
     return blueprint
