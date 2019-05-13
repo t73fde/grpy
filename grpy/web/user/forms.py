@@ -17,16 +17,26 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Authentication blueprint for grpy.web."""
+"""Web forms for grpy user management."""
 
-from flask import Blueprint
+from flask_wtf import FlaskForm
+from wtforms.fields import BooleanField, StringField, SubmitField
+from wtforms.validators import DataRequired
 
-from . import views
+
+class UserPermissionsForm(FlaskForm):
+    """User permissions."""
+
+    active = BooleanField("Active")
+    host = BooleanField("Host")
+    manager = BooleanField("Manager")
+    admin = BooleanField("Administrator")
+    submit_update = SubmitField("Update")
 
 
-def create_blueprint() -> Blueprint:
-    """Create the authentication blueprint."""
-    blueprint = Blueprint("auth", __name__)
-    blueprint.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
-    blueprint.add_url_rule("/logout", "logout", views.logout)
-    return blueprint
+class UserForm(FlaskForm):
+    """User data."""
+
+    ident = StringField(
+        "Ident", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+    submit_create = SubmitField("Create")

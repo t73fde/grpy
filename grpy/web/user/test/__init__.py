@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2019 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -17,17 +17,4 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Test the web forms."""
-
-from typing import Any, Sequence, cast
-
-
-class FormData(dict):
-    """A simple formdata implementation."""
-
-    def getlist(self, key) -> Sequence[Any]:
-        """Return value as a list."""
-        value = self[key]
-        if not isinstance(value, (list, tuple)):
-            return [value]
-        return cast(Sequence[Any], value)
+"""Test package."""

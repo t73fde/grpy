@@ -99,7 +99,7 @@
   <div class="w3-container {{ color("danger") }}">
   <h2>Delete User</h2>
 </div>
-<form class="w3-container" method="post" action="{{ url_for('auth.user_delete', user_key=user.key) }}">
+<form class="w3-container" method="post" action="{{ url_for('user.delete', user_key=user.key) }}">
 <p><input type="submit" value="Delete" class="w3-button {{ color('danger') }}"></p>
 </form>
 </div>

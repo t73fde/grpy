@@ -28,7 +28,7 @@
   <tr><th>Identifier</th><th>Last Login</th><th>Active</th><th>Host</th><th>Manager</th><th>Admin</th></tr>
 {%- for user in user_list -%}
 <tr>
-  <td><a href="{{ url_for("auth.user_detail", user_key=user.key) }}">{{ user.ident }}</a></td>
+  <td><a href="{{ url_for("user.detail", user_key=user.key) }}">{{ user.ident }}</a></td>
   <td>{{ user.last_login|datetimeformat("iso-short")|default("", True) }}</td>
   <td>{% if user.is_active %}&#9746;{% endif %}</td>
   <td>{% if user.is_host %}&#9746;{% endif %}</td>
@@ -37,6 +37,6 @@
 </tr>
 {%- endfor %}
 </table>
-<p><a href="{{ url_for('auth.user_create') }}" class="w3-button {{ color('primary') }}">Create</a></p>
+<p><a href="{{ url_for('user.create') }}" class="w3-button {{ color('primary') }}">Create</a></p>
 </div>
 {% endblock %}

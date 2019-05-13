@@ -30,7 +30,7 @@ from ..repo import create_repository
 from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
 from ..version import Version, get_version, read_version_file
-from . import auth, grouping, policies, utils, views
+from . import auth, grouping, policies, user, utils, views
 
 
 class GrpyApp(Flask):
@@ -146,9 +146,9 @@ class GrpyApp(Flask):
             """Set user attribute pased on session data."""
             user_key_int = session.get('user', None)
             if user_key_int:
-                user = self.get_connection().get_user(UserKey(int=user_key_int))
-                if user:
-                    g.user = user
+                user_obj = self.get_connection().get_user(UserKey(int=user_key_int))
+                if user_obj:
+                    g.user = user_obj
                     return None
                 self._clear_session()
             g.user = None
@@ -227,6 +227,9 @@ def create_app(config_mapping: Dict[str, Any] = None) -> GrpyApp:
     grouping_blueprint = grouping.create_blueprint()
     app.register_blueprint(grouping_blueprint, url_prefix='/groupings')
 
+    user_blueprint = user.create_blueprint()
+    app.register_blueprint(user_blueprint, url_prefix='/users')
+
     app.log_debug("Application created.")
     return app
 
@@ -249,13 +252,13 @@ def populate_testdata(repository: Repository) -> None:
         from ..core.utils import now as utils_now
         from ..core.models import Grouping
         now = utils_now()
-        for user in (kreuz, stern):
+        for user_obj in (kreuz, stern):
             set_grouping_new_code(connection, Grouping(
-                None, ".", "PM", cast(UserKey, user.key),
+                None, ".", "PM", cast(UserKey, user_obj.key),
                 now, now + timedelta(days=14), None,
                 "RD", 7, 7, "Note: not"))
             set_grouping_new_code(connection, Grouping(
-                None, ".", "SWE", cast(UserKey, user.key),
+                None, ".", "SWE", cast(UserKey, user_obj.key),
                 now, now + timedelta(days=7), now + timedelta(days=14),
                 "RD", 7, 7, "Was?"))
         set_grouping_new_code(connection, Grouping(

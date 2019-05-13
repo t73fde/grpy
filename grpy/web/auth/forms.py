@@ -20,8 +20,7 @@
 """Web forms for grpy."""
 
 from flask_wtf import FlaskForm
-from wtforms.fields import (BooleanField, HiddenField, PasswordField,
-                            StringField, SubmitField)
+from wtforms.fields import HiddenField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 
@@ -32,21 +31,3 @@ class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     password = PasswordField("Password", [DataRequired()])
     next_url = HiddenField()
     submit_login = SubmitField("Login")
-
-
-class UserPermissionsForm(FlaskForm):
-    """User permissions."""
-
-    active = BooleanField("Active")
-    host = BooleanField("Host")
-    manager = BooleanField("Manager")
-    admin = BooleanField("Administrator")
-    submit_update = SubmitField("Update")
-
-
-class UserForm(FlaskForm):
-    """User data."""
-
-    ident = StringField(
-        "Ident", [DataRequired()], filters=[lambda s: s.strip() if s else None])
-    submit_create = SubmitField("Create")

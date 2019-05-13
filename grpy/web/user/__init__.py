@@ -17,7 +17,7 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Authentication blueprint for grpy.web."""
+"""User management blueprint for grpy.web."""
 
 from flask import Blueprint
 
@@ -25,8 +25,15 @@ from . import views
 
 
 def create_blueprint() -> Blueprint:
-    """Create the authentication blueprint."""
-    blueprint = Blueprint("auth", __name__)
-    blueprint.add_url_rule("/login", "login", views.login, methods=('GET', 'POST'))
-    blueprint.add_url_rule("/logout", "logout", views.logout)
+    """Create the user management blueprint."""
+    blueprint = Blueprint("user", __name__)
+    blueprint.add_url_rule("/", "users", views.users)
+    blueprint.add_url_rule(
+        "/create", "create", views.user_create, methods=('GET', 'POST'))
+    blueprint.add_url_rule(
+        "/<user:user_key>/", "detail", views.user_detail,
+        methods=('GET', 'POST'))
+    blueprint.add_url_rule(
+        "/<user:user_key>/delete", "delete", views.user_delete,
+        methods=('POST',))
     return blueprint
