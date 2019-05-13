@@ -160,7 +160,7 @@ def grouping_detail(grouping_key: GroupingKey):
             grouping_key,
             logic.remove_from_groups(
                 get_connection().get_groups(grouping_key), deleted_users))
-        flash("{} registered users removed.".format(count), category='info')
+        flash("{} registered users removed.".format(count), category="success")
         return _redirect_to_detail(grouping_key)
 
     state = get_grouping_state(get_connection(), grouping_key)
@@ -239,10 +239,10 @@ def grouping_register(grouping_key: GroupingKey):
             Registration(grouping_key, g.user.key, user_preferences))
         if registration:
             flash("Registration for '{}' is updated.".format(grouping.name),
-                  category="info")
+                  category="success")
         else:
             flash("Registration for '{}' is stored.".format(grouping.name),
-                  category="info")
+                  category="success")
         return redirect(url_for('home'))
     form_template = getattr(form, "TEMPLATE", None)
     return render_template(
@@ -294,7 +294,7 @@ def grouping_remove_groups(grouping_key: GroupingKey):
     if form.validate_on_submit():
         if form.submit_remove.data:
             _remove_groups(grouping_key)
-            flash("Groups removed.", category="info")
+            flash("Groups removed.", category="success")
         return _redirect_to_detail(grouping_key)
 
     group_list = _get_group_list(grouping_key)
@@ -313,7 +313,7 @@ def grouping_final(grouping_key: GroupingKey):
     else:
         get_connection().set_grouping(
             dataclasses.replace(grouping, final_date=utils.now()))
-        flash("Final date is now set.", category="info")
+        flash("Final date is now set.", category="success")
     return _redirect_to_detail(grouping_key)
 
 
@@ -326,11 +326,11 @@ def grouping_close(grouping_key: GroupingKey):
     elif grouping.close_date:
         get_connection().set_grouping(
             dataclasses.replace(grouping, close_date=None))
-        flash("Close date removed.", category="info")
+        flash("Close date removed.", category="success")
     else:
         get_connection().set_grouping(
             dataclasses.replace(grouping, close_date=utils.now()))
-        flash("Close date is now set.", category="info")
+        flash("Close date is now set.", category="success")
     return _redirect_to_detail(grouping_key)
 
 
@@ -348,7 +348,7 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
     if form.validate_on_submit():
         if form.submit_fasten.data:
             get_connection().delete_registrations(grouping_key)
-            flash("Groups fastened.", category="info")
+            flash("Groups fastened.", category="success")
         return _redirect_to_detail(grouping_key)
 
     group_list = _get_group_list(grouping_key)
@@ -406,7 +406,7 @@ def grouping_delete(grouping_key: GroupingKey):
         if form.submit_delete.data:
             _remove_groups(grouping_key)
             get_connection().delete_grouping(grouping_key)
-            flash("Grouping '{}' deleted.".format(grouping.name), category="info")
+            flash("Grouping '{}' deleted.".format(grouping.name), category="success")
             return redirect(url_for('home'))
         return _redirect_to_detail(grouping_key)
 

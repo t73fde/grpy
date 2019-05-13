@@ -90,7 +90,7 @@ def user_detail(user_key: UserKey):
         if user.permissions != new_permissions:
             get_connection().set_user(dataclasses.replace(
                 user, permissions=new_permissions))
-            flash("Permissions of '{}' updated.".format(user.ident), category="info")
+            flash("Permissions of '{}' updated.".format(user.ident), category="success")
         return redirect(url_for('user.users'))
 
     form = forms.UserPermissionsForm(data={
@@ -132,5 +132,5 @@ def user_delete(user_key: UserKey):
         return redirect(detail_url)
 
     connection.delete_user(user_key)
-    flash("User '{}' deleted.".format(user.ident), category="info")
+    flash("User '{}' deleted.".format(user.ident), category="success")
     return redirect(url_for('user.users'))

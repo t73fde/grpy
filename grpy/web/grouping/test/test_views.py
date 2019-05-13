@@ -200,7 +200,7 @@ def test_grouping_detail_remove(
             client.post(url, data={
                 'u': [str(u.key) for u in to_delete],
             }),
-            url, "info", "{} registered users removed.".format(len(to_delete)))
+            url, "success", "{} registered users removed.".format(len(to_delete)))
 
 
 def test_grouping_detail_remove_grouped(
@@ -227,7 +227,7 @@ def test_grouping_detail_remove_illegal(
         check_flash(
             client,
             client.post(url, data={'u': data}),
-            url, "info", "0 registered users removed.")
+            url, "success", "0 registered users removed.")
 
 
 def test_grouping_detail_fasten(
@@ -326,12 +326,12 @@ def test_grouping_register(app: GrpyApp, client, auth, app_grouping: Grouping) -
     check_flash(
         client,
         client.post(url, data={'submit_register': "submit_register"}),
-        "/", "info", "Registration for '{}' is stored.".format(app_grouping.name))
+        "/", "success", "Registration for '{}' is stored.".format(app_grouping.name))
 
     check_flash(
         client,
         client.post(url, data={'submit_register': "submit_register"}),
-        "/", "info", "Registration for '{}' is updated.".format(app_grouping.name))
+        "/", "success", "Registration for '{}' is updated.".format(app_grouping.name))
 
     data = check_get_data(client, url_for('home'))
     assert "Registered Groupings" in data
@@ -475,7 +475,7 @@ def test_grouping_delete_after_build(
         client,
         client.post(url, data={'u': [users[0].key]}),
         url_for('grouping.detail', grouping_key=app_grouping.key),
-        "info", "1 registered users removed.")
+        "success", "1 registered users removed.")
 
     # This user must not be in the freshly formed group
     other_users = {user.key for user in users if user != users[0]}
@@ -514,7 +514,7 @@ def test_remove_groups(
     check_flash(
         client,
         client.post(url, data={'submit_remove': "submit_remove"}),
-        location_url, "info", "Groups removed.")
+        location_url, "success", "Groups removed.")
     assert app.get_connection().get_groups(app_grouping.key) == ()
 
 
@@ -528,7 +528,7 @@ def test_grouping_final(
     detail_url = url_for('grouping.detail', grouping_key=app_grouping.key)
     assert url in check_get_data(client, detail_url)
     check_flash(
-        client, client.get(url), detail_url, "info", "Final date is now set.")
+        client, client.get(url), detail_url, "success", "Final date is now set.")
 
     yet = utils.now()
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
@@ -575,13 +575,13 @@ def test_grouping_close(
     assert app_grouping.key is not None
 
     check_flash(
-        client, client.get(url), detail_url, "info", "Close date is now set.")
+        client, client.get(url), detail_url, "success", "Close date is now set.")
     grouping = app.get_connection().get_grouping(app_grouping.key)
     assert grouping is not None
     assert grouping.close_date is not None
 
     check_flash(
-        client, client.get(url), detail_url, "info", "Close date removed.")
+        client, client.get(url), detail_url, "success", "Close date removed.")
     grouping = app.get_connection().get_grouping(app_grouping.key)
     assert grouping is not None
     assert grouping.close_date is None
@@ -615,7 +615,7 @@ def test_fasten_groups(
     check_flash(
         client,
         client.post(url, data={'submit_fasten': "submit_fasten"}),
-        location_url, "info", "Groups fastened.")
+        location_url, "success", "Groups fastened.")
     assert app.get_connection().get_groups(app_grouping.key) == (frozenset([user.key]),)
     assert app.get_connection().count_registrations_by_grouping(app_grouping.key) == 0
 
@@ -737,7 +737,7 @@ def test_delete_grouping(
     check_flash(
         client,
         client.post(url, data={'submit_delete': "submit_delete"}),
-        "/", "info", "Grouping '{}' deleted.".format(app_grouping.name))
+        "/", "success", "Grouping '{}' deleted.".format(app_grouping.name))
     assert app.get_connection().get_grouping(app_grouping.key) is None
 
     check_requests(client, url, 404, False)

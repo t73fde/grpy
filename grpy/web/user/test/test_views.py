@@ -129,7 +129,7 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
             if user.key != admin_user.key:
                 check_flash(
                     client, response, userlist_url,
-                    "info", "Permissions of '{}' updated.".format(user.ident))
+                    "success", "Permissions of '{}' updated.".format(user.ident))
             new_user = app.get_connection().get_user(user.key)
             assert new_user is not None
             if user.key == admin_user.key:
@@ -255,6 +255,6 @@ def test_admin_user_delete(app: GrpyApp, client, auth, app_grouping: Grouping) -
 
     check_flash(
         client, client.post(url), url_for('user.users'),
-        "info", "User '%s' deleted." % user.ident)
+        "success", "User '%s' deleted." % user.ident)
     assert client.post(
         url_for('user.delete', user_key=UserKey(int=0))).status_code == 404
