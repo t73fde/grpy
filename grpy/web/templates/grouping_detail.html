@@ -63,7 +63,7 @@
   {% endif %}
   <a href="{{ url_for('.assign', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Assign</button></a>
   {% if can_delete %}
-  <a href="{{ url_for('.delete', grouping_key=grouping.key) }}"><button class="w3-button {{ color('danger') }}">Delete</button></a>
+  <a href="{{ url_for('.delete', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Delete</button></a>
   {% endif %}
   {% if can_start %}
   <a href="{{ url_for('.start', grouping_key=grouping.key) }}"><button class="w3-button {{ color('secondary') }}">Start</button></a>

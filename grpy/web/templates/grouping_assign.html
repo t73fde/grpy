@@ -22,7 +22,8 @@
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
-<div class="w3-container {{ color("heading") }}">
+<div class="w3-card">
+<div class="w3-container {{ color("form") }}">
   <h1>Assign Grouping to Host</h1>
 </div>
 {{- render_data("Name", grouping.name) }}
@@ -34,5 +35,7 @@
 {{- render_field(form.new_host, autofocus=True) -}}
 <p class="w3-container">{{- form.submit_assign(class="w3-btn w3-ripple " + color("danger")) }}</p>
 </form>
+<div class="w3-container"></div>
+</div>
 </div>
 {% endblock %}

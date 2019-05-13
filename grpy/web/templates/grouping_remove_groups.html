@@ -43,9 +43,8 @@
   <form method="post" action="{{ url_for('.remove_groups', grouping_key=grouping.key) }}">
     {{- form.csrf_token }}
     <div class="w3-panel">
-    {{ form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}
-
-    {{ form.submit_remove(class="w3-btn w3-ripple " + color("danger")) }}
+    {{- form.submit_cancel(class="w3-btn w3-ripple " + color("primary")) }}
+    {{- form.submit_remove(class="w3-btn w3-ripple " + color("danger")) }}
     </div>
   </form>
 </div>
