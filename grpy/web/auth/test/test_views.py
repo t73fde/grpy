@@ -63,6 +63,15 @@ def test_invalid_login(app: GrpyApp, client) -> None:
     assert 'user' not in session
 
 
+def test_long_ident(client) -> None:
+    """Test login view with an ident that is too long."""
+    url = url_for('auth.login')
+    response = client.post(url, data={'ident': "i" * 2000, 'password': "1"})
+    assert response.status_code == 200
+    assert b"Field cannot be longer than " in response.data
+    assert 'user' not in session
+
+
 def test_double_login(app: GrpyApp, client, auth) -> None:
     """A double login makes the last user to be logged in."""
     auth.login("user")

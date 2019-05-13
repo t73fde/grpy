@@ -34,16 +34,15 @@ def login():
 
     if request.method == 'POST':
         form = forms.LoginForm()
+        if form.validate():
+            if logic.authenticate(form.ident.data, form.password.data):
+                next_url = form.next_url.data
+                if not next_url or not next_url.startswith("/"):
+                    next_url = url_for('home')
+                return redirect(next_url)
+            flash("Cannot authenticate user", category="error")
     else:
         form = forms.LoginForm(data={'next_url': request.args.get('next_url', '')})
-
-    if form.validate_on_submit():
-        if logic.authenticate(form.ident.data, form.password.data):
-            next_url = form.next_url.data
-            if not next_url or not next_url.startswith("/"):
-                next_url = url_for('home')
-            return redirect(next_url)
-        flash("Cannot authenticate user", category="error")
     return render_template("login.html", form=form)
 
 

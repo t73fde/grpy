@@ -21,13 +21,13 @@
 
 from flask_wtf import FlaskForm
 from wtforms.fields import HiddenField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Length
 
 
 class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
     """Login data."""
 
-    ident = StringField("Identifier", [DataRequired()])
+    ident = StringField("Identifier", [DataRequired(), Length(max=1000)])
     password = PasswordField("Password", [DataRequired()])
     next_url = HiddenField()
     submit_login = SubmitField("Login")

@@ -142,7 +142,7 @@ def grouping_detail(grouping_key: GroupingKey):
     user_registrations.sort(key=lambda u: u.ident)
 
     form = forms.RemoveRegistrationsForm()
-    if request.method == 'POST':
+    if form.is_submitted():
         delete_users = request.form.getlist('u')
         user_keys = {u.key for u in user_registrations}
         deleted_users = set()
