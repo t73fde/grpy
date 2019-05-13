@@ -36,7 +36,7 @@
   <a href="{{ url_for('about') }}" class="w3-bar-item w3-button">About</a>
   {%- if g.user %}
   <div class="w3-dropdown-hover">
-    <button class="w3-button">{{ g.user.ident|truncate(16) }}</button>
+    <button class="w3-button">{{ g.user.ident|truncate_ident }}</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
       {%- if g.user.is_manager -%}
       <a href="{{ url_for('grouping.list') }}" class="w3-bar-item w3-button">Groupings</a>

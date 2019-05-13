@@ -19,6 +19,7 @@
 
 """Web application for grpy."""
 
+import functools
 import os
 from typing import Any, Dict, Optional, cast
 
@@ -159,9 +160,6 @@ class GrpyApp(Flask):
     def _setup_babel(self) -> None:
         """Prepare application to work with Babel."""
         self.babel = Babel(self, configure_jinja=True)
-        self.jinja_env.filters.update(  # pylint: disable=no-member
-            datetimeformat=utils.datetimeformat,
-        )
 
     def _setup_werkzeug(self) -> None:
         """Add some globals for Werkzeug."""
@@ -170,6 +168,11 @@ class GrpyApp(Flask):
 
     def _setup_jinja(self) -> None:
         """Add some filters / globals for Jinja2."""
+        self.jinja_env.filters.update(  # pylint: disable=no-member
+            datetimeformat=utils.datetimeformat,
+            truncate_ident=functools.partial(utils.truncate, 20),
+            truncate_gname=functools.partial(utils.truncate, 30),
+        )
         self.jinja_env.globals.update(  # pylint: disable=no-member
             get_all_messages=utils.get_all_messages,
             color=utils.colormap,

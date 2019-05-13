@@ -26,8 +26,8 @@
 <tr><th>Host</th><th>Name</th><th>Final date</th><th>Close Date</th></tr>
 {%- for grouping in groupings %}
 <tr>
-  <td>{{ grouping.host_ident }}
-  <td><a href="{{ url_for('grouping.assign', grouping_key=grouping.key) }}">{{ grouping.name }}</a></td>
+  <td>{{ grouping.host_ident|truncate_ident }}
+  <td><a href="{{ url_for('grouping.assign', grouping_key=grouping.key) }}">{{ grouping.name|truncate_gname }}</a></td>
   <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
   <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
 </tr>

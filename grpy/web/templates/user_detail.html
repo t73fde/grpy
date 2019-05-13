@@ -48,7 +48,7 @@
 <tr><th>Name</th><th>Final date</th><th>Close date</th></tr>
 {%- for grouping in host_groupings %}
 <tr>
-  <td>{{ grouping.name }}</td>
+  <td>{{ grouping.name|truncate_gname }}</td>
   <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
   <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
 </tr>
@@ -66,9 +66,9 @@
 <tr><th>Name</th><th>Close date</th><th>Members</th></tr>
 {%- for group in user_groups %}
 <tr>
-  <td>{{ group.grouping_name }}</td>
+  <td>{{ group.grouping_name|truncate_gname }}</td>
   <td>{{ group.grouping_close_date|datetimeformat("iso-short")|default("", True) }}</td>
-  <td>{{ group.group|sort|map(attribute="user_ident")|join(", ") }}</td>
+  <td>{{ group.group|sort|map(attribute="user_ident")|map("truncate_ident")|join(", ") }}</td>
 </tr>
 {%- endfor %}
 </table>
@@ -84,7 +84,7 @@
 <tr><th>Name</th><th>Final date</th><th>Close date</th></tr>
 {%- for grouping in user_groupings %}
 <tr>
-  <td>{{ grouping.name }}</td>
+  <td>{{ grouping.name|truncate_gname }}</td>
   <td>{{ grouping.final_date|datetimeformat("iso-short") }}</td>
   <td>{{ grouping.close_date|datetimeformat("iso-short")|default("", True) }}</td>
 </tr>

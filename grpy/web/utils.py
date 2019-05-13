@@ -186,3 +186,12 @@ def get_all_messages() -> Sequence[Tuple[str, str]]:
         del session['connection_messages']
         return post_messages
     return cast(Sequence[Tuple[str, str]], get_flashed_messages(with_categories=True))
+
+
+def truncate(length: int, value: str) -> str:
+    """Return string value with a maximal length."""
+    if len(value) <= length:
+        return value
+    if length < 0:
+        return ""
+    return value[0:max(length, 3) - 3] + "..."

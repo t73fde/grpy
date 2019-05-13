@@ -18,7 +18,7 @@
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
 {% from "macros.html" import render_data, render_field %}
-{% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
+{% block title %}{{ grouping.name|truncate_gname }}{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">

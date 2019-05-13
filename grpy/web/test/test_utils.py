@@ -32,7 +32,7 @@ from ...core.utils import now
 from ..app import GrpyApp, create_app
 from ..middleware import PrefixMiddleware
 from ..utils import (admin_required, datetimeformat, login_required,
-                     login_required_redirect, make_model, to_bool,
+                     login_required_redirect, make_model, to_bool, truncate,
                      update_model, value_or_404)
 
 
@@ -218,3 +218,16 @@ def test_datetime_format(ram_app) -> None:  # pylint: disable=unused-argument
     dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=now().tzinfo)
     assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55 UTC"
     assert datetimeformat(dt_val, "YYYY", False) == "2019"
+
+
+def test_truncate() -> None:
+    """Test the truncate base function."""
+    assert truncate(-1, "abcdef") == ""
+    assert truncate(0, "abcdef") == "..."
+    assert truncate(1, "abcdef") == "..."
+    assert truncate(2, "abcdef") == "..."
+    assert truncate(3, "abcdef") == "..."
+    assert truncate(4, "abcdef") == "a..."
+    assert truncate(5, "abcdef") == "ab..."
+    assert truncate(6, "abcdef") == "abcdef"
+    assert truncate(6, "abcdefg") == "abc..."

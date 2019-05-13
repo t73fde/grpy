@@ -18,7 +18,7 @@
  # along with grpy. If not, see <https://www.gnu.org/licenses/>.
  #}
 {% from "macros.html" import render_data %}
-{% block title %}{{ grouping.name|truncate(20) }}{% endblock %}
+{% block title %}{{ grouping.name|truncate_gname }}{% endblock %}
 {% block heading %}{% endblock %}
 {% block content %}
 <div class="w3-panel">
@@ -76,7 +76,7 @@
   <table class="w3-table w3-bordered">
   <tr><td>#</td><td>Member</td></tr>
   {%- for group in group_list %}
-  <tr><td>{{ loop.index }}</td><td>{{ group|join(', ') }}</td></tr>
+  <tr><td>{{ loop.index }}</td><td>{{ group|map("truncate_ident")|join(', ') }}</td></tr>
   {%- endfor %}
   </table>
 </div>
@@ -94,7 +94,7 @@
     {{- form.csrf_token }}
     <ol class="w3-ul">
     {%- for user in user_registrations %}
-    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident }}</input></label></li>
+    <li><label><input type="checkbox" name="u" value="{{ user.key }}">&nbsp;{{ user.ident|truncate_ident }}</input></label></li>
     {%- endfor %}
     </ol>
     {{- form.submit_remove(class="w3-btn " + color("danger")) }}
