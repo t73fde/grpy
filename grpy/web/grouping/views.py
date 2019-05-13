@@ -366,10 +366,10 @@ def grouping_assign(grouping_key: GroupingKey):
         user for user in connection.iter_users(order=["ident"]) if user.is_active]
     users.sort(key=lambda u: (not u.is_host, u.ident))
     form = forms.AssignGroupingForm()
-    form.new_host.choices = [('', '')] + [
+    form.new_host.choices = [
         (cast(UserKey, user.key).hex, user.ident) for user in users]
-    if request.method == 'POST':
-        if form.validate_on_submit():
+    if form.is_submitted():
+        if form.validate():
             # form.new_host.data must be a valid UUID hex value,
             # because of form validation.
             new_host_key = UserKey(form.new_host.data)
@@ -379,10 +379,14 @@ def grouping_assign(grouping_key: GroupingKey):
                     connection.set_grouping(dataclasses.replace(
                         grouping, host_key=new_host_key))
                     flash("Host of '{}' is now '{}'.".format(
-                        grouping.name, new_host.ident), category="info")
-            return redirect(url_for('grouping.list'))
+                        grouping.name, new_host.ident), category="success")
+            if form.next_url.data == "1":
+                return redirect(url_for('.list'))
+            return redirect(url_for('home'))
     else:
         form.new_host.data = grouping.host_key.hex
+        if g.user.is_manager:
+            form.next_url.data = "1"
     return render_template(
         "grouping_assign.html", grouping=grouping, form=form)
 

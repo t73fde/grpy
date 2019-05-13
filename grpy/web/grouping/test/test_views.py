@@ -260,7 +260,7 @@ def test_grouping_detail_fasten(
     app.get_connection().set_groups(app_grouping.key, (users_as_group,))
     data = check_get_data(client, url)
     assert "<h1>Groups</h1>" in data
-    assert "Fasten" in data
+    assert "Remove Reservations" in data
     assert url_for('grouping.fasten_groups', grouping_key=app_grouping.key) in data
     assert "Remove Groups" in data
 
@@ -624,7 +624,7 @@ def test_fasten_groups(
         "Grouping not performed recently.")
 
 
-def test_assign_grouping(
+def test_assign_grouping(  # pylint: disable=too-many-locals
         app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Assign grouping to another user."""
     assert app_grouping.key is not None
@@ -634,14 +634,18 @@ def test_assign_grouping(
     new_host = app.get_connection().set_user(User(None, "NEWHOST"))
     assert new_host is not None
     assert new_host.key is not None
-    location_url = url_for('grouping.list')
-    for ident in ("manager", host_ident(app, app_grouping)):
+    list_url = url_for('grouping.list')
+    home_url = url_for('home')
+    for ident, next_url, location_url in (
+            ("manager", "1", list_url),
+            (host_ident(app, app_grouping), "", home_url)):
         auth.login(ident)
         data = check_get_data(client, url)
         for user in users:
             if user.is_active:
                 assert user.key is not None
                 assert user.key.hex in data
+        assert 'name="next_url" type="hidden" value="' + next_url + '"' in data
 
         response = client.post(url)
         assert response.status_code == 200
@@ -656,14 +660,18 @@ def test_assign_grouping(
         assert "This field is required" in response.data.decode('utf-8')
 
         check_redirect(
-            client.post(url, data={'new_host': app_grouping.host_key.hex}),
+            client.post(url, data={
+                'new_host': app_grouping.host_key.hex,
+                'next_url': next_url}),
             location_url)
 
         prev_host_key = app_grouping.host_key
         check_flash(
             client,
-            client.post(url, data={'new_host': new_host.key.hex}),
-            location_url, "info",
+            client.post(url, data={
+                'new_host': new_host.key.hex,
+                'next_url': next_url}),
+            location_url, "success",
             "Host of '{}' is now '{}'.".format(app_grouping.name, new_host.ident))
         new_grouping = app.get_connection().get_grouping(app_grouping.key)
         assert new_grouping is not None
@@ -688,7 +696,9 @@ def test_assign_grouping_deleted_new_host(
     url = url_for('grouping.assign', grouping_key=app_grouping.key)
     location_url = url_for('grouping.list')
     check_redirect(
-        client.post(url, data={'new_host': app_grouping.host_key.hex}),
+        client.post(url, data={
+            'new_host': app_grouping.host_key.hex,
+            'next_url': "1"}),
         location_url)
 
 
