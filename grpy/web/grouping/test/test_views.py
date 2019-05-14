@@ -41,32 +41,32 @@ def host_ident(app: GrpyApp, grouping: Grouping) -> str:
     return host.ident
 
 
-def check_bad_requests(client, auth, url: str, do_post: bool = True) -> None:
+def check_bad_requests(
+        client, auth, url: str, do_post: bool = True,
+        allow_admin: bool = False) -> None:
     """Assert that others cannot access resource."""
     auth.login("user")
     check_requests(client, url, 403, do_post)
-    auth.login("admin")
-    check_requests(client, url, 403, do_post)
+    if not allow_admin:
+        auth.login("admin")
+        check_requests(client, url, 403, do_post)
     check_bad_anon_requests(client, auth, url, do_post)
 
 
 def check_bad_host_requests(  # pylint: disable=too-many-arguments
         app: GrpyApp, client, auth, url: str,
-        do_post: bool = True, allow_manager: bool = False) -> None:
+        do_post: bool = True, allow_admin: bool = False) -> None:
     """Assert that other host and other users cannot access resource."""
     app.get_connection().set_user(User(None, "host-0", Permissions.HOST))
     auth.login("host-0")
     check_requests(client, url, 403, do_post)
-    if not allow_manager:
-        auth.login("manager")
-        check_requests(client, url, 403, do_post)
-    check_bad_requests(client, auth, url, do_post)
+    check_bad_requests(client, auth, url, do_post, allow_admin)
 
 
 def test_grouping_list(app: GrpyApp, client, auth) -> None:
-    """The list of groupings is shown to the manager."""
+    """The list of groupings is shown to the admin."""
     url = url_for('grouping.list')
-    check_bad_host_requests(app, client, auth, url, do_post=False, allow_manager=True)
+    check_bad_host_requests(app, client, auth, url, do_post=False, allow_admin=True)
 
     hosts = [
         app.get_connection().set_user(User(None, "HOST_%d" % i, Permissions.HOST))
@@ -89,7 +89,7 @@ def test_grouping_list(app: GrpyApp, client, auth) -> None:
     assert grouping_2b.key is not None
     assert grouping_2b == app.get_connection().get_grouping(grouping_2b.key)
 
-    auth.login("manager")
+    auth.login("admin")
     data = check_get_data(client, url)
     assert url in data
     assert hosts[0].ident not in data
@@ -105,8 +105,8 @@ def test_grouping_create(app: GrpyApp, client, auth) -> None:
     url = url_for('grouping.create')
     check_bad_requests(client, auth, url)
 
-    # A manager is not allowed to create new groupings
-    auth.login("manager")
+    # An admin is not allowed to create new groupings
+    auth.login("admin")
     check_requests(client, url, 403, True)
 
     auth.login("host")
@@ -629,7 +629,7 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
     """Assign grouping to another user."""
     assert app_grouping.key is not None
     url = url_for('grouping.assign', grouping_key=app_grouping.key)
-    check_bad_host_requests(app, client, auth, url, allow_manager=True)
+    check_bad_host_requests(app, client, auth, url, allow_admin=True)
     users = app.get_connection().iter_users()
     new_host = app.get_connection().set_user(User(None, "NEWHOST"))
     assert new_host is not None
@@ -637,7 +637,7 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
     list_url = url_for('grouping.list')
     home_url = url_for('home')
     for ident, next_url, location_url in (
-            ("manager", "1", list_url),
+            ("admin", "1", list_url),
             (host_ident(app, app_grouping), "", home_url)):
         auth.login(ident)
         data = check_get_data(client, url)
@@ -683,14 +683,14 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
 def test_assign_grouping_deleted_new_host(
         monkeypatch, app: GrpyApp, client, auth, app_grouping: Grouping) -> None:
     """Assign grouping to deleted user."""
-    auth.login("manager")
-    manager = app.get_connection().get_user_by_ident("manager")
+    auth.login("admin")
+    admin = app.get_connection().get_user_by_ident("admin")
 
     def return_none(_self, user_key: UserKey):
-        assert manager is not None
-        assert manager.key is not None
-        if user_key == manager.key:
-            return manager
+        assert admin is not None
+        assert admin.key is not None
+        if user_key == admin.key:
+            return admin
         return None
     monkeypatch.setattr(app.get_connection().__class__, "get_user", return_none)
     url = url_for('grouping.assign', grouping_key=app_grouping.key)

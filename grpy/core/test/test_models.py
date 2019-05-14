@@ -63,15 +63,6 @@ def test_user_is_admin() -> None:
     assert User(None, "name", Permissions.ADMIN | Permissions.INACTIVE).is_admin
 
 
-def test_user_is_manager() -> None:
-    """Test method .is_manager."""
-    assert User(None, "name", Permissions.MANAGER).is_manager
-    assert User(None, "name", Permissions.MANAGER | Permissions.HOST).is_manager
-    assert not User(None, "name").is_manager
-    assert User(None, "name", Permissions.MANAGER | Permissions.INACTIVE).is_manager
-    assert User(None, "name", Permissions.MANAGER | Permissions.ADMIN).is_manager
-
-
 def test_user_validation() -> None:
     """A valid model raises no exception."""
     User(None, "name").validate()

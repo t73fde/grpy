@@ -29,7 +29,6 @@ class UserPermissionsForm(FlaskForm):
 
     active = BooleanField("Active")
     host = BooleanField("Host")
-    manager = BooleanField("Manager")
     admin = BooleanField("Administrator")
     submit_update = SubmitField("Update")
 

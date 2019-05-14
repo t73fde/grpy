@@ -49,7 +49,6 @@ def _create_app(repository_url) -> GrpyApp:
         connection = grpy_app.get_connection()
         connection.set_user(User(None, "host", Permissions.HOST))
         connection.set_user(User(None, "admin", Permissions.ADMIN))
-        connection.set_user(User(None, "manager", Permissions.MANAGER))
 
     return grpy_app
 

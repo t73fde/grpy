@@ -82,7 +82,6 @@ class Permissions(enum.Flag):
     INACTIVE = 1
     HOST = 2
     ADMIN = 4
-    MANAGER = 8
 
 
 @dataclasses.dataclass(frozen=True)
@@ -108,11 +107,6 @@ class User(Model):
     def is_admin(self) -> bool:
         """Return True if user is an (user) administrator."""
         return bool(self.permissions & Permissions.ADMIN)
-
-    @property
-    def is_manager(self) -> bool:
-        """Return True if user is a (grouping/host) manager."""
-        return bool(self.permissions & Permissions.MANAGER)
 
     def validate(self) -> None:
         """Check model for consistency."""

@@ -32,7 +32,6 @@
   {{- form.csrf_token }}
   {%- if is_other %}{{- render_checkbox(form.active) }}{% endif %}
   {{- render_checkbox(form.host) }}
-  {{- render_checkbox(form.manager) }}
   {%- if is_other %}{{- render_checkbox(form.admin) }}{% endif -%}
   <p>{{- form.submit_update(class="w3-btn " + color("primary")) }}</p>
 </form>

@@ -33,7 +33,8 @@ from ...policies import get_policy
 from ...repo.base import Connection
 from ...repo.logic import get_grouping_state, set_grouping_new_code
 from ..policies import get_policy_names, get_registration_form
-from ..utils import login_required, make_model, update_model, value_or_404
+from ..utils import (admin_required, login_required, make_model, update_model,
+                     value_or_404)
 from . import forms
 
 
@@ -81,11 +82,9 @@ class GroupingData:
     close_date: Optional[datetime.datetime]
 
 
-@login_required
+@admin_required
 def grouping_list():
     """Show list of all relevant groupings."""
-    if not g.user.is_manager:
-        abort(403)
     connection = get_connection()
     groupings = []
     for grouping in connection.iter_groupings():
@@ -117,7 +116,7 @@ def grouping_create():
     return render_template("grouping_create.html", form=form)
 
 
-def _get_grouping(grouping_key: GroupingKey, allow_manager: bool = False) -> Grouping:
+def _get_grouping(grouping_key: GroupingKey, allow_admin: bool = False) -> Grouping:
     """
     Retrieve grouping with given key.
 
@@ -126,7 +125,7 @@ def _get_grouping(grouping_key: GroupingKey, allow_manager: bool = False) -> Gro
     """
     grouping = value_or_404(get_connection().get_grouping(grouping_key))
     if g.user.key != grouping.host_key:
-        if not (allow_manager and g.user.is_manager):
+        if not (allow_admin and g.user.is_admin):
             abort(403)
     return grouping
 
@@ -360,7 +359,7 @@ def grouping_fasten_groups(grouping_key: GroupingKey):
 @login_required
 def grouping_assign(grouping_key: GroupingKey):
     """Assign grouping to another host."""
-    grouping = _get_grouping(grouping_key, allow_manager=True)
+    grouping = _get_grouping(grouping_key, allow_admin=True)
     connection = get_connection()
     users = [
         user for user in connection.iter_users(order=["ident"]) if user.is_active]
@@ -385,7 +384,7 @@ def grouping_assign(grouping_key: GroupingKey):
             return redirect(url_for('home'))
     else:
         form.new_host.data = grouping.host_key.hex
-        if g.user.is_manager:
+        if g.user.is_admin:
             form.next_url.data = "1"
     return render_template(
         "grouping_assign.html", grouping=grouping, form=form)

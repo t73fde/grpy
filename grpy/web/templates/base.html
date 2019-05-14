@@ -38,10 +38,8 @@
   <div class="w3-dropdown-hover">
     <button class="w3-button">{{ g.user.ident|truncate_ident }}</button>
     <div class="w3-dropdown-content w3-bar-block w3-card-4">
-      {%- if g.user.is_manager -%}
-      <a href="{{ url_for('grouping.list') }}" class="w3-bar-item w3-button">Groupings</a>
-      {%- endif -%}
       {%- if g.user.is_admin -%}
+      <a href="{{ url_for('grouping.list') }}" class="w3-bar-item w3-button">Groupings</a>
       <a href="{{ url_for('user.users') }}" class="w3-bar-item w3-button">Users</a>
       {%- endif -%}
       <a href="{{ url_for('auth.logout')}}" class="w3-bar-item w3-button">Logout</a>
