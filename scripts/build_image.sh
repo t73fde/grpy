@@ -22,5 +22,4 @@
 python setup.py --quiet sdist
 sudo docker build \
   --build-arg VERSION="$(python setup.py --version)" \
-  -f docker/Dockerfile.grpy \
   -t grpy .
