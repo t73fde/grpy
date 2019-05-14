@@ -28,5 +28,4 @@ build:
   - deploy
   image: hshnwinps/pydev
   script:
-  - pipenv install --dev
-  - pipenv run ./scripts/build_image.sh
+  - docker build -t grpy .

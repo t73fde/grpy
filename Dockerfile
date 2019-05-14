@@ -17,26 +17,28 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
+FROM hshnwinps/pydev as builder
+WORKDIR /home
+COPY . /home
+RUN python setup.py --quiet sdist \
+ && mv dist/* dist/grpy.tar.gz
+
 FROM python:3.7-alpine
-ARG VERSION
-ENV BASE_NAME=grpy-$VERSION
-ENV TAR_NAME=$BASE_NAME.tar.gz
-COPY dist/$TAR_NAME /
+COPY --from=builder /home/dist/grpy.tar.gz /home/VERSION.txt /
 RUN set -ex \
  && apk update \
  && pip install -U pip \
- && pip install /$TAR_NAME \
+ && pip install /grpy.tar.gz \
  && cd /usr/src \
- && tar xfz /$TAR_NAME \
- && rm /$TAR_NAME \
- && mv $BASE_NAME grpy \
+ && tar xfz /grpy.tar.gz \
+ && rm /grpy.tar.gz /VERSION.txt \
+ && mv grpy-* grpy \
  && rm -rf grpy/grpy \
  && addgroup grpy \
  && adduser -D -H -G grpy grpy \
  && mkdir db \
  && rm -rf /root/.cache /root/.local /root/.virtualenvs \
- && rm -rf /var/cache/apk/* \
- && unset TAR_NAME BASE_NAME
+ && rm -rf /var/cache/apk/*
 
 # USER nobody
 WORKDIR /
