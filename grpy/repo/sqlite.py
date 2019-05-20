@@ -55,8 +55,7 @@ class SqliteRepository(Repository):
         parsed_url = urlparse(repository_url)
         if parsed_url.scheme != "sqlite":
             raise ValueError(
-                "SqliteRepository cannot handle scheme: {}".format(
-                    parsed_url.scheme))
+                f"SqliteRepository cannot handle scheme: {parsed_url.scheme}")
         parsed_url = parsed_url._replace(
             netloc="", params='', query='', fragment='')
         super().__init__(parsed_url.geturl())
@@ -358,9 +357,9 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         if encoded is None:
             self._add_message(
                 'critical',
-                "Unable to store preferences of type {}. "
-                "Please consult your administrator.".format(
-                    type(registration.preferences)))
+                f"Unable to store preferences of type "
+                "{type(registration.preferences)}. "
+                "Please consult your administrator.")
             return registration
         cursor = self._execute(
             "SELECT preferences FROM registrations WHERE grouping_key=? AND user_key=?",

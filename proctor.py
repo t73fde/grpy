@@ -205,8 +205,9 @@ def coverage(ctx, directory: str, verbose: int) -> None:
             if not run_coverage([directory], directory, verbose):
                 ctx.exit(1)
         else:
-            click.echo("Unknown directory '{}'. Must be one of {}".format(
-                directory, sorted(["grpy"] + packages)))
+            click.echo(
+                f"Unknown directory '{directory}'. "
+                "Must be one of {sorted(['grpy'] + packages)}")
             ctx.exit(1)
 
 

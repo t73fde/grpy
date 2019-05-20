@@ -200,7 +200,7 @@ def test_grouping_detail_remove(
             client.post(url, data={
                 'u': [str(u.key) for u in to_delete],
             }),
-            url, "success", "{} registered users removed.".format(len(to_delete)))
+            url, "success", f"{len(to_delete)} registered users removed.")
 
 
 def test_grouping_detail_remove_grouped(
@@ -326,12 +326,12 @@ def test_grouping_register(app: GrpyApp, client, auth, app_grouping: Grouping) -
     check_flash(
         client,
         client.post(url, data={'submit_register': "submit_register"}),
-        "/", "success", "Registration for '{}' is stored.".format(app_grouping.name))
+        "/", "success", f"Registration for '{app_grouping.name}' is stored.")
 
     check_flash(
         client,
         client.post(url, data={'submit_register': "submit_register"}),
-        "/", "success", "Registration for '{}' is updated.".format(app_grouping.name))
+        "/", "success", f"Registration for '{app_grouping.name}' is updated.")
 
     data = check_get_data(client, url_for('home'))
     assert "Registered Groupings" in data
@@ -350,7 +350,7 @@ def test_grouping_register_out_of_time(
         app_grouping, begin_date=now + datetime.timedelta(seconds=3600)))
     check_flash(
         client, client.post(url, data={}),
-        "/", "warning", "Grouping '{}' is not available.".format(app_grouping.name))
+        "/", "warning", f"Grouping '{app_grouping.name}' is not available.")
 
     app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
@@ -358,7 +358,7 @@ def test_grouping_register_out_of_time(
         final_date=now - datetime.timedelta(seconds=1800)))
     check_flash(
         client, client.post(url, data={}),
-        "/", "warning", "Grouping '{}' is not available.".format(app_grouping.name))
+        "/", "warning", f"Grouping '{app_grouping.name}' is not available.")
 
 
 def test_grouping_start(
@@ -380,7 +380,7 @@ def test_grouping_start(
     assert new_grouping.key is not None
     check_flash(
         client, client.get(url), location_url, "warning",
-        "No registrations for '{}' found.".format(new_grouping.name))
+        f"No registrations for '{app_grouping.name}' found.")
 
     user = app.get_connection().get_user_by_ident("user")
     assert user is not None
@@ -672,7 +672,7 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
                 'new_host': new_host.key.hex,
                 'next_url': next_url}),
             location_url, "success",
-            "Host of '{}' is now '{}'.".format(app_grouping.name, new_host.ident))
+            f"Host of '{app_grouping.name}' is now '{new_host.ident}'.")
         new_grouping = app.get_connection().get_grouping(app_grouping.key)
         assert new_grouping is not None
         assert new_grouping.host_key == new_host.key
@@ -737,7 +737,7 @@ def test_delete_grouping(
     check_flash(
         client,
         client.post(url, data={'submit_delete': "submit_delete"}),
-        "/", "success", "Grouping '{}' deleted.".format(app_grouping.name))
+        "/", "success", f"Grouping '{app_grouping.name}' deleted.")
     assert app.get_connection().get_grouping(app_grouping.key) is None
 
     check_requests(client, url, 404, False)

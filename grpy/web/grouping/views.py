@@ -159,7 +159,7 @@ def grouping_detail(grouping_key: GroupingKey):
             grouping_key,
             logic.remove_from_groups(
                 get_connection().get_groups(grouping_key), deleted_users))
-        flash("{} registered users removed.".format(count), category="success")
+        flash(f"{count} registered users removed.", category="success")
         return _redirect_to_detail(grouping_key)
 
     state = get_grouping_state(get_connection(), grouping_key)
@@ -226,8 +226,7 @@ def grouping_register(grouping_key: GroupingKey):
         abort(403)
 
     if not grouping.can_register():
-        flash("Grouping '{}' is not available.".format(grouping.name),
-              category="warning")
+        flash(f"Grouping '{grouping.name}' is not available.", category="warning")
         return redirect(url_for('home'))
     registration = get_connection().get_registration(grouping_key, g.user.key)
 
@@ -237,11 +236,9 @@ def grouping_register(grouping_key: GroupingKey):
         get_connection().set_registration(
             Registration(grouping_key, g.user.key, user_preferences))
         if registration:
-            flash("Registration for '{}' is updated.".format(grouping.name),
-                  category="success")
+            flash(f"Registration for '{grouping.name}' is updated.", category="success")
         else:
-            flash("Registration for '{}' is stored.".format(grouping.name),
-                  category="success")
+            flash(f"Registration for '{grouping.name}' is stored.", category="success")
         return redirect(url_for('home'))
     form_template = getattr(form, "TEMPLATE", None)
     return render_template(
@@ -262,8 +259,7 @@ def grouping_start(grouping_key: GroupingKey):
     user_registrations = utils.LazyList(
         get_connection().iter_user_registrations_by_grouping(grouping_key))
     if not user_registrations:
-        flash("No registrations for '{}' found.".format(grouping.name),
-              category="warning")
+        flash(f"No registrations for '{grouping.name}' found.", category="warning")
         return _redirect_to_detail(grouping_key)
 
     form = forms.StartGroupingForm()
@@ -377,8 +373,8 @@ def grouping_assign(grouping_key: GroupingKey):
                 if new_host_key != grouping.host_key:
                     connection.set_grouping(dataclasses.replace(
                         grouping, host_key=new_host_key))
-                    flash("Host of '{}' is now '{}'.".format(
-                        grouping.name, new_host.ident), category="success")
+                    flash(f"Host of '{grouping.name}' is now '{new_host.ident}'.",
+                          category="success")
             if form.next_url.data == "1":
                 return redirect(url_for('.list'))
             return redirect(url_for('home'))
@@ -405,7 +401,7 @@ def grouping_delete(grouping_key: GroupingKey):
         if form.submit_delete.data:
             _remove_groups(grouping_key)
             get_connection().delete_grouping(grouping_key)
-            flash("Grouping '{}' deleted.".format(grouping.name), category="success")
+            flash(f"Grouping '{grouping.name}' deleted.", category="success")
             return redirect(url_for('home'))
         return _redirect_to_detail(grouping_key)
 

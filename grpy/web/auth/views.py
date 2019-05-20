@@ -29,7 +29,7 @@ def login():
     """Show login form and authenticate user."""
     if g.user:
         current_app.logout()
-        flash("User '{}' was logged out.".format(g.user.ident), category="info")
+        flash(f"User '{g.user.ident}' was logged out.", category="info")
         g.user = None
 
     if request.method == 'POST':

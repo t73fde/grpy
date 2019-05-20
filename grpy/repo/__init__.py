@@ -41,11 +41,11 @@ def create_repository(repository_url: str) -> Repository:
         repository = REPOSITORY_DIRECTORY[parsed_url.scheme](parsed_url.geturl())
     except KeyError:
         repository = DummyRepository(
-            "dummy:", "Unknown repository scheme '{}'".format(parsed_url.scheme))
+            "dummy:", f"Unknown repository scheme '{parsed_url.scheme}'")
     while not repository.can_connect():
         repository = DummyRepository(
-            "dummy:", "Cannot connect to {}".format(repository.url))
+            "dummy:", f"Cannot connect to {repository.url}")
     if not repository.initialize():
         repository = DummyRepository(
-            "dummy:", "Cannot initialize repository {}".format(repository.url))
+            "dummy:", f"Cannot initialize repository {repository.url}")
     return ProxyRepository(repository)

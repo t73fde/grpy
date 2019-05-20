@@ -125,7 +125,7 @@ def test_admin_change_permission(app: GrpyApp, client, auth) -> None:
             if user.key != admin_user.key:
                 check_flash(
                     client, response, userlist_url,
-                    "success", "Permissions of '{}' updated.".format(user.ident))
+                    "success", f"Permissions of '{user.ident}' updated.")
             new_user = app.get_connection().get_user(user.key)
             assert new_user is not None
             if user.key == admin_user.key:

@@ -113,7 +113,7 @@ class User(Model):
         if self.key and not isinstance(self.key, UserKey):
             raise ValidationFailed("Key is not an UserKey: " + repr(self.key))
         if not self.ident:
-            raise ValidationFailed("Ident is empty: {}".format(self))
+            raise ValidationFailed(f"Ident is empty: {self}")
 
 
 class GroupingState(enum.Enum):
@@ -173,26 +173,24 @@ class Grouping(Model):
         if self.key and not isinstance(self.key, GroupingKey):
             raise ValidationFailed("Key is not a GroupingKey: " + repr(self.key))
         if not self.code:
-            raise ValidationFailed("Code is empty: {}".format(self))
+            raise ValidationFailed(f"Code is empty: {self}")
         if not self.name:
-            raise ValidationFailed("Name is empty: {}".format(self))
+            raise ValidationFailed(f"Name is empty: {self}")
         if not isinstance(self.host_key, UserKey):
             raise ValidationFailed("Host is not an UserKey: " + repr(self.host_key))
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
-                "Begin date after final date: {} >= {}".format(
-                    self.begin_date, self.final_date))
+                f"Begin date after final date: {self.begin_date} >= {self.final_date}")
         if self.close_date and self.final_date >= self.close_date:
             raise ValidationFailed(
-                "Final date after close date: {} >= {}".format(
-                    self.final_date, self.close_date))
+                f"Final date after close date: {self.final_date} >= {self.close_date}")
         if not self.policy:
-            raise ValidationFailed("Policy is empty: {}".format(self))
+            raise ValidationFailed(f"Policy is empty: {self}")
         if self.max_group_size < 1:
             raise ValidationFailed(
-                "Maximum group size < 1: {}".format(self.max_group_size))
+                f"Maximum group size < 1: {self.max_group_size}")
         if self.member_reserve < 0:
-            raise ValidationFailed("Member reserve < 0: {}".format(self.member_reserve))
+            raise ValidationFailed(f"Member reserve < 0: {self.member_reserve}")
 
     def get_state(self) -> GroupingState:
         """
@@ -238,7 +236,7 @@ class Registration(Model):
                 "Participant is not an UserKey: " + repr(self.user_key))
         if not isinstance(self.preferences, UserPreferences):
             raise ValidationFailed(
-                "Preferences is not a UserPreferences: {}".format(self.preferences))
+                f"Preferences is not a UserPreferences: {self.preferences}")
 
 
 PolicyData = Dict[User, UserPreferences]

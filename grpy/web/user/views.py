@@ -63,7 +63,7 @@ def user_create():
             user = get_connection().set_user(user)
             return redirect(url_for("user.detail", user_key=user.key))
         except DuplicateKey:
-            flash("Ident '{}' is already in use.".format(ident), category="error")
+            flash(f"Ident '{ident}' is already in use.", category="error")
     return render_template("user_create.html", form=form)
 
 
@@ -88,7 +88,7 @@ def user_detail(user_key: UserKey):
         if user.permissions != new_permissions:
             get_connection().set_user(dataclasses.replace(
                 user, permissions=new_permissions))
-            flash("Permissions of '{}' updated.".format(user.ident), category="success")
+            flash(f"Permissions of '{user.ident}' updated.", category="success")
         return redirect(url_for('user.users'))
 
     form = forms.UserPermissionsForm(data={
@@ -130,5 +130,5 @@ def user_delete(user_key: UserKey):
         return redirect(detail_url)
 
     connection.delete_user(user_key)
-    flash("User '{}' deleted.".format(user.ident), category="success")
+    flash(f"User '{user.ident}' deleted.", category="success")
     return redirect(url_for('user.users'))
