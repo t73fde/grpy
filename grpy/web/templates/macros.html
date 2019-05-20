@@ -28,7 +28,7 @@
 
 {% macro render_field(field, autofocus=False) %}
 <div class="w3-panel">
-<strong>{{- field.label }}:</strong>
+<strong>{{- field.label }}{% if "required" in field.flags %}<span class="w3-text-red" title="Required">*</span>{% else %}:{% endif %}</strong>
 {%- if field.errors %}
   {{- render_input(field, autofocus, class="w3-input w3-border w3-border-red") }}
   {%- for error in field.errors %}
@@ -38,17 +38,17 @@
   {%- endfor %}
 {%- else %}
 {{ render_input(field, autofocus, class="w3-input") }}
-{%- endif %}
+{%- endif -%}
 </div>
-{% endmacro %}
+{%- endmacro %}
 
-{% macro render_field_list(field_list, autofocus=False) %}
+{%- macro render_field_list(field_list, autofocus=False) -%}
 <div class="w3-panel">
-<strong>{{- field_list.label }}:</strong>
+<strong>{{- field_list.label }}{% if "required" in field_list.flags %}<span class="w3-text-red" title="Required">*</span>{% else %}:{% endif %}</strong>
 {%- if field_list.errors %}
   {% for field in field_list %}
   {{- render_input(field, autofocus, class="w3-input w3-border w3-border-red") }}
-  {% endfor %}
+  {%- endfor %}
   {%- for error in field_list.errors %}
     <div class="w3-text-red">
       {{- error -}}
@@ -57,10 +57,10 @@
 {%- else %}
 {% for field in field_list %}
   {{- render_input(field, autofocus, class="w3-input") }}
-{% endfor %}
-{%- endif %}
+{%- endfor %}
+{%- endif -%}
 </div>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro render_data(label, value) %}
 <div class="w3-panel">

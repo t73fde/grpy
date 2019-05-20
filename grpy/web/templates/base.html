@@ -45,7 +45,7 @@
       <a href="{{ url_for('auth.logout')}}" class="w3-bar-item w3-button">Logout</a>
     </div>
   </div>
-  {% else %}
+  {%- else %}
   <a href="{{ url_for('auth.login') }}" class="w3-bar-item w3-button">Login</a>
   {%- endif %}
 </nav>
