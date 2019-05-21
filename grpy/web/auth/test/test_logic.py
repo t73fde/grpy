@@ -128,3 +128,20 @@ def test_authenticate_spaces(ram_app: GrpyApp) -> None:
     assert user.is_active
     assert ram_app.get_connection().get_user_by_ident(ident.strip().lower()) is not None
     assert ram_app.get_connection().get_user_by_ident(ident.strip()) is None
+
+
+def test_authenticate_first_admin(ram_app: GrpyApp) -> None:
+    """The first user is always an administrator."""
+    connection = ram_app.get_connection()
+    for user in connection.iter_users():
+        assert user.key is not None
+        connection.delete_user(user.key)
+    assert list(connection.iter_users()) == []
+    first_user = authenticate("first", "1")
+    assert first_user is not None
+    assert first_user.is_admin
+
+    # Second user is not an administrator
+    second_user = authenticate("second", "1")
+    assert second_user is not None
+    assert not second_user.is_admin

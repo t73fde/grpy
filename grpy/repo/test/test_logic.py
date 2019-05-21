@@ -32,8 +32,15 @@ from ...core.models import (Grouping, GroupingKey, GroupingState, Registration,
 from ...core.preferences import get_code, register_preferences
 from ..base import Connection, DuplicateKey
 from ..logic import (decode_preferences, encode_preferences,
-                     get_grouping_state, groupings_for_host,
+                     get_grouping_state, groupings_for_host, has_user,
                      set_grouping_new_code)
+
+
+def test_has_user(connection: Connection) -> None:
+    """Must return True if there is at least one user in the repository."""
+    assert not has_user(connection)
+    connection.set_user(User(None, "ident"))
+    assert has_user(connection)
 
 
 def test_set_grouping_new_code(connection: Connection, grouping: Grouping) -> None:

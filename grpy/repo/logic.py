@@ -27,8 +27,13 @@ from ..core.logic import len_groups, make_code
 from ..core.models import (Grouping, GroupingKey, GroupingState, UserKey,
                            UserPreferences)
 from ..core.preferences import get_code, get_preferences
-from ..core.utils import now
+from ..core.utils import LazyList, now
 from .base import Connection, DuplicateKey
+
+
+def has_user(connection: Connection) -> bool:
+    """Return True if there is at least one user stored in the repository."""
+    return bool(LazyList(connection.iter_users()))
 
 
 def set_grouping_new_code(connection: Connection, grouping: Grouping) -> Grouping:

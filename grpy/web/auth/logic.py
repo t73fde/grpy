@@ -26,8 +26,9 @@ import requests
 from flask import current_app
 
 from ...core import utils
-from ...core.models import User
+from ...core.models import Permissions, User
 from ...repo.base import Connection
+from ...repo.logic import has_user
 
 
 def check_pw(app, url: Optional[str], ident: str, password: str) -> bool:
@@ -59,7 +60,9 @@ def authenticate(ident: str, password: str) -> Optional[User]:
         connection: Connection = app.get_connection()
         user = connection.get_user_by_ident(ident)
         if not user:
-            user = connection.set_user(User(None, ident))
+            # The first user will be an administrator
+            permissions = Permissions(0) if has_user(connection) else Permissions.ADMIN
+            user = connection.set_user(User(None, ident, permissions))
         if user.is_active:
             app.login(user.key)
             connection.set_user(dataclasses.replace(user, last_login=utils.now()))
