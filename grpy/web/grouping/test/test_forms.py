@@ -51,8 +51,8 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
     }
 
     form = GroupingForm(formdata=FormData(
-        name="name", begin_date="1970-01-01 00:00",
-        final_date="1970-01-01 00:00", policy="RD",
+        name="name", begin_date="1970-01-01T00:00",
+        final_date="1970-01-01T00:00", policy="RD",
         max_group_size=2, member_reserve=1, note="Note"))
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
@@ -61,8 +61,8 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
     }
 
     form = GroupingForm(formdata=FormData(
-        name="name" * 1000, begin_date="1970-01-01 00:00",
-        final_date="1970-01-01 00:01", close_date="1970-01-01 00:01",
+        name="name" * 1000, begin_date="1970-01-01T00:00",
+        final_date="1970-01-01T00:01", close_date="1970-01-01T00:01",
         policy="RD", max_group_size=2, member_reserve=1, note="Notes" * 1000))
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
@@ -73,8 +73,8 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
     }
 
     form = GroupingForm(formdata=FormData(
-        name="name", begin_date="1970-01-01 00:00",
-        final_date="1970-01-01 00:01", close_date="1970-01-01 00:02",
+        name="name", begin_date="1970-01-01T00:00",
+        final_date="1970-01-01T00:01", close_date="1970-01-01T00:02",
         policy="RD", max_group_size=2, member_reserve=1, notes=""))
     form.policy.choices = [('RD', "Random")]
     assert form.validate()

@@ -118,8 +118,8 @@ def test_grouping_create(app: GrpyApp, client, auth) -> None:
 
     check_redirect(
         client.post(url, data={
-            'name': "name", 'begin_date': "1970-01-01 00:00",
-            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'name': "name", 'begin_date': "1970-01-01T00:00",
+            'final_date': "1970-01-01T00:01", 'close_date': "1970-01-01T00:02",
             'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
         "/")
 
@@ -128,8 +128,8 @@ def test_grouping_create(app: GrpyApp, client, auth) -> None:
 
     check_redirect(
         client.post(url, data={
-            'name': "name", 'begin_date': "1970-01-01 00:00",
-            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'name': "name", 'begin_date': "1970-01-01T00:00",
+            'final_date': "1970-01-01T00:01", 'close_date': "1970-01-01T00:02",
             'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
         "/")
 
@@ -285,8 +285,8 @@ def test_grouping_update(
 
     check_redirect(
         client.post(url, data={
-            'name': "very new name", 'begin_date': "1970-01-01 00:00",
-            'final_date': "1970-01-01 00:01", 'close_date': "1970-01-01 00:02",
+            'name': "very new name", 'begin_date': "1970-01-01T00:00",
+            'final_date': "1970-01-01T00:01", 'close_date': "1970-01-01T00:02",
             'policy': "RD", 'max_group_size': "2", 'member_reserve': "1"}),
         url_for('.detail', grouping_key=app_grouping.key))
 
