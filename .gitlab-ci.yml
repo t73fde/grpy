@@ -12,7 +12,7 @@ check:
   image: hshnwinps/pydev
   script:
   - pipenv install --dev
-  - pipenv run python proctor.py -v full-check
+  - pipenv run python make.py -v full-check
 
 test:
   stage: test
