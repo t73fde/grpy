@@ -61,6 +61,7 @@ def user_create():
         user = User(None, ident)
         try:
             user = get_connection().set_user(user)
+            flash(f"User '{ident}' created.", category="success")
             return redirect(url_for("user.detail", user_key=user.key))
         except DuplicateKey:
             flash(f"Ident '{ident}' is already in use.", category="error")

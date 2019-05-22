@@ -72,7 +72,9 @@ def test_admin_user_create(app: GrpyApp, client, auth) -> None:
     assert user is not None
     assert user.permissions == Permissions(0)
     assert user.last_login is None
-    check_redirect(response, url_for('user.detail', user_key=user.key))
+    check_flash(
+        client, response, url_for('user.detail', user_key=user.key),
+        "success", f"User '{user.ident}' created.")
 
     response = client.post(url, data={'ident': "name3"})
     assert response.status_code == 200
