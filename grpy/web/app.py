@@ -246,7 +246,8 @@ def populate_testdata(repository: Repository) -> None:
     """Add some initial data for testing."""
     connection = repository.create()
     try:
-        kreuz = connection.set_user(User(None, "kreuz", Permissions.HOST))
+        kreuz = connection.set_user(User(
+            None, "kreuz", Permissions.HOST | Permissions.ADMIN))
         stern = connection.set_user(User(None, "stern", Permissions.HOST))
         connection.set_user(User(None, "student"))
         connection.set_user(User(None, "xnologin"))
