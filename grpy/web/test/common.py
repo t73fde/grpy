@@ -19,9 +19,20 @@
 
 """Common helper functions."""
 
-from typing import cast
+from typing import Any, Sequence, cast
 
 from flask import get_flashed_messages, url_for
+
+
+class FormData(dict):
+    """A simple formdata implementation."""
+
+    def getlist(self, key) -> Sequence[Any]:
+        """Return value as a list."""
+        value = self[key]
+        if not isinstance(value, (list, tuple)):
+            return [value]
+        return cast(Sequence[Any], value)
 
 
 def check_get(client, url: str, status_code: int = 200):

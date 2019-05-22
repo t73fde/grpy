@@ -1,0 +1,61 @@
+##
+#    Copyright (c) 2019 Detlef Stern
+#
+#    This file is part of grpy - user grouping.
+#
+#    Grpy is free software: you can redistribute it and/or modify it under the
+#    terms of the GNU Affero General Public License as published by the Free
+#    Software Foundation, either version 3 of the License, or (at your option)
+#    any later version.
+#
+#    Grpy is distributed in the hope that it will be useful, but WITHOUT ANY
+#    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#    FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+#    more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with grpy. If not, see <http://www.gnu.org/licenses/>.
+##
+
+"""Test the web forms for authentication."""
+
+from ...test.common import FormData
+from ..forms import LoginForm
+
+
+def test_login_form(ram_app) -> None:  # pylint: disable=unused-argument
+    """Validate the login form."""
+    form = LoginForm()
+    assert not form.validate()
+    assert form.errors == {
+        'ident': ["This field is required."],
+        'password': ["This field is required."],
+    }
+
+    form = LoginForm(formdata=FormData(ident="", password="1"))
+    assert not form.validate()
+    assert form.errors == {
+        'ident': ["This field is required."],
+    }
+
+    form = LoginForm(formdata=FormData(ident="1", password=""))
+    assert not form.validate()
+    assert form.errors == {
+        'password': ["This field is required."],
+    }
+
+    form = LoginForm(formdata=FormData(ident="1" * 2000, password="1"))
+    assert not form.validate()
+    assert form.errors == {
+        'ident': ["Field cannot be longer than 1000 characters."],
+    }
+
+    form = LoginForm(formdata=FormData(ident="1", password="1" * 2000))
+    assert not form.validate()
+    assert form.errors == {
+        'password': ["Field cannot be longer than 1000 characters."],
+    }
+
+    form = LoginForm(formdata=FormData(ident="1", password="1"))
+    assert form.validate()
+    assert form.errors == {}

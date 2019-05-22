@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2019 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -17,17 +17,22 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Web forms for grpy."""
+"""Test the web forms for user management."""
 
-from flask_wtf import FlaskForm
-from wtforms.fields import HiddenField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length
+from ...test.common import FormData
+from ..forms import UserForm
 
 
-class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods
-    """Login data."""
+def test_user_form(ram_app) -> None:  # pylint: disable=unused-argument
+    """Validate the login form."""
+    form = UserForm()
+    assert not form.validate()
+    assert form.errors == {
+        'ident': ["This field is required."],
+    }
 
-    ident = StringField("Identifier", [DataRequired(), Length(max=1000)])
-    password = PasswordField("Password", [DataRequired(), Length(max=1000)])
-    next_url = HiddenField()
-    submit_login = SubmitField("Login")
+    form = UserForm(formdata=FormData(ident="1" * 2000))
+    assert not form.validate()
+    assert form.errors == {
+        'ident': ["Field cannot be longer than 1000 characters."],
+    }

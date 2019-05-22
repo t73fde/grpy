@@ -23,8 +23,8 @@ from flask_wtf import FlaskForm
 from pytz import UTC
 from wtforms.fields import (DateTimeField, HiddenField, IntegerField,
                             SelectField, StringField, SubmitField)
-from wtforms.validators import (DataRequired, InputRequired, NumberRange,
-                                Optional, ValidationError)
+from wtforms.validators import (DataRequired, InputRequired, Length,
+                                NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
 
 
@@ -32,7 +32,9 @@ class GroupingForm(FlaskForm):
     """Grouping data."""
 
     name = StringField(
-        "Name", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+        "Name",
+        [DataRequired(), Length(max=1000)],
+        filters=[lambda s: s.strip() if s else None])
     begin_date = DateTimeField(
         "Begin date", [InputRequired()],
         filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
@@ -51,7 +53,10 @@ class GroupingForm(FlaskForm):
     member_reserve = IntegerField(
         "Member reserve", [InputRequired(), NumberRange(min=0)])
     note = StringField(
-        "Notes", widget=TextArea(), filters=[lambda s: s.strip() if s else ""])
+        "Notes",
+        [Length(max=2000)],
+        widget=TextArea(),
+        filters=[lambda s: s.strip() if s else ""])
     submit_create = SubmitField("Create")
     submit_update = SubmitField("Update")
     submit_delete = SubmitField("Delete")

@@ -21,7 +21,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms.fields import BooleanField, StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Length
 
 
 class UserPermissionsForm(FlaskForm):
@@ -37,5 +37,7 @@ class UserForm(FlaskForm):
     """User data."""
 
     ident = StringField(
-        "Ident", [DataRequired()], filters=[lambda s: s.strip() if s else None])
+        "Ident",
+        [DataRequired(), Length(max=1000)],
+        filters=[lambda s: s.strip() if s else None])
     submit_create = SubmitField("Create")

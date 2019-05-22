@@ -22,6 +22,7 @@
 from typing import cast
 
 from wtforms.fields import FieldList, StringField
+from wtforms.validators import Length
 
 from ...core.models import UserPreferences
 from ...policies.preferred import PreferredPreferences
@@ -37,7 +38,10 @@ def create_preferred_policy_form(num_entries: int):
         TEMPLATE = "policies/preferred.html"
 
         idents = FieldList(
-            StringField("Ident", filters=[lambda s: s.strip() if s else None]),
+            StringField(
+                "Ident",
+                [Length(max=1000)],
+                filters=[lambda s: s.strip() if s else None]),
             min_entries=num_entries, max_entries=num_entries)
 
         @classmethod
