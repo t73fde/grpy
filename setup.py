@@ -115,7 +115,7 @@ if __name__ == "__main__":
         install_requires=INSTALL_REQUIRES,
         python_requires='>=3.6',
         license="AGPL3",
-        url="https://gitlab.win.hs-heilbronn.de/kreuz/grpy",
+        url="https://github.com/t73fde/grpy",
         author="Detlef Stern",
         author_email="detlef.stern@hs-heilbronn.de",
         keywords=["education", "gouping", "team-building"],
