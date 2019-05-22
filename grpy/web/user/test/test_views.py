@@ -250,3 +250,17 @@ def test_admin_user_delete(app: GrpyApp, client, auth, app_grouping: Grouping) -
         "success", "User '%s' deleted." % user.ident)
     assert client.post(
         url_for('user.delete', user_key=UserKey(int=0))).status_code == 404
+
+
+def test_admin_user_detail_delete(app: GrpyApp, client, auth) -> None:
+    """Viewing own detail page, there is no possiblity to delete itself."""
+    admin_user = app.get_connection().get_user_by_ident("admin")
+    assert admin_user is not None
+    assert admin_user.key is not None
+
+    url = url_for('user.detail', user_key=admin_user.key)
+    check_bad_requests(client, auth, url, False)
+    auth.login("admin")
+    data = check_get_data(client, url)
+    assert url_for('user.delete', user_key=admin_user.key) not in data
+    assert "Delete User" not in data

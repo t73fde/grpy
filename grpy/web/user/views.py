@@ -106,7 +106,7 @@ def user_detail(user_key: UserKey):
         grouping for grouping in
         connection.iter_groupings_by_user(user_key, order=["final_date"])
         if grouping.key not in user_keys]
-    can_delete = not (host_groupings or user_groups or user_groupings)
+    can_delete = not (host_groupings or user_groups or user_groupings) and is_other
 
     return render_template(
         "user_detail.html", user=user, form=form, is_other=is_other,
