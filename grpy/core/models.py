@@ -114,6 +114,9 @@ class User(Model):
             raise ValidationFailed("Key is not an UserKey: " + repr(self.key))
         if not self.ident:
             raise ValidationFailed(f"Ident is empty: {self}")
+        if self.ident != self.ident.strip():
+            raise ValidationFailed(
+                f"Ident contains leading/trailing whitespace: {self}")
 
 
 class GroupingState(enum.Enum):

@@ -74,6 +74,9 @@ def test_user_validation_failed() -> None:
         User("123", "name").validate()  # type: ignore
     with pytest.raises(ValidationFailed, match="Ident is empty"):
         User(None, "").validate()
+    with pytest.raises(
+            ValidationFailed, match="Ident contains leading/trailing whitespace"):
+        User(None, "\tident").validate()
 
 
 def test_grouping_validation() -> None:
