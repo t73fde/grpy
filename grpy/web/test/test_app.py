@@ -23,6 +23,7 @@ import logging
 import os
 
 import pytest
+import pytz.tzinfo
 from flask import Flask, g, url_for
 from werkzeug.test import Client
 
@@ -94,6 +95,19 @@ def test_setup_logging() -> None:
     assert create_app().logger.handlers == []
     handlers = [logging.NullHandler()]
     assert create_app({'LOG_HANDLERS': handlers}).logger.handlers == handlers
+
+
+def test_setup_time_zone() -> None:
+    """After app creation, there is a valid timezone."""
+    assert isinstance(create_app().default_tz, pytz.tzinfo.BaseTzInfo)
+
+
+def test_setup_time_zone_invalid(caplog) -> None:
+    """When specifying an invalid time zone. use UTC and log an error."""
+    assert create_app(config_mapping={'DEFAULT_TZ': "*none*"}).default_tz is pytz.utc
+    assert caplog.record_tuples == [
+        ('flask.app', logging.ERROR, "Unknown DEFAULT_TZ: '*none*', will use 'UTC'."),
+    ]
 
 
 def create_grpy_app() -> Flask:

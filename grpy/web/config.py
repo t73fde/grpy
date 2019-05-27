@@ -50,3 +50,7 @@ AUTH_URL = "http://localhost:9876/"
 # and "user" are different user identifications or not.
 # Per default, user names are not case sensitive
 AUTH_CASE = False
+
+# The default time zone is where you expect most of your users.
+# An illegal value will result in UTC time zone.
+DEFAULT_TZ = "Europe/Berlin"

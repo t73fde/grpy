@@ -23,6 +23,9 @@ import functools
 import os
 from typing import Any, Dict, Optional, cast
 
+import pytz
+import pytz.exceptions
+import pytz.tzinfo
 from flask import Flask, g, make_response, render_template, session
 from flask_babel import Babel
 
@@ -43,6 +46,7 @@ class GrpyApp(Flask):
         self._repository: Optional[Repository] = None
         self.version: Optional[Version] = None
         self.babel = None
+        self.default_tz: pytz.tzinfo.BaseTzInfo = pytz.utc
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
@@ -92,6 +96,15 @@ class GrpyApp(Flask):
     def _setup_version(self) -> None:
         """Provide version information."""
         self.version = get_version(read_version_file(self.root_path, 3))
+
+    def _setup_time_zone(self) -> None:
+        """Determine the applications default time zone."""
+        tz_name = self.config.get('DEFAULT_TZ', "UTC")
+        try:
+            self.default_tz = pytz.timezone(tz_name)
+        except pytz.exceptions.UnknownTimeZoneError:
+            self.log_error(f"Unknown DEFAULT_TZ: '{tz_name}', will use 'UTC'.")
+            self.default_tz = pytz.utc
 
     def _setup_repository(self) -> None:
         """Add a repository to the application."""
@@ -204,6 +217,7 @@ class GrpyApp(Flask):
         """Set-up the app."""
         self._setup_logging()
         self._setup_version()
+        self._setup_time_zone()
         self._setup_repository()
         self._setup_user_handling()
         self._setup_babel()
