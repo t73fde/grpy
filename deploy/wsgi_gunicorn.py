@@ -22,7 +22,6 @@
 import logging
 
 from grpy.web.app import create_app
-from grpy.web.middleware import PrefixMiddleware
 
 
 def create_application():
@@ -32,7 +31,6 @@ def create_application():
         'LOG_LEVEL': gunicorn_logger.level,
         'LOG_HANDLERS': gunicorn_logger.handlers,
     })
-    grpy_app.wsgi_app = PrefixMiddleware(grpy_app.wsgi_app, "/grpy")
     return grpy_app
 
 

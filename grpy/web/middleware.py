@@ -25,23 +25,33 @@ Loosely based on `werkzeug.wsgi.DispatcherMiddleware` with some ideas from
 """
 
 
+def cleanup_prefix(prefix: str) -> str:
+    """Ensure that prefix is in sane state."""
+    result = prefix.strip()
+    if not result or result == "/":
+        return "/"
+    if not result.startswith("/"):
+        result = "/" + result
+    if result.endswith("/"):
+        result = result[:-1]
+    return result
+
+
+def get_prefix_middleware(app, prefix: str):
+    """Create the middleware, but only if needed."""
+    prefix = cleanup_prefix(prefix)
+    if prefix == "/":
+        return app
+    return PrefixMiddleware(app, prefix)
+
+
 class PrefixMiddleware:  # pylint: disable=too-few-public-methods
     """Set an URL prefix for a WSGI app."""
-
-    @staticmethod
-    def cleanup_prefix(prefix: str) -> str:
-        """Ensure that prefix is in sane state."""
-        result = prefix.strip()
-        if not result.startswith("/"):
-            result = "/" + result
-        if result.endswith("/"):
-            result = result[:-1]
-        return result
 
     def __init__(self, app, prefix: str) -> None:
         """Remember the WSGI app and the prefix."""
         self.app = app
-        self.prefix = self.cleanup_prefix(prefix)
+        self.prefix = cleanup_prefix(prefix)
 
     def __call__(self, environ, start_response):
         """Execute the WSGI call."""

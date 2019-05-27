@@ -35,6 +35,7 @@ from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
 from ..version import Version, get_version, read_version_file
 from . import auth, grouping, policies, user, utils, views
+from .middleware import get_prefix_middleware
 
 
 class GrpyApp(Flask):
@@ -247,6 +248,8 @@ def create_app(config_mapping: Dict[str, Any] = None) -> GrpyApp:
     user_blueprint = user.create_blueprint()
     app.register_blueprint(user_blueprint, url_prefix='/users')
 
+    url_prefix = app.config.get("URL_PREFIX", "/")
+    app.wsgi_app = get_prefix_middleware(app.wsgi_app, url_prefix)  # type: ignore
     app.log_debug("Application created.")
     return app
 

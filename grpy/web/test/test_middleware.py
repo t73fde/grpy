@@ -23,7 +23,8 @@ from flask import Flask
 from werkzeug.test import Client
 
 from ..app import create_app
-from ..middleware import PrefixMiddleware
+from ..middleware import (PrefixMiddleware, cleanup_prefix,
+                          get_prefix_middleware)
 
 
 def _just_a_view() -> bytes:
@@ -38,12 +39,23 @@ def _make_app() -> Flask:
     return grpy_app
 
 
-def test_prefix_init() -> None:
-    """Test the initialization method of PrefixMiddleware."""
-    grpy_app = _make_app()
+def test_cleanup_prefix() -> None:
+    """A prefix has to be cleaned up."""
+    assert cleanup_prefix("") == "/"
+    assert cleanup_prefix("/") == "/"
     for prefix in ('prefix', '/prefix', 'prefix/', '/prefix/'):
-        app = PrefixMiddleware(grpy_app, prefix)
-        assert app.prefix == '/prefix'
+        assert cleanup_prefix(prefix) == "/prefix"
+
+
+def test_create() -> None:
+    """An empty prefix will not add a middleware."""
+    app = get_prefix_middleware("app", "")
+    assert app == "app"
+    app = get_prefix_middleware("app", "/")
+    assert app == "app"
+    app = get_prefix_middleware("app", "/bla")
+    assert app != "app"
+    assert isinstance(app, PrefixMiddleware)
 
 
 def test_prefix_call_valid() -> None:

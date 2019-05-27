@@ -54,3 +54,7 @@ AUTH_CASE = False
 # The default time zone is where you expect most of your users.
 # An illegal value will result in UTC time zone.
 DEFAULT_TZ = "Europe/Berlin"
+
+# If web application is proxied by a web server, based on an URL prefix, you
+# must set this variable to the prefix, e.g. "/grpy".
+URL_PREFIX = "/"
