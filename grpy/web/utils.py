@@ -24,6 +24,7 @@ import datetime
 from functools import wraps
 from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, cast
 
+import pytz
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
                    request, session, url_for)
 from flask_babel import format_datetime
@@ -139,6 +140,19 @@ def update_model(model: Model, form_data):
         model, **{k: v for k, v in form_data.items() if k in fields})
 
 
+def local2utc(dt_value: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+    """Convert a local date time value into utc time zone."""
+    if dt_value is None:
+        return None
+    local_value = current_app.default_tz.localize(dt_value)
+    return cast(datetime.datetime, local_value.astimezone(pytz.UTC))
+
+
+def utc2local(dt_value: datetime.datetime) -> datetime.datetime:
+    """Convert a date time of utc time zone into local time zone."""
+    return dt_value.astimezone(current_app.default_tz)
+
+
 def datetimeformat(
         dt_value: Optional[datetime.datetime] = None,
         dt_format: Optional[str] = None,
@@ -151,7 +165,7 @@ def datetimeformat(
     """
     if not dt_value:
         return None
-    dt_value = dt_value.astimezone(current_app.default_tz)
+    dt_value = utc2local(dt_value)
     if dt_format == "iso-short":
         return cast(str, format_datetime(dt_value, "YYYY-MM-dd HH:mm", rebase=False))
     return cast(str, format_datetime(dt_value, dt_format, rebase))

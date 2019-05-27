@@ -178,15 +178,15 @@ class Grouping(Model):
     def _validate_date(self) -> None:
         """Check all date related consistencies."""
         if self.begin_date.tzinfo != pytz.UTC:
-            raise ValidationFailed("Begin date is not UTC: {self}")
+            raise ValidationFailed(f"Begin date is not UTC: {self}")
         if self.final_date.tzinfo != pytz.UTC:
-            raise ValidationFailed("Final date is not UTC: {self}")
+            raise ValidationFailed(f"Final date is not UTC: {self}")
         if self.begin_date >= self.final_date:
             raise ValidationFailed(
                 f"Begin date after final date: {self.begin_date} >= {self.final_date}")
         if self.close_date:
             if self.close_date.tzinfo != pytz.UTC:
-                raise ValidationFailed("Close date is not UTC: {self}")
+                raise ValidationFailed(f"Close date is not UTC: {self}")
             if self.final_date >= self.close_date:
                 raise ValidationFailed(
                     f"Final date after close date: "

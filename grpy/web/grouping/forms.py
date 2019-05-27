@@ -20,13 +20,13 @@
 """Web forms for groupings."""
 
 from flask_wtf import FlaskForm
-from pytz import UTC
-from wtforms.fields import (DateTimeField, HiddenField, IntegerField,
-                            SelectField, StringField, SubmitField)
+from wtforms.fields import (HiddenField, IntegerField, SelectField,
+                            StringField, SubmitField)
 from wtforms.validators import (DataRequired, InputRequired, Length,
                                 NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
-from wtforms.widgets.html5 import DateTimeLocalInput
+
+from ..forms import DateTimeField
 
 
 class GroupingForm(FlaskForm):
@@ -38,21 +38,12 @@ class GroupingForm(FlaskForm):
         filters=[lambda s: s.strip() if s else None])
     begin_date = DateTimeField(
         "Begin date", [InputRequired()],
-        format="%Y-%m-%dT%H:%M",
-        widget=DateTimeLocalInput(),
-        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
     )
     final_date = DateTimeField(
         "Final date", [InputRequired()],
-        format="%Y-%m-%dT%H:%M",
-        widget=DateTimeLocalInput(),
-        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
     )
     close_date = DateTimeField(
         "Close date", [Optional()],
-        format="%Y-%m-%dT%H:%M",
-        widget=DateTimeLocalInput(),
-        filters=[lambda d: d.replace(tzinfo=UTC) if d else None],
     )
     policy = SelectField("Policy", [DataRequired()])
     max_group_size = IntegerField(

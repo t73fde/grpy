@@ -17,12 +17,48 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Common web forms for grpy."""
+"""Common web forms and fields for grpy."""
+
+from typing import Any, List, Optional
 
 from flask_wtf import FlaskForm
+from wtforms.fields import DateTimeField as WTFDateTimeField
 from wtforms.fields import SubmitField
+from wtforms.widgets.html5 import DateTimeLocalInput
 
 from ..core.models import UserPreferences
+from .utils import local2utc, utc2local
+
+
+class DateTimeField(WTFDateTimeField):
+    """Time zone aware date time field with better widget."""
+
+    def __init__(
+            self,
+            label: str,
+            validators: Optional[List[Any]] = None,
+            _form=None,
+            _name=None,
+            _prefix="",
+            _translations=None,
+            _meta=None,
+    ):
+        """Initialize field with a label and optional validators."""
+        super().__init__(
+            label, validators, format="%Y-%m-%dT%H:%M", filters=[local2utc],
+            widget=DateTimeLocalInput(),
+            _form=_form, _name=_name, _prefix=_prefix,
+            _translations=_translations, _meta=_meta,
+        )
+
+    def _value(self) -> str:
+        """Provide a string representation."""
+        if self.raw_data:
+            return " ".join(self.raw_data)
+        if self.data:
+            local_data = utc2local(self.data)
+            return local_data.strftime(self.format)
+        return ""
 
 
 class RegistrationForm(FlaskForm):
