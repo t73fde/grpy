@@ -119,7 +119,7 @@ class User(Model):
         if self.ident != self.ident.strip():
             raise ValidationFailed(
                 f"Ident contains leading/trailing whitespace: {self}")
-        if self.last_login and self.last_login.tzinfo != pytz.utc:
+        if self.last_login and self.last_login.tzinfo != pytz.UTC:
             raise ValidationFailed(f"Last login date is not UTC: {self}")
 
 

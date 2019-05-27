@@ -23,12 +23,12 @@ import collections
 from datetime import datetime
 from typing import Deque, Iterable, TypeVar
 
-from pytz import utc
+from pytz import UTC
 
 
 def now() -> datetime:
     """Return the current UTC time."""
-    return datetime.now(tz=utc)
+    return datetime.now(tz=UTC)
 
 
 T = TypeVar("T")  # pylint: disable=invalid-name

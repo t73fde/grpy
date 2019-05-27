@@ -46,7 +46,7 @@ class GrpyApp(Flask):
         self._repository: Optional[Repository] = None
         self.version: Optional[Version] = None
         self.babel = None
-        self.default_tz: pytz.tzinfo.BaseTzInfo = pytz.utc
+        self.default_tz: pytz.tzinfo.BaseTzInfo = pytz.UTC
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
@@ -104,7 +104,7 @@ class GrpyApp(Flask):
             self.default_tz = pytz.timezone(tz_name)
         except pytz.exceptions.UnknownTimeZoneError:
             self.log_error(f"Unknown DEFAULT_TZ: '{tz_name}', will use 'UTC'.")
-            self.default_tz = pytz.utc
+            self.default_tz = pytz.UTC
 
     def _setup_repository(self) -> None:
         """Add a repository to the application."""

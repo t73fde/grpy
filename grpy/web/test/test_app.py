@@ -104,7 +104,7 @@ def test_setup_time_zone() -> None:
 
 def test_setup_time_zone_invalid(caplog) -> None:
     """When specifying an invalid time zone. use UTC and log an error."""
-    assert create_app(config_mapping={'DEFAULT_TZ': "*none*"}).default_tz is pytz.utc
+    assert create_app(config_mapping={'DEFAULT_TZ': "*none*"}).default_tz is pytz.UTC
     assert caplog.record_tuples == [
         ('flask.app', logging.ERROR, "Unknown DEFAULT_TZ: '*none*', will use 'UTC'."),
     ]

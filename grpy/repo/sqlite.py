@@ -26,7 +26,7 @@ from typing import (AbstractSet, Any, Iterable, List, Optional, Sequence,
                     Tuple, cast)
 from urllib.parse import urlparse
 
-from pytz import utc
+from pytz import UTC
 
 from ..core.models import (Grouping, GroupingKey, Groups, Permissions,
                            Registration, User, UserKey)
@@ -44,7 +44,7 @@ sqlite3.register_adapter(
 sqlite3.register_converter(
     'DATETIME',
     lambda b: datetime.strptime(
-        b.decode('utf-8'), "%Y%m%d-%H%M%S.%f").replace(tzinfo=utc))
+        b.decode('utf-8'), "%Y%m%d-%H%M%S.%f").replace(tzinfo=UTC))
 
 
 class SqliteRepository(Repository):
