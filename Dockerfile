@@ -27,7 +27,8 @@ FROM python:3.7-alpine
 COPY --from=builder /home/dist/grpy.tar.gz /home/VERSION.txt /
 RUN set -ex \
  && apk update \
- && pip install -U pip \
+ && apk upgrade \
+ && pip install -U pip pipenv \
  && pip install /grpy.tar.gz \
  && cd /usr/src \
  && tar xfz /grpy.tar.gz \
@@ -37,6 +38,7 @@ RUN set -ex \
  && addgroup grpy \
  && adduser -D -H -G grpy grpy \
  && mkdir db \
+ && pip uninstall -y pipenv virtualenv virtualenv-clone wheel pip \
  && rm -rf /root/.cache /root/.local /root/.virtualenvs \
  && rm -rf /var/cache/apk/*
 
