@@ -22,6 +22,8 @@
 from datetime import timedelta, tzinfo
 from typing import cast
 
+import pytz
+
 from .. import utils
 from ..utils import LazyList
 
@@ -29,6 +31,7 @@ from ..utils import LazyList
 def test_now() -> None:
     """The now functions returns an UTC timestamp."""
     now_tzinfo = cast(tzinfo, utils.now().tzinfo)
+    assert now_tzinfo == pytz.utc
     assert now_tzinfo.utcoffset(None) == timedelta(0)
     assert now_tzinfo.tzname(None) == "UTC"
 

@@ -25,6 +25,8 @@ import enum
 from typing import Dict, FrozenSet, Optional, Tuple
 from uuid import UUID, uuid4
 
+import pytz
+
 from .utils import now
 
 
@@ -117,6 +119,8 @@ class User(Model):
         if self.ident != self.ident.strip():
             raise ValidationFailed(
                 f"Ident contains leading/trailing whitespace: {self}")
+        if self.last_login and self.last_login.tzinfo != pytz.utc:
+            raise ValidationFailed(f"Last login date is not UTC: {self}")
 
 
 class GroupingState(enum.Enum):
@@ -171,6 +175,23 @@ class Grouping(Model):
     member_reserve: int
     note: str
 
+    def _validate_date(self) -> None:
+        """Check all date related consistencies."""
+        if self.begin_date.tzinfo != pytz.UTC:
+            raise ValidationFailed("Begin date is not UTC: {self}")
+        if self.final_date.tzinfo != pytz.UTC:
+            raise ValidationFailed("Final date is not UTC: {self}")
+        if self.begin_date >= self.final_date:
+            raise ValidationFailed(
+                f"Begin date after final date: {self.begin_date} >= {self.final_date}")
+        if self.close_date:
+            if self.close_date.tzinfo != pytz.UTC:
+                raise ValidationFailed("Close date is not UTC: {self}")
+            if self.final_date >= self.close_date:
+                raise ValidationFailed(
+                    f"Final date after close date: "
+                    "{self.final_date} >= {self.close_date}")
+
     def validate(self) -> None:
         """Check model for consistency."""
         if self.key and not isinstance(self.key, GroupingKey):
@@ -181,12 +202,7 @@ class Grouping(Model):
             raise ValidationFailed(f"Name is empty: {self}")
         if not isinstance(self.host_key, UserKey):
             raise ValidationFailed("Host is not an UserKey: " + repr(self.host_key))
-        if self.begin_date >= self.final_date:
-            raise ValidationFailed(
-                f"Begin date after final date: {self.begin_date} >= {self.final_date}")
-        if self.close_date and self.final_date >= self.close_date:
-            raise ValidationFailed(
-                f"Final date after close date: {self.final_date} >= {self.close_date}")
+        self._validate_date()
         if not self.policy:
             raise ValidationFailed(f"Policy is empty: {self}")
         if self.max_group_size < 1:

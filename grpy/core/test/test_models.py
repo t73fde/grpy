@@ -20,7 +20,7 @@
 """Test the models module."""
 
 import dataclasses
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import cast
 
 import pytest
@@ -77,6 +77,8 @@ def test_user_validation_failed() -> None:
     with pytest.raises(
             ValidationFailed, match="Ident contains leading/trailing whitespace"):
         User(None, "\tident").validate()
+    with pytest.raises(ValidationFailed, match="Last login date is not UTC: "):
+        User(None, "ident", last_login=datetime(2019, 5, 27, 13, 51, 35)).validate()
 
 
 def test_grouping_validation() -> None:
@@ -94,6 +96,7 @@ def test_grouping_validation() -> None:
 def test_grouping_validation_failed() -> None:
     """An invalid model raises exception."""
     yet = now()
+    notzdate = datetime(2019, 5, 27, 13, 54, 17)
     delta = timedelta(seconds=1)
     with pytest.raises(ValidationFailed, match="Key is not a GroupingKey: "):
         Grouping(
@@ -111,9 +114,21 @@ def test_grouping_validation_failed() -> None:
         Grouping(
             None, "code", "", UserKey(int=0), yet, yet + delta, None,
             "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Begin date is not UTC: "):
+        Grouping(
+            None, "code", "name", UserKey(int=0), notzdate, yet, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Final date is not UTC: "):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, notzdate, None,
+            "RD", 2, 0, "").validate()
     with pytest.raises(ValidationFailed, match="Begin date after final date: "):
         Grouping(
             None, "code", "name", UserKey(int=0), yet, yet, None,
+            "RD", 2, 0, "").validate()
+    with pytest.raises(ValidationFailed, match="Close date is not UTC: "):
+        Grouping(
+            None, "code", "name", UserKey(int=0), yet, yet + delta, notzdate,
             "RD", 2, 0, "").validate()
     with pytest.raises(ValidationFailed, match="Final date after close date: "):
         Grouping(
