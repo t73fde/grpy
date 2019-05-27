@@ -28,7 +28,6 @@ from werkzeug.exceptions import NotFound
 from werkzeug.test import Client
 
 from ...core.models import GroupingKey, Permissions, User, UserKey
-from ...core.utils import now
 from ..app import GrpyApp, create_app
 from ..middleware import PrefixMiddleware
 from ..utils import (admin_required, datetimeformat, login_required,
@@ -210,13 +209,13 @@ def test_update_model() -> None:
     assert user == User(key, "user")
 
 
-def test_datetime_format(ram_app) -> None:  # pylint: disable=unused-argument
+def test_datetime_format(ram_app) -> None:
     """Return a datetime according to given format."""
     assert datetimeformat() is None
     assert datetimeformat(None, None, False) is None
 
-    dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=now().tzinfo)
-    assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55 UTC"
+    dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=ram_app.default_tz)
+    assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55"
     assert datetimeformat(dt_val, "YYYY", False) == "2019"
 
 

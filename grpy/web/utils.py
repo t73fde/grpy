@@ -151,8 +151,9 @@ def datetimeformat(
     """
     if not dt_value:
         return None
+    dt_value = dt_value.astimezone(current_app.default_tz)
     if dt_format == "iso-short":
-        return cast(str, format_datetime(dt_value, "YYYY-MM-dd HH:mm z", rebase))
+        return cast(str, format_datetime(dt_value, "YYYY-MM-dd HH:mm", rebase=False))
     return cast(str, format_datetime(dt_value, dt_format, rebase))
 
 
