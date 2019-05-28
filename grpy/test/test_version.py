@@ -30,19 +30,23 @@ from ..version import Version, get_version, read_version_file
 
 def test_read_version_file() -> None:
     """Search for a version file."""
+    try:
+        pathlib.Path("VERSION.txt").unlink()
+    except FileNotFoundError:
+        pass
     assert read_version_file(None, 3) == []
     with tempfile.TemporaryDirectory() as dirname:
         assert read_version_file(dirname, 1) == []
         root_path = pathlib.Path(dirname)
         with (root_path / "VERSION.txt").open("w") as version_file:
-            print("user", file=version_file)
             print("vcs", file=version_file)
-        assert read_version_file(dirname, 1) == ["user", "vcs"]
+            print("date", file=version_file)
+        assert read_version_file(dirname, 1) == ["vcs", "date"]
 
         subdir = root_path / "sub"
         subdir.mkdir()
         assert read_version_file(str(subdir), 1) == []
-        assert read_version_file(str(subdir), 2) == ["user", "vcs"]
+        assert read_version_file(str(subdir), 2) == ["vcs", "date"]
 
 
 def test_get_version() -> None:
