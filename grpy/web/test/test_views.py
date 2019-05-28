@@ -181,6 +181,16 @@ def test_about_anonymous(app: GrpyApp, client) -> None:
     assert url_for('about') in data
     assert url_for('auth.login') in data
     assert url_for('auth.logout') not in data
+    assert "VeRsIoN" not in data
+    assert "VcS" not in data
+    assert "DaTe" not in data
+
+
+def test_about_user(app: GrpyApp, client, auth) -> None:
+    """An user can see some version details."""
+    app.version = Version("VeRsIoN", "VcS", "DaTe")
+    auth.login("user")
+    data = check_get_data(client, url_for('about'))
     assert "VeRsIoN" in data
     assert "VcS" not in data
     assert "DaTe" not in data

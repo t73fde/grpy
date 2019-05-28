@@ -93,16 +93,16 @@ def home():
 
 def about():
     """Show about page."""
-    version = current_app.version
-    if version.user_version:
-        versions = [version.user_version]
-    else:
-        versions = []
-    if g.user and g.user.is_admin:
-        if version.vcs_version:
-            versions.append(version.vcs_version)
-        if version.build_date:
-            versions.append(version.build_date)
+    versions = []
+    if g.user:
+        version = current_app.version
+        if version.user_version:
+            versions.append(version.user_version)
+        if g.user.is_admin:
+            if version.vcs_version:
+                versions.append(version.vcs_version)
+            if version.build_date:
+                versions.append(version.build_date)
     return render_template("about.html", versions=versions)
 
 
