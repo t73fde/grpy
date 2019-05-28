@@ -51,11 +51,11 @@ def test_get_version() -> None:
         version = pkg_resources.get_distribution('grpy').version
     except pkg_resources.DistributionNotFound:
         version = ""
-    assert get_version([]) == Version(version, "")
+    assert get_version([]) == Version(version, "", "")
 
-    assert get_version(["1"]) == Version("1", "")
-    assert get_version(["1", "2"]) == Version("1", "2")
-    assert get_version(["1", "2", "3"]) == Version("1", "2")
+    assert get_version(["1"]) == Version(version, "1", "")
+    assert get_version(["1", "2"]) == Version(version, "1", "2")
+    assert get_version(["1", "2", "3"]) == Version(version, "1", "2")
 
 
 def test_get_version_from_distribution(monkeypatch) -> None:
@@ -67,4 +67,4 @@ def test_get_version_from_distribution(monkeypatch) -> None:
         return mock
 
     monkeypatch.setattr(pkg_resources, 'get_distribution', get_distribution)
-    assert get_version([]) == Version("321", "")
+    assert get_version([]) == Version("321", "", "")

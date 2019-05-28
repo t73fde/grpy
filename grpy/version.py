@@ -32,9 +32,10 @@ class Version:
 
     user_version: str
     vcs_version: str
+    build_date: str
 
 
-def read_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
+def get_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
     """Read the file VERSION.txt and return its content as a sequence."""
     if path:
         current_path = pathlib.Path(path)
@@ -52,13 +53,27 @@ def read_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
     return []
 
 
+def read_version_file(path: Optional[str], max_level: int) -> Sequence[str]:
+    """Read the file VERSION.txt and return its content as a sequence."""
+    lines = get_version_file(path, max_level)
+    if not lines:
+        lines = get_version_file(".", 1)
+    return lines
+
+
 def get_version(lines: Sequence[str]) -> Version:
     """Return version information."""
+    try:
+        user_version = pkg_resources.get_distribution("grpy").version
+    except pkg_resources.DistributionNotFound:
+        user_version = ""
     if not lines:
-        try:
-            return Version(pkg_resources.get_distribution("grpy").version, "")
-        except pkg_resources.DistributionNotFound:
-            return Version("", "")
-    if len(lines) < 2:
-        return Version(lines[0], "")
-    return Version(lines[0], lines[1])
+        vcs_version = ""
+        build_date = ""
+    elif len(lines) < 2:
+        vcs_version = lines[0]
+        build_date = ""
+    else:
+        vcs_version = lines[0]
+        build_date = lines[1]
+    return Version(user_version, vcs_version, build_date)

@@ -27,6 +27,7 @@ from flask import url_for
 from ...core import utils
 from ...core.models import (Grouping, Permissions, Registration, User,
                             UserPreferences)
+from ...version import Version
 from ..app import GrpyApp
 from .common import check_get_data
 
@@ -171,14 +172,34 @@ def test_home_inactive(app: GrpyApp, client, auth) -> None:
     assert check_get_data(client, url).count(login_url) == 2
 
 
-def test_about_anonymous(client) -> None:
+def test_about_anonymous(app: GrpyApp, client) -> None:
     """Test about view as an anonymous user."""
+    app.version = Version("VeRsIoN", "VcS", "DaTe")
     data = check_get_data(client, url_for('about'))
     assert ": About</title>" in data
     assert url_for('home') in data
     assert url_for('about') in data
     assert url_for('auth.login') in data
     assert url_for('auth.logout') not in data
+    assert "VeRsIoN" in data
+    assert "VcS" not in data
+    assert "DaTe" not in data
+
+
+def test_about_admin(app: GrpyApp, client, auth) -> None:
+    """An administrator can see more version details."""
+    app.version = Version("", "VcS", "DaTe")
+    auth.login("admin")
+    data = check_get_data(client, url_for('about'))
+    assert "VeRsIoN" not in data
+    assert "VcS" in data
+    assert "DaTe" in data
+
+    app.version = Version("VERsion", "", "")
+    data = check_get_data(client, url_for('about'))
+    assert "VERsion" in data
+    assert "VcS" not in data
+    assert "DaTe" not in data
 
 
 def test_shortlink_host(client, auth, app_grouping: Grouping) -> None:

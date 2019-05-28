@@ -20,8 +20,8 @@
 
 """Setup script."""
 
+import datetime
 import os
-import re
 import subprocess  # nosec
 from typing import List
 
@@ -78,7 +78,6 @@ def create_version_txt() -> None:
         with open_local(".git/HEAD"):
             pass
     except FileNotFoundError:
-        print("HEAD = NO")
         return
 
     git_version_lines = execute_command([
@@ -86,14 +85,11 @@ def create_version_txt() -> None:
     if not git_version_lines:
         return
 
-    raw_version = git_version_lines[0]
-    split_version = raw_version.split("-")
-    setup_version = ".".join(split_version[:2])
-    setup_version = re.sub(r"\.0(\d)", lambda m: "." + m.group(1), setup_version)
+    git_version = git_version_lines[0]
     with open_local(VERSION_TXT, "w") as version_file:
-        version_file.write(setup_version)
+        version_file.write(git_version)
         version_file.write("\n")
-        version_file.write(raw_version)
+        version_file.write(datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"))
         version_file.write("\n")
 
 
@@ -102,13 +98,12 @@ if __name__ == "__main__":
     create_version_txt()
     README = open_local("README.md").read()
     INSTALL_REQUIRES = read_requires()
-    VERSION = open_local(VERSION_TXT).readline().strip()
 
     setup(
         name="grpy",
         description="Web Application to build groups / teams",
         long_description=README,
-        version=VERSION,
+        version="2019.5.28",
         packages=find_packages(),
         include_package_data=True,
         zip_safe=False,

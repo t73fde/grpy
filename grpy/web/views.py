@@ -93,7 +93,17 @@ def home():
 
 def about():
     """Show about page."""
-    return render_template("about.html", version=current_app.version.user_version)
+    version = current_app.version
+    if version.user_version:
+        versions = [version.user_version]
+    else:
+        versions = []
+    if g.user and g.user.is_admin:
+        if version.vcs_version:
+            versions.append(version.vcs_version)
+        if version.build_date:
+            versions.append(version.build_date)
+    return render_template("about.html", versions=versions)
 
 
 def shortlink(code: str):

@@ -231,6 +231,10 @@ def create_app(config_mapping: Dict[str, Any] = None) -> GrpyApp:
     app = GrpyApp("grpy.web")
     app.setup_config(config_mapping)
     app.setup()
+    version = cast(Version, app.version)
+    app.log_info(
+        f"Version = {version.user_version} / "
+        f"{version.vcs_version} / {version.build_date}")
 
     for code in (401, 403, 404):
         app.register_error_handler(code, handle_client_error)

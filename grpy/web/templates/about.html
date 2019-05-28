@@ -24,9 +24,13 @@
 <div class="w3-panel">
 <h1>About this software</h1>
 Grpy is a small service to group users, according to specific constraints.
-{% if version %}
+{% if versions %}
 <hr />
-<div class="w3-right-align w3-small">Version: {{ version }}</div>
+<div class="w3-right-align w3-small">Version:
+{% for version in versions -%}
+{%- if not loop.first %}<br>{% endif %}{{ version }}
+{%- endfor -%}
+</div>
 {% endif %}
 </div>
 {% endblock %}
