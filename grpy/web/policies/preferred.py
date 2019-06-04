@@ -26,7 +26,7 @@ from wtforms.validators import Length
 
 from ...core.models import UserPreferences
 from ...policies.preferred import PreferredPreferences
-from ..forms import RegistrationForm
+from ..core.forms import RegistrationForm
 
 
 def create_preferred_policy_form(num_entries: int):

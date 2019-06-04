@@ -24,12 +24,12 @@ import datetime
 
 from flask import url_for
 
-from ...core import utils
-from ...core.models import (Grouping, Permissions, Registration, User,
-                            UserPreferences)
-from ...version import Version
-from ..app import GrpyApp
-from .common import check_get_data
+from ....core import utils
+from ....core.models import (Grouping, Permissions, Registration, User,
+                             UserPreferences)
+from ....version import Version
+from ...app import GrpyApp
+from ...test.common import check_get_data
 
 
 def test_home_anonymous(client) -> None:

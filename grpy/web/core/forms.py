@@ -26,7 +26,7 @@ from wtforms.fields import DateTimeField as WTFDateTimeField
 from wtforms.fields import SubmitField
 from wtforms.widgets.html5 import DateTimeLocalInput
 
-from ..core.models import UserPreferences
+from ...core.models import UserPreferences
 from .utils import local2utc, utc2local
 
 

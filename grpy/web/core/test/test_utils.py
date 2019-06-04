@@ -27,8 +27,8 @@ from flask import url_for
 from werkzeug.exceptions import NotFound
 from werkzeug.test import Client
 
-from ...core.models import GroupingKey, Permissions, User, UserKey
-from ..app import GrpyApp, create_app
+from ....core.models import GroupingKey, Permissions, User, UserKey
+from ...app import GrpyApp, create_app
 from ..middleware import PrefixMiddleware
 from ..utils import (admin_required, datetimeformat, login_required,
                      login_required_redirect, make_model, to_bool, truncate,

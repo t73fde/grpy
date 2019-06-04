@@ -29,7 +29,7 @@ from ...policies.simple_belbin import (AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER,
                                        STRONGLY_AGREE, STRONGLY_DISAGREE,
                                        SimpleBelbinAnswer,
                                        SimpleBelbinPreferences)
-from ..forms import RegistrationForm
+from ..core.forms import RegistrationForm
 
 
 class SimpleBelbinPolicyForm(RegistrationForm):

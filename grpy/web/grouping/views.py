@@ -32,9 +32,9 @@ from ...core.models import (Grouping, GroupingKey, GroupingState, Registration,
 from ...policies import get_policy
 from ...repo.base import Connection
 from ...repo.logic import get_grouping_state, set_grouping_new_code
+from ..core.utils import (admin_required, login_required, make_model,
+                          update_model, value_or_404)
 from ..policies import get_policy_names, get_registration_form
-from ..utils import (admin_required, login_required, make_model, update_model,
-                     value_or_404)
 from . import forms
 
 

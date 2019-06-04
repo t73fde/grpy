@@ -34,8 +34,9 @@ from ..repo import create_repository
 from ..repo.base import Connection, Repository
 from ..repo.logic import set_grouping_new_code
 from ..version import Version, get_version, read_version_file
-from . import auth, grouping, policies, user, utils, views
-from .middleware import get_prefix_middleware
+from . import auth, grouping, policies, user
+from .core import utils, views
+from .core.middleware import get_prefix_middleware
 
 
 class GrpyApp(Flask):

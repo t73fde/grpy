@@ -26,7 +26,7 @@ from wtforms.validators import (DataRequired, InputRequired, Length,
                                 NumberRange, Optional, ValidationError)
 from wtforms.widgets import TextArea
 
-from ..forms import DateTimeField
+from ..core.forms import DateTimeField
 
 
 class GroupingForm(FlaskForm):

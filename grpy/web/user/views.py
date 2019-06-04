@@ -27,7 +27,7 @@ from flask import (current_app, flash, g, redirect, render_template, request,
 
 from ...core.models import Permissions, User, UserKey
 from ...repo.base import Connection, DuplicateKey
-from ..utils import admin_required, value_or_404
+from ..core.utils import admin_required, value_or_404
 from . import forms
 
 

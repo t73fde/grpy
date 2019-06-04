@@ -22,7 +22,7 @@
 from flask import Flask
 from werkzeug.test import Client
 
-from ..app import create_app
+from ...app import create_app
 from ..middleware import (PrefixMiddleware, cleanup_prefix,
                           get_prefix_middleware)
 

@@ -30,7 +30,7 @@ from flask import (abort, current_app, g, get_flashed_messages, redirect,
 from flask_babel import format_datetime
 from werkzeug.routing import UUIDConverter
 
-from ..core.models import GroupingKey, Model, UserKey
+from ...core.models import GroupingKey, Model, UserKey
 
 
 class GroupingKeyConverter(UUIDConverter):
