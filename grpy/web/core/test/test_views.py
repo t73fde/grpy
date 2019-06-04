@@ -137,12 +137,12 @@ def test_home_user_after_register(app, client, auth, app_grouping: Grouping) -> 
     assert client.get(register_url).status_code == 302
 
 
-def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> None:
-    """Home view shows registration."""
+def test_home_user_after_final(app, client, auth, app_grouping: Grouping) -> None:
+    """Home view shows group membership."""
     app_grouping = app.get_connection().set_grouping(dataclasses.replace(
         app_grouping,
         final_date=app_grouping.begin_date + datetime.timedelta(seconds=60),
-        close_date=app_grouping.begin_date + datetime.timedelta(seconds=61)))
+        close_date=app_grouping.begin_date + datetime.timedelta(days=2)))
     assert app_grouping.key is not None
 
     auth.login("user")
@@ -151,8 +151,31 @@ def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> Non
     app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
 
     data = check_get_data(client, url_for('home'))
+    assert "Groups" in data
+    assert "Member" in data
+    assert app_grouping.name in data
+    assert user.ident in data
+
+
+def test_home_user_after_close(app, client, auth, app_grouping: Grouping) -> None:
+    """Home view shows nothing."""
+    app_grouping = app.get_connection().set_grouping(dataclasses.replace(
+        app_grouping,
+        final_date=app_grouping.begin_date + datetime.timedelta(seconds=60),
+        close_date=app_grouping.begin_date + datetime.timedelta(seconds=61)))
+    assert app_grouping.key is not None
+
+    auth.login("user_close")
+    user = app.get_connection().get_user_by_ident("user_close")
+    assert user.key is not None
+    app.get_connection().set_groups(app_grouping.key, (frozenset([user.key]),))
+
+    data = check_get_data(client, url_for('home'))
     assert "Groups" not in data
     assert "Member" not in data
+    assert app_grouping.name not in data
+    assert data.count(user.ident) == 1
+    assert "Please use a valid grouping link" in data
 
 
 def test_home_inactive(app: GrpyApp, client, auth) -> None:

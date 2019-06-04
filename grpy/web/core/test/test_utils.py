@@ -28,11 +28,12 @@ from werkzeug.exceptions import NotFound
 from werkzeug.test import Client
 
 from ....core.models import GroupingKey, Permissions, User, UserKey
+from ....repo.base import Message
 from ...app import GrpyApp, create_app
 from ..middleware import PrefixMiddleware
-from ..utils import (admin_required, datetimeformat, login_required,
-                     login_required_redirect, make_model, to_bool, truncate,
-                     update_model, value_or_404)
+from ..utils import (admin_required, datetimeformat, get_all_messages,
+                     login_required, login_required_redirect, make_model,
+                     to_bool, truncate, update_model, value_or_404)
 
 
 def test_grouping_key_converter(ram_app: GrpyApp, ram_client) -> None:
@@ -209,7 +210,7 @@ def test_update_model() -> None:
     assert user == User(key, "user")
 
 
-def test_datetime_format(ram_app) -> None:
+def test_datetimeformat(ram_app) -> None:
     """Return a datetime according to given format."""
     assert datetimeformat() is None
     assert datetimeformat(None, None, False) is None
@@ -217,6 +218,40 @@ def test_datetime_format(ram_app) -> None:
     dt_val = datetime.datetime(2019, 2, 4, 16, 55, 0, tzinfo=ram_app.default_tz)
     assert datetimeformat(dt_val, "iso-short", False) == "2019-02-04 16:55"
     assert datetimeformat(dt_val, "YYYY", False) == "2019"
+
+
+def test_get_all_messages_none(ram_app) -> None:  # pylint: disable=unused-argument
+    """Return messages from repository or session."""
+    assert get_all_messages() == []
+
+
+def test_get_all_messages_repo(ram_app, monkeypatch) -> None:
+    """Return messages from repository."""
+    def get_messages():
+        return [Message('cr', "mr")]
+
+    conn = ram_app.get_connection()
+    monkeypatch.setattr(conn, "get_messages", get_messages)
+    assert get_all_messages() == [("cr", "mr")]
+
+
+def test_get_all_messages_session(ram_app, ram_client, monkeypatch) -> None:
+    """Return messages via session."""
+    def just_a_view() -> bytes:
+        """This view is for testing only."""
+        return b"View"
+
+    def get_messages():
+        return [Message('cs', "ms")]
+
+    conn = ram_app.get_connection()
+    with monkeypatch.context() as patch:
+        patch.setattr(conn, "get_messages", get_messages)
+        ram_app.add_url_rule('/test/', "test_view", just_a_view)
+        response = ram_client.get(url_for("test_view"))
+    assert response.status_code == 200
+    assert response.data == b"View"
+    assert get_all_messages() == [("cs", "ms")]
 
 
 def test_truncate() -> None:

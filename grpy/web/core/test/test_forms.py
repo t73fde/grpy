@@ -29,14 +29,16 @@ from ...test.common import FormData
 from ..forms import DateTimeField
 
 
-def test_date_time_field(ram_app: GrpyApp) -> None:  # pylint: disable=unused-argument
+class DateTimeForm(Form):  # pylint: disable=too-few-public-methods
+    """Just a test form."""
+    a = DateTimeField("a")
+
+
+def test_date_time_field_formdata(
+        ram_app: GrpyApp) -> None:  # pylint: disable=unused-argument
     """The date time field is time zone aware."""
 
-    class TestForm(Form):  # pylint: disable=too-few-public-methods
-        """Just a test form."""
-        a = DateTimeField("a")
-
-    form = TestForm(formdata=FormData(a="2019-05-27T16:17"))
+    form = DateTimeForm(formdata=FormData(a="2019-05-27T16:17"))
     assert form.a.raw_data == ["2019-05-27T16:17"]
     assert form.a.data == datetime.datetime(2019, 5, 27, 14, 17, tzinfo=pytz.UTC)
     assert str(form.a) == \
@@ -46,3 +48,26 @@ def test_date_time_field(ram_app: GrpyApp) -> None:  # pylint: disable=unused-ar
     assert form.a._value() == "abc def"  # pylint: disable=protected-access
     assert str(form.a) == \
         '<input id="a" name="a" type="datetime-local" value="abc def">'
+
+
+def test_date_time_field_kwargs(
+        ram_app: GrpyApp) -> None:  # pylint: disable=unused-argument
+    """The date time field is time zone aware."""
+
+    my_date = datetime.datetime(2019, 5, 27, 14, 17, tzinfo=pytz.UTC)
+    form = DateTimeForm(a=my_date)
+    assert form.a.raw_data is None
+    assert form.a.data == my_date
+    assert str(form.a) == \
+        '<input id="a" name="a" type="datetime-local" value="2019-05-27T16:17">'
+
+
+def test_date_time_field_none(
+        ram_app: GrpyApp) -> None:  # pylint: disable=unused-argument
+    """The date time field is time zone aware."""
+
+    form = DateTimeForm()
+    assert form.a.raw_data is None
+    assert form.a.data is None
+    assert str(form.a) == \
+        '<input id="a" name="a" type="datetime-local" value="">'
