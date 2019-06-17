@@ -55,7 +55,7 @@ class GrpyApp(Flask):
         self.config.from_pyfile("config.py")  # type: ignore
         if config_mapping:
             if config_mapping.get('TESTING', False):
-                self.config.from_mapping(  # type: ignore
+                self.config.from_mapping(  # nosec, type: ignore
                     SECRET_KEY="dev",
                     REPOSITORY="ram://",
                     WTF_CSRF_ENABLED=False,
