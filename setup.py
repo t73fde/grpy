@@ -42,7 +42,7 @@ def execute_command(args: List[str]) -> List[str]:
     process = subprocess.run(args, stdout=subprocess.PIPE)  # nosec
     if process.returncode:
         return []
-    return [line for line in process.stdout.decode('utf-8').split("\n")]
+    return [line for line in process.stdout.decode('utf-8').splitlines()]
 
 
 def create_requirements_txt() -> None:
