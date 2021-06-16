@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -87,7 +87,7 @@ def lint_flake8(source_paths: List[str], verbose: int) -> bool:
 def run_coverage(paths: Sequence[str], test_directory: str, verbose: int) -> bool:
     """Run the coverage checks."""
     process = exec_subprocess(
-        ["pytest", "--testmon-off", "--cov-report=term", "--cov-report=html"] +
+        ["pytest", "--cov-report=term", "--cov-report=html"] +
         ["--cov=" + p for p in paths] + [test_directory],
         verbose)
     if process.returncode:

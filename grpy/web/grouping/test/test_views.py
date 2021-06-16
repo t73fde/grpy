@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -114,7 +114,7 @@ def test_grouping_create(app: GrpyApp, client, auth) -> None:
 
     response = client.post(url, data={})
     assert response.status_code == 200
-    assert response.data.count(b'This field is required') == 5
+    assert response.data.count(b'This field is required') == 6
 
     check_redirect(
         client.post(url, data={
@@ -281,7 +281,7 @@ def test_grouping_update(
     check_get(client, url)
     response = client.post(url, data={})
     assert response.status_code == 200
-    assert response.data.count(b'This field is required') == 5
+    assert response.data.count(b'This field is required') == 6
 
     check_redirect(
         client.post(url, data={
@@ -649,7 +649,7 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
 
         response = client.post(url)
         assert response.status_code == 200
-        assert "Not a valid choice" in response.data.decode('utf-8')
+        assert "This field is required." in response.data.decode('utf-8')
 
         response = client.post(url, data={'new_host': "abcdef\0ghij"})
         assert response.status_code == 200
@@ -657,7 +657,7 @@ def test_assign_grouping(  # pylint: disable=too-many-locals
 
         response = client.post(url, data={'new_host': ""})
         assert response.status_code == 200
-        assert "This field is required" in response.data.decode('utf-8')
+        assert "This field is required." in response.data.decode('utf-8')
 
         check_redirect(
             client.post(url, data={

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -41,7 +41,7 @@ Flask = "*"
 Flask-Babel = "*"
 Flask-WTF = "*"
 WTForms = "*"
-dataclasses = {version="*", markers="python_version < 3.7"}
+#dataclasses = {version="*", markers="python_version < 3.7"}
 pytz = "*"
 gunicorn = "*"
 requests = "*"

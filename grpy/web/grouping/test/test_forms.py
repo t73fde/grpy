@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -34,7 +34,7 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
         'final_date': ["This field is required."],
         'max_group_size': ["This field is required."],
         'member_reserve': ["This field is required."],
-        'policy': ["Not a valid choice"],
+        'policy': ["This field is required."],
     }
 
     form = GroupingForm(formdata=FormData(

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -106,7 +106,7 @@ def test_setup_time_zone_invalid(caplog) -> None:
     """When specifying an invalid time zone. use UTC and log an error."""
     assert create_app(config_mapping={'DEFAULT_TZ': "*none*"}).default_tz is pytz.UTC
     assert caplog.record_tuples == [
-        ('flask.app', logging.ERROR, "Unknown DEFAULT_TZ: '*none*', will use 'UTC'."),
+        ('grpy.web', logging.ERROR, "Unknown DEFAULT_TZ: '*none*', will use 'UTC'."),
     ]
 
 
@@ -124,10 +124,10 @@ def do_login(grpy_app: Flask) -> Client:
     """Login user 'host'."""
     client = Client(grpy_app)
     with grpy_app.test_request_context():
-        _iter_data, status, headers = client.post(  # type: ignore
+        resp = client.post(  # type: ignore
             url_for('auth.login'), data={'ident': "host", 'password': "1"})
-    assert status == "302 FOUND"
-    assert headers['Location'] == "http://localhost/"
+    assert resp.status == "302 FOUND"
+    assert resp.headers['Location'] == "http://localhost/"
     return client
 
 
@@ -143,10 +143,9 @@ def test_flash_connection_messages_get(monkeypatch) -> None:
     monkeypatch.setattr(
         ValidatingProxyConnection, 'iter_groups_by_user', raise_value_error)
     with grpy_app.test_request_context():
-        iter_data, status, _headers = client.get(url_for('home'))  # type: ignore
-    assert status == "200 OK"
-    data = b" ".join(iter_data)
-    assert b"builtins.ValueError: Test for critical get message" in data
+        resp = client.get(url_for('home'))  # type: ignore
+    assert resp.status == "200 OK"
+    assert b"builtins.ValueError: Test for critical get message" in resp.data
 
 
 def test_flash_connection_messages_push(monkeypatch) -> None:
@@ -160,7 +159,6 @@ def test_flash_connection_messages_push(monkeypatch) -> None:
     monkeypatch.setattr(ValidatingProxyConnection, 'set_user', raise_value_error)
     client = do_login(grpy_app)
     with grpy_app.test_request_context():
-        iter_data, status, _headers = client.get(url_for('home'))  # type: ignore
-    assert status == "200 OK"
-    data = b" ".join(iter_data)
-    assert b"builtins.ValueError: Test for critical post message" in data
+        resp = client.get(url_for('home'))  # type: ignore
+    assert resp.status == "200 OK"
+    assert b"builtins.ValueError: Test for critical post message" in resp.data

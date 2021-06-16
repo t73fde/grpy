@@ -10,6 +10,7 @@
 .testmondata
 .tmontmp
 .tox
+.vscode
 VERSION.txt
 build/
 dist/

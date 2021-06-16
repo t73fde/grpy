@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -62,17 +62,17 @@ def test_prefix_call_valid() -> None:
     """A valid prefix will lead to valid results."""
     app = PrefixMiddleware(_make_app(), "prefix")
     client = Client(app)
-    iter_data, status, _headers = client.get('/prefix/test')  # type: ignore
-    assert status.split(" ")[:1] == ['200']
-    assert list(iter_data) == [b"jaw"]
+    resp = client.get('/prefix/test')  # type: ignore
+    assert resp.status.split(" ")[:1] == ['200']
+    assert resp.data == b"jaw"
 
 
 def test_prefix_call_invalid() -> None:
     """An invalid prefix will lead to error page."""
     app = PrefixMiddleware(_make_app(), "prefix")
     client = Client(app)
-    _iter_data, status, _headers = client.get('/test')  # type: ignore
-    assert status.split(" ")[:1] == ['404']
+    resp = client.get('/test')  # type: ignore
+    assert resp.status.split(" ")[:1] == ['404']
 
 
 def test_prefix_call_scheme() -> None:

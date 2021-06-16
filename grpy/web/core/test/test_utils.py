@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -178,10 +178,10 @@ def test_login_required_redirect_prefix() -> None:
     grpy_app.add_url_rule('/test', "test", just_a_view)
     app = PrefixMiddleware(grpy_app, '/prefix')
     client = Client(app)
-    _, status, headers = client.get('/prefix/test')  # type: ignore
-    assert status.split(" ")[:1] == ["302"]
+    resp = client.get('/prefix/test')  # type: ignore
+    assert resp.status.split(" ")[:1] == ["302"]
     with grpy_app.test_request_context():
-        assert headers['Location'] == \
+        assert resp.headers['Location'] == \
             "http://localhost/prefix" + url_for('auth.login', next_url='/prefix/test')
 
 
