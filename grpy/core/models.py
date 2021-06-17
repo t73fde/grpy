@@ -159,7 +159,7 @@ class GroupingKey(KeyType):
     """Key to identify a grouping."""
 
 
-@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
+@dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods,R0902
 class Grouping(Model):  # pylint: disable=too-many-instance-attributes
     """Grouping data."""
 
