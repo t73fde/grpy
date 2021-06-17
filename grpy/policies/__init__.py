@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -49,7 +49,7 @@ def identity_policy(
 
 def random_policy(data: PolicyData, max_group_size: int, member_reserve: int) -> Groups:
     """Build groups randomly."""
-    users = [user for user in data]
+    users = list(data)
     random.shuffle(users)
     return _build_groups(users, max_group_size, member_reserve)
 

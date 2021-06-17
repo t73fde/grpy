@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -42,7 +42,7 @@ def _get_user(user_key: UserKey) -> User:
 
 def get_connection() -> Connection:
     """Return an open connection, specific for this request."""
-    return cast(Connection, current_app.get_connection())
+    return cast(Connection, current_app.get_connection())  # type: ignore
 
 
 @admin_required

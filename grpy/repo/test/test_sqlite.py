@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -53,20 +53,20 @@ def test_connect() -> None:
     assert SqliteRepository("sqlite:").can_connect() is True
     assert SqliteRepository("sqlite://./\0").can_connect() is False
 
-    temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+    with tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False) as temp_file:
+        temp_file_name = temp_file.name
+        try:
+            assert SqliteRepository("sqlite://" + temp_file_name).can_connect()
+            temp_file.write(b"Hello World!\n")
+            # assert not SqliteRepository("sqlite://" + temp_file.name).can_connect()
+        finally:
+            os.unlink(temp_file_name)
+    assert not os.path.exists(temp_file_name)
     try:
-        assert SqliteRepository("sqlite://" + temp_file.name).can_connect()
-        temp_file.write(b"Hello World!\n")
-        # assert not SqliteRepository("sqlite://" + temp_file.name).can_connect()
+        assert SqliteRepository("sqlite://" + temp_file_name).can_connect()
     finally:
-        temp_file.close()
-        os.unlink(temp_file.name)
-    assert not os.path.exists(temp_file.name)
-    try:
-        assert SqliteRepository("sqlite://" + temp_file.name).can_connect()
-    finally:
-        os.unlink(temp_file.name)
-    assert not os.path.exists(temp_file.name)
+        os.unlink(temp_file_name)
+    assert not os.path.exists(temp_file_name)
 
 
 def test_memory_always_other_connection() -> None:
@@ -83,10 +83,12 @@ def test_memory_always_other_connection() -> None:
 
 def test_real_always_other_connection() -> None:
     """The repository will always return another connection for real SQLite."""
-    temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+    temp_file = tempfile.NamedTemporaryFile(  # pylint: disable=consider-using-with
+        suffix=".sqlite3", delete=False)
+    temp_file_name = temp_file.name
     try:
         temp_file.close()
-        repository = SqliteRepository("sqlite://" + temp_file.name)
+        repository = SqliteRepository("sqlite://" + temp_file_name)
         connection_1 = repository.create()
         assert connection_1 is not None
         connection_2 = repository.create()
@@ -95,8 +97,8 @@ def test_real_always_other_connection() -> None:
         connection_1.close(True)
         connection_2.close(False)
     finally:
-        os.unlink(temp_file.name)
-    assert not os.path.exists(temp_file.name)
+        os.unlink(temp_file_name)
+    assert not os.path.exists(temp_file_name)
 
 
 def test_memory_initialize() -> None:
@@ -220,7 +222,7 @@ def test_get_registration() -> None:
     assert host.key is not None
     grouping = connection.set_grouping(make_grouping("code", host.key))
     assert grouping.key is not None
-    user = connection.set_user(User(None, "UsER"))
+    user = connection.set_user(User(None, "UsEr"))
     assert user.key is not None
 
     registration = Registration(grouping.key, user.key, UserPreferences())
@@ -239,13 +241,13 @@ def test_iter_user_registrations_by_grouping() -> None:
     grouping = connection.set_grouping(make_grouping("code", host.key))
     assert grouping.key is not None
 
-    for i in range(7):
+    for i in range(8):
         user = connection.set_user(User(None, "user-%d" % i))
         assert user.key is not None
         connection.set_registration(Registration(
             grouping.key, user.key, UserPreferences()))
 
-    assert len(list(connection.iter_user_registrations_by_grouping(grouping.key))) == 7
+    assert len(list(connection.iter_user_registrations_by_grouping(grouping.key))) == 8
     connection._execute(  # pylint: disable=protected-access
         "UPDATE registrations SET preferences=''")
     assert not connection.iter_user_registrations_by_grouping(grouping.key)

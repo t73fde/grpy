@@ -76,7 +76,8 @@ def lint_formatting(source_paths: List[str], verbose: int) -> bool:
 def lint_flake8(source_paths: List[str], verbose: int) -> bool:
     """Run flake8."""
     try:
-        from _multiprocessing import SemLock  # noqa: F401 pylint: disable=unused-import
+        from _multiprocessing import (  # noqa: F401 pylint: disable=unused-import
+            SemLock)
         flake8_params: List[str] = []
     except ImportError:
         flake8_params = ["-j", "1"]

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -98,7 +98,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
             try:
                 previous_user = self._state.users[user.key]
             except KeyError:
-                raise NothingToUpdate("Missing user", user.key)
+                raise NothingToUpdate("Missing user", user.key) from None
             if previous_user.ident != user.ident:
                 del self._state.users_ident[previous_user.ident]
         else:
@@ -139,7 +139,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
             try:
                 previous_grouping = self._state.groupings[grouping.key]
             except KeyError:
-                raise NothingToUpdate("Missing grouping", grouping.key)
+                raise NothingToUpdate("Missing grouping", grouping.key) from None
             if previous_grouping.code != grouping.code:
                 del self._state.groupings_code[previous_grouping.code]
         else:
@@ -209,8 +209,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
             del self._state.registrations[key]
 
     def iter_groupings_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
@@ -218,8 +217,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
                 if p == user_key)
 
     def iter_user_registrations_by_grouping(
-            self,
-            grouping_key: GroupingKey,
+            self, grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
@@ -236,8 +234,7 @@ class RamConnection(Connection):  # pylint: disable=too-many-public-methods
         return cast(Groups, self._state.groups.get(grouping_key, ()))
 
     def iter_groups_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""

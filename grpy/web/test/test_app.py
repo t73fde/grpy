@@ -124,7 +124,7 @@ def do_login(grpy_app: Flask) -> Client:
     """Login user 'host'."""
     client = Client(grpy_app)
     with grpy_app.test_request_context():
-        resp = client.post(  # type: ignore
+        resp = client.post(
             url_for('auth.login'), data={'ident': "host", 'password': "1"})
     assert resp.status == "302 FOUND"
     assert resp.headers['Location'] == "http://localhost/"
@@ -143,7 +143,7 @@ def test_flash_connection_messages_get(monkeypatch) -> None:
     monkeypatch.setattr(
         ValidatingProxyConnection, 'iter_groups_by_user', raise_value_error)
     with grpy_app.test_request_context():
-        resp = client.get(url_for('home'))  # type: ignore
+        resp = client.get(url_for('home'))
     assert resp.status == "200 OK"
     assert b"builtins.ValueError: Test for critical get message" in resp.data
 
@@ -159,6 +159,6 @@ def test_flash_connection_messages_push(monkeypatch) -> None:
     monkeypatch.setattr(ValidatingProxyConnection, 'set_user', raise_value_error)
     client = do_login(grpy_app)
     with grpy_app.test_request_context():
-        resp = client.get(url_for('home'))  # type: ignore
+        resp = client.get(url_for('home'))
     assert resp.status == "200 OK"
     assert b"builtins.ValueError: Test for critical post message" in resp.data

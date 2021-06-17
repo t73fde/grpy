@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -43,7 +43,7 @@ def _create_simple_belbin_preferences() -> PolicyData:
                     SimpleBelbinAnswer,
                     tuple(random.randint(0, 3) for _ in range(8)))
             data[user] = SimpleBelbinPreferences(answers)
-    return cast(PolicyData, data)
+    return data
 
 
 def test_build_simple_belbin_rating_data() -> None:

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -199,7 +199,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         """Execute a SQL command."""
         if self._connection is None:
             raise TypeError("SQLite connection is None")
-        return cast(sqlite3.Cursor, self._connection.execute(sql, values))
+        return self._connection.execute(sql, values)
 
     def set_user(self, user: User) -> User:
         """Add / update the given user."""
@@ -216,7 +216,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
                     (user.ident, user.permissions.value, user.last_login, user.key))
             except sqlite3.IntegrityError as exc:
                 if exc.args[0] == 'UNIQUE constraint failed: users.ident':
-                    raise DuplicateKey("User.ident", user.ident)
+                    raise DuplicateKey("User.ident", user.ident) from None
                 raise
             return user
 
@@ -227,7 +227,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
                 (user_key, user.ident, user.permissions.value, user.last_login))
         except sqlite3.IntegrityError as exc:
             if exc.args[0] == 'UNIQUE constraint failed: users.ident':
-                raise DuplicateKey("User.ident", user.ident)
+                raise DuplicateKey("User.ident", user.ident) from None
             raise
         return dataclasses.replace(user, key=user_key)
 
@@ -288,7 +288,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
                         grouping.note, grouping.key))
             except sqlite3.IntegrityError as exc:
                 if exc.args[0] == 'UNIQUE constraint failed: groupings.code':
-                    raise DuplicateKey("Grouping.code", grouping.code)
+                    raise DuplicateKey("Grouping.code", grouping.code) from None
                 raise
             return grouping
 
@@ -302,7 +302,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
                     grouping.member_reserve, grouping.note))
         except sqlite3.IntegrityError as exc:
             if exc.args[0] == 'UNIQUE constraint failed: groupings.code':
-                raise DuplicateKey("Grouping.code", grouping.code)
+                raise DuplicateKey("Grouping.code", grouping.code) from None
             raise
         return dataclasses.replace(grouping, key=grouping_key)
 
@@ -357,8 +357,8 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         if encoded is None:
             self._add_message(
                 'critical',
-                f"Unable to store preferences of type "
-                "{type(registration.preferences)}. "
+                "Unable to store preferences of type "
+                f"{type(registration.preferences)}. "
                 "Please consult your administrator.")
             return registration
         cursor = self._execute(
@@ -413,8 +413,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
             "DELETE FROM registrations WHERE grouping_key=?", (grouping_key, ))
 
     def iter_groupings_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
@@ -432,8 +431,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         return result
 
     def iter_user_registrations_by_grouping(
-            self,
-            grouping_key: GroupingKey,
+            self, grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
@@ -492,8 +490,7 @@ class SqliteConnection(Connection):  # pylint: disable=too-many-public-methods
         return tuple(result)
 
     def iter_groups_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""

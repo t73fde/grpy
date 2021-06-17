@@ -178,7 +178,7 @@ def test_login_required_redirect_prefix() -> None:
     grpy_app.add_url_rule('/test', "test", just_a_view)
     app = PrefixMiddleware(grpy_app, '/prefix')
     client = Client(app)
-    resp = client.get('/prefix/test')  # type: ignore
+    resp = client.get('/prefix/test')
     assert resp.status.split(" ")[:1] == ["302"]
     with grpy_app.test_request_context():
         assert resp.headers['Location'] == \

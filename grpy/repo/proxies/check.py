@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -75,7 +75,8 @@ class CatchingProxyConnection(FilterProxyConnection):
             Message(category=category, text=text, exception=exception))
         self._has_errors = True
 
-    def _filter(self, function: Callable, default, *args):
+    def _filter(  # pylint: disable=arguments-differ
+            self, function: Callable, default, *args):
         """Execute function call and catches all relevant exceptions."""
         try:
             return super()._filter(function, default, *args)

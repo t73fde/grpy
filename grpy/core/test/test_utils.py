@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -83,8 +83,6 @@ def test_lazy_list_len() -> None:
     """Calculating the length result in consuming the whole iterator."""
     assert len(LazyList([])) == 0  # pylint: disable=len-as-condition
     assert len(LazyList([1, 2, 3])) == 3
-    assert len(LazyList(  # pylint: disable=len-as-condition
-        i for i in [])) == 0  # type: ignore
     assert len(LazyList(i for i in [1])) == 1
     assert len(LazyList(())) == 0  # pylint: disable=len-as-condition
     assert len(LazyList((1,))) == 1
@@ -99,7 +97,6 @@ def test_lazy_list_iterator() -> None:
     """The lazy list is itself an iterator."""
     assert list(LazyList([])) == []
     assert list(LazyList([1, 2, 3])) == [1, 2, 3]
-    assert list(LazyList(i for i in [])) == []  # type: ignore
     assert list(LazyList(i for i in [1])) == [1]
     assert list(LazyList(())) == []
     assert list(LazyList((1,))) == [1]

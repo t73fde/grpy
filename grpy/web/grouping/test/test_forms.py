@@ -28,7 +28,7 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
     form = GroupingForm()
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'name': ["This field is required."],
         'begin_date': ["This field is required."],
         'final_date': ["This field is required."],
@@ -42,7 +42,7 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
         max_group_size="n", member_reserve="n", note=""))
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'begin_date': ["Not a valid datetime value"],
         'final_date': ["Not a valid datetime value"],
         'max_group_size': ["Not a valid integer value", "Number must be at least 1."],
@@ -56,7 +56,7 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
         max_group_size=2, member_reserve=1, note="Note"))
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'final_date': ["Final date must be after begin date."],
     }
 
@@ -66,7 +66,7 @@ def test_grouping_form(ram_app) -> None:  # pylint: disable=unused-argument
         policy="RD", max_group_size=2, member_reserve=1, note="Notes" * 1000))
     form.policy.choices = [('RD', "Random")]
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'name': ["Field cannot be longer than 1000 characters."],
         'close_date': ["Close date must be after final date."],
         'note': ["Field cannot be longer than 2000 characters."],

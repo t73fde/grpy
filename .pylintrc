@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -449,10 +449,10 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+min-similarity-lines=7
 
 
 [VARIABLES]

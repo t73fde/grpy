@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -36,6 +36,7 @@ class DummyRepository(Repository):
 
     def can_connect(self) -> bool:
         """Test the connection to the data source."""
+        # Nothing to do
         return True
 
     def initialize(self) -> bool:

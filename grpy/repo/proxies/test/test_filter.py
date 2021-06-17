@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -52,7 +52,8 @@ class MockedFilterProxyConnection(FilterProxyConnection):
         """Return the delegate as a mock object."""
         return self._delegate
 
-    def _filter(self, function: Callable, default, *args):
+    def _filter(  # pylint: disable=arguments-differ
+            self, function: Callable, default, *args):
         """Execute function call and catches all relevant exceptions."""
         self.filter_count += 1
         function(*args)

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -45,7 +45,7 @@ def check_pw(app, url: Optional[str], ident: str, password: str) -> bool:
         app.log_error(
             "Unable to get authentication from '%s' for '%s'", url, ident)
         status_code = 600
-    return 200 <= status_code <= 299
+    return 200 <= status_code <= 299  # type: ignore
 
 
 def authenticate(ident: str, password: str) -> Optional[User]:
@@ -57,14 +57,14 @@ def authenticate(ident: str, password: str) -> Optional[User]:
         ident = ident.strip()
     url = app.config.get("AUTH_URL", "http://localhost:9876/")
     if check_pw(app, url, ident, password):
-        connection: Connection = app.get_connection()
+        connection: Connection = app.get_connection()  # type: ignore
         user = connection.get_user_by_ident(ident)
         if not user:
             # The first user will be an administrator
             permissions = Permissions(0) if has_user(connection) else Permissions.ADMIN
             user = connection.set_user(User(None, ident, permissions))
         if user.is_active:
-            app.login(user.key)
+            app.login(user.key)  # type: ignore
             connection.set_user(dataclasses.replace(user, last_login=utils.now()))
             return user
     return None

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -160,7 +160,7 @@ class GroupingKey(KeyType):
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
-class Grouping(Model):
+class Grouping(Model):  # pylint: disable=too-many-instance-attributes
     """Grouping data."""
 
     key: Optional[GroupingKey]
@@ -189,8 +189,8 @@ class Grouping(Model):
                 raise ValidationFailed(f"Close date is not UTC: {self}")
             if self.final_date >= self.close_date:
                 raise ValidationFailed(
-                    f"Final date after close date: "
-                    "{self.final_date} >= {self.close_date}")
+                    "Final date after close date: "
+                    f"{self.final_date} >= {self.close_date}")
 
     def validate(self) -> None:
         """Check model for consistency."""

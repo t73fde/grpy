@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -144,13 +144,13 @@ def local2utc(dt_value: Optional[datetime.datetime]) -> Optional[datetime.dateti
     """Convert a local date time value into utc time zone."""
     if dt_value is None:
         return None
-    local_value = current_app.default_tz.localize(dt_value)
+    local_value = current_app.default_tz.localize(dt_value)  # type: ignore
     return cast(datetime.datetime, local_value.astimezone(pytz.UTC))
 
 
 def utc2local(dt_value: datetime.datetime) -> datetime.datetime:
     """Convert a date time of utc time zone into local time zone."""
-    return dt_value.astimezone(current_app.default_tz)
+    return dt_value.astimezone(current_app.default_tz)  # type: ignore
 
 
 def datetimeformat(
@@ -193,7 +193,7 @@ def get_all_messages() -> Sequence[Tuple[str, str]]:
     """Return all messages, not just those from the session."""
     get_messages: List[Tuple[str, str]] = [
         (m.category, m.text)
-        for m in current_app.get_connection().get_messages()]
+        for m in current_app.get_connection().get_messages()]  # type: ignore
     if get_messages:
         return get_messages
     post_messages: List[Tuple[str, str]] = session.get('connection_messages', [])

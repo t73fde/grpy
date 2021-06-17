@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -36,7 +36,7 @@ from .utils import redirect_to_login, value_or_404
 
 def get_connection() -> Connection:
     """Return an open connection, specific for this request."""
-    return cast(Connection, current_app.get_connection())
+    return cast(Connection, current_app.get_connection())  # type: ignore
 
 
 @dataclasses.dataclass(frozen=True)  # pylint: disable=too-few-public-methods
@@ -53,8 +53,8 @@ def home():
     if g.user is None:
         return render_template("home_anon.html")
     if g.user and not g.user.is_active:
-        current_app.logout()
-        g.user = None
+        current_app.logout()  # type: ignore
+        g.user = None  # pylint: disable=assigning-non-slot
         return render_template("home_anon.html")
 
     open_groupings, closed_groupings = groupings_for_host(
@@ -95,7 +95,7 @@ def about():
     """Show about page."""
     versions = []
     if g.user:
-        version = current_app.version
+        version = current_app.version  # type: ignore
         if version.user_version:
             versions.append(version.user_version)
         if g.user.is_admin:

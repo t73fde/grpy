@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -68,9 +68,9 @@ def _get_request_param() -> Sequence[str]:
 def app(request) -> Iterator[GrpyApp]:
     """Create an app as fixture."""
     if request.param == "sqlite:///":
-        temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
-        temp_file.close()
-        repository_url = "sqlite://" + temp_file.name
+        with tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False) as temp_file:
+            temp_file_name = temp_file.name
+        repository_url = "sqlite://" + temp_file_name
         with_tempfile = True
     else:
         repository_url = request.param
@@ -78,7 +78,7 @@ def app(request) -> Iterator[GrpyApp]:
 
     yield _create_app(repository_url)
     if with_tempfile:
-        os.unlink(temp_file.name)
+        os.unlink(temp_file_name)
 
 
 @pytest.fixture

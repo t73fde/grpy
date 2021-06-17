@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a30533ad3155f0ed2b5b390fdabdd8c48228d91fa4ca78015016d2a46641d697"
+            "sha256": "a65cb961392e0f320ad2916774ee8865c22bbaee36c8b673fb091dd95c57ad2c"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -321,14 +321,6 @@
             ],
             "index": "pypi",
             "version": "==21.4.3"
-        },
-        "flake8-isort": {
-            "hashes": [
-                "sha256:2b91300f4f1926b396c2c90185844eb1a3d5ec39ea6138832d119da0a208f4d9",
-                "sha256:729cd6ef9ba3659512dee337687c05d79c78e1215fdf921ed67e5fe46cce2f3c"
-            ],
-            "index": "pypi",
-            "version": "==4.0.0"
         },
         "flask": {
             "hashes": [
@@ -663,13 +655,6 @@
                 "sha256:50d7b78fbaf0d04cd62411188fa7eedcb03eb7f4c4b37005615ceebe582aa82a"
             ],
             "version": "==3.3.0"
-        },
-        "testfixtures": {
-            "hashes": [
-                "sha256:5ec3a0dd6f71cc4c304fbc024a10cc293d3e0b852c868014b9f233203e149bda",
-                "sha256:9ed31e83f59619e2fa17df053b241e16e0608f4580f7b5a9333a0c9bdcc99137"
-            ],
-            "version": "==6.17.1"
         },
         "toml": {
             "hashes": [

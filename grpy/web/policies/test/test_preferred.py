@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -121,6 +121,6 @@ def test_preferred_policy_form_length(
     ident = "ident"
     form = create_preferred_policy_form(1)(idents=[ident * 1000])
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'idents': [["Field cannot be longer than 1000 characters."]],
     }

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -27,35 +27,35 @@ def test_login_form(ram_app) -> None:  # pylint: disable=unused-argument
     """Validate the login form."""
     form = LoginForm()
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'ident': ["This field is required."],
         'password': ["This field is required."],
     }
 
     form = LoginForm(formdata=FormData(ident="", password="1"))
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'ident': ["This field is required."],
     }
 
     form = LoginForm(formdata=FormData(ident="1", password=""))
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'password': ["This field is required."],
     }
 
     form = LoginForm(formdata=FormData(ident="1" * 2000, password="1"))
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'ident': ["Field cannot be longer than 1000 characters."],
     }
 
     form = LoginForm(formdata=FormData(ident="1", password="1" * 2000))
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'password': ["Field cannot be longer than 1000 characters."],
     }
 
     form = LoginForm(formdata=FormData(ident="1", password="1"))
     assert form.validate()
-    assert form.errors == {}
+    assert form.errors == {}  # pylint: disable=no-member

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -52,7 +52,7 @@ class GrpyApp(Flask):
 
     def setup_config(self, config_mapping: Dict[str, Any] = None) -> None:
         """Create the application configuration."""
-        self.config.from_pyfile("config.py")  # type: ignore
+        self.config.from_pyfile("config.py")
         if config_mapping:
             if config_mapping.get('TESTING', False):
                 self.config.from_mapping(  # nosec, type: ignore
@@ -60,8 +60,8 @@ class GrpyApp(Flask):
                     REPOSITORY="ram://",
                     WTF_CSRF_ENABLED=False,
                 )
-            self.config.from_mapping(config_mapping)  # type: ignore
-        self.config.from_envvar("GRPY_CONFIG", silent=True)  # type: ignore
+            self.config.from_mapping(config_mapping)
+        self.config.from_envvar("GRPY_CONFIG", silent=True)
         for key, value in self.config.items():
             new_value = os.environ.get(key, None)
             if new_value is None:
@@ -89,7 +89,7 @@ class GrpyApp(Flask):
         self.logger.setLevel(log_level.upper())  # pylint: disable=no-member
 
     def _setup_logging(self) -> None:
-        """Set-up application logging."""
+        """Set application logging up."""
         self._set_log_level(self.config.get('LOG_LEVEL'))
         log_handlers = self.config.get('LOG_HANDLERS')
         if log_handlers:
@@ -145,7 +145,8 @@ class GrpyApp(Flask):
         if 'connection' not in g:
             if self._repository is None:
                 raise TypeError("Repository not set")
-            g.connection = self._repository.create()
+            g.connection = \
+                self._repository.create()  # pylint: disable=assigning-non-slot
         return cast(Connection, g.connection)
 
     @staticmethod
@@ -164,10 +165,10 @@ class GrpyApp(Flask):
             if user_key_int:
                 user_obj = self.get_connection().get_user(UserKey(int=user_key_int))
                 if user_obj:
-                    g.user = user_obj
+                    g.user = user_obj  # pylint: disable=assigning-non-slot
                     return None
                 self._clear_session()
-            g.user = None
+            g.user = None  # pylint: disable=assigning-non-slot
             return None
 
         self.before_request(load_logged_in_user)
@@ -216,7 +217,7 @@ class GrpyApp(Flask):
         self.logger.error(message, *args, **kwargs)  # pylint: disable=no-member
 
     def setup(self) -> None:
-        """Set-up the app."""
+        """Set the app up."""
         self._setup_logging()
         self._setup_version()
         self._setup_time_zone()
@@ -274,9 +275,13 @@ def populate_testdata(repository: Repository) -> None:
         connection.set_user(User(None, "student"))
         connection.set_user(User(None, "xnologin"))
 
-        from datetime import timedelta
-        from ..core.utils import now as utils_now
-        from ..core.models import Grouping
+        from datetime import (  # pylint: disable=import-outside-toplevel
+            timedelta)
+        from ..core.models import (  # pylint: disable=import-outside-toplevel
+            Grouping)
+        from ..core.utils import (  # pylint: disable=import-outside-toplevel
+            now as utils_now)
+
         now = utils_now()
         for user_obj in (kreuz, stern):
             set_grouping_new_code(connection, Grouping(

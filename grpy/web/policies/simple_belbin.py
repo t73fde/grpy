@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -53,8 +53,7 @@ class SimpleBelbinPolicyForm(RegistrationForm):
         """Create a filled form."""
         if not isinstance(preferences, SimpleBelbinPreferences):
             return cls()
-        answers = cast(SimpleBelbinPreferences, preferences).answers
-        return cls(answers=answers)
+        return cls(answers=preferences.answers)
 
     def get_user_preferences(self, _config) -> UserPreferences:
         """Read user preferences from form."""

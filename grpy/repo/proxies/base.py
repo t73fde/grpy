@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -116,16 +116,14 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
         self._delegate.delete_registrations(grouping_key)
 
     def iter_groupings_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[Grouping]:
         """Return an iterator of all groupings the user applied to."""
         return self._delegate.iter_groupings_by_user(user_key, where, order)
 
     def iter_user_registrations_by_grouping(
-            self,
-            grouping_key: GroupingKey,
+            self, grouping_key: GroupingKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserRegistration]:
         """Return an iterator of user data of some user."""
@@ -141,8 +139,7 @@ class BaseProxyConnection(Connection):  # pylint: disable=too-many-public-method
         return self._delegate.get_groups(grouping_key)
 
     def iter_groups_by_user(
-            self,
-            user_key: UserKey,
+            self, user_key: UserKey,
             where: Optional[WhereSpec] = None,
             order: Optional[OrderSpec] = None) -> Iterable[UserGroup]:
         """Return an iterator of group data of some user."""

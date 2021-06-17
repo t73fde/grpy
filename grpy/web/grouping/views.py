@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -40,7 +40,7 @@ from . import forms
 
 def get_connection() -> Connection:
     """Return an open connection, specific for this request."""
-    return cast(Connection, current_app.get_connection())
+    return cast(Connection, current_app.get_connection())  # type: ignore
 
 
 def _redirect_to_detail(grouping_key: GroupingKey):
@@ -108,7 +108,8 @@ def grouping_create():
     form.policy.choices = [('', '')] + get_policy_names()
     if form.validate_on_submit():
         grouping = cast(Grouping, make_model(
-            Grouping, form.data, {"code": ".", "host_key": g.user.key}))
+            Grouping, form.data,  # pylint: disable=no-member
+            {"code": ".", "host_key": g.user.key}))
         set_grouping_new_code(
             get_connection(),
             dataclasses.replace(grouping, code=logic.make_code(grouping)))

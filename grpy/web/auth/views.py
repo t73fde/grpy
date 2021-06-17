@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -28,9 +28,9 @@ from . import forms, logic
 def login():
     """Show login form and authenticate user."""
     if g.user:
-        current_app.logout()
+        current_app.logout()  # type: ignore
         flash(f"User '{g.user.ident}' was logged out.", category="info")
-        g.user = None
+        g.user = None  # pylint: disable=assigning-non-slot
 
     if request.method == 'POST':
         form = forms.LoginForm()
@@ -48,5 +48,5 @@ def login():
 
 def logout():
     """Logout current user."""
-    current_app.logout()
+    current_app.logout()  # type: ignore
     return redirect(url_for("home"))

@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -58,9 +58,9 @@ def connection(request):
     assert messages.
     """
     if request.param == "sqlite:///":
-        temp_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
-        temp_file.close()
-        repository: Repository = SqliteRepository("sqlite://" + temp_file.name)
+        with tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False) as temp_file:
+            temp_file_name = temp_file.name
+        repository: Repository = SqliteRepository("sqlite://" + temp_file_name)
         with_tempfile = True
     else:
         if request.param == "ram:":

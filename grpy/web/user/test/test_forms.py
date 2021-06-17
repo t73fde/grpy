@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -27,12 +27,12 @@ def test_user_form(ram_app) -> None:  # pylint: disable=unused-argument
     """Validate the login form."""
     form = UserForm()
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'ident': ["This field is required."],
     }
 
     form = UserForm(formdata=FormData(ident="1" * 2000))
     assert not form.validate()
-    assert form.errors == {
+    assert form.errors == {  # pylint: disable=no-member
         'ident': ["Field cannot be longer than 1000 characters."],
     }

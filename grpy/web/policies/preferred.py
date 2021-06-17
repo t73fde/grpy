@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -18,8 +18,6 @@
 ##
 
 """Web part of policy for group forming by specifying preferred members."""
-
-from typing import cast
 
 from wtforms.fields import FieldList, StringField
 from wtforms.validators import Length
@@ -49,8 +47,7 @@ def create_preferred_policy_form(num_entries: int):
             """Create a filled form."""
             if not isinstance(preferences, PreferredPreferences):
                 return cls()
-            preferred = list(filter(
-                None, cast(PreferredPreferences, preferences).preferred))
+            preferred = list(filter(None, preferences.preferred))
             if not preferred:
                 return cls()
             return cls(idents=preferred[:num_entries])

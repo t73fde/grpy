@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -131,7 +131,7 @@ def decode_preferences(encoded: str) -> Optional[UserPreferences]:
         field_names = [field.name for field in dataclasses.fields(preference_class)]
         fields = value_dict['fields']
         values = [_list_to_tuple(fields[name]) for name in field_names]
-        result = preference_class(*values)  # type: ignore
+        result = preference_class(*values)
         return result
     except Exception:  # pylint: disable=broad-except
         return None
