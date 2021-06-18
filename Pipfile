@@ -33,6 +33,11 @@ pytest-cov = "*"
 pytest-flask = "*"
 pytest-randomly = "*"
 pytest-testmon = "*"
+types-cryptography ="*"
+types-pkg_resources ="*"
+types-pytz ="*"
+types-requests ="*"
+types-toml = "*"
 tox = "*"
 
 [packages]
