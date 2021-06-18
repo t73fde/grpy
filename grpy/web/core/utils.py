@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, cast
 import pytz
 from flask import (abort, current_app, g, get_flashed_messages, redirect,
                    request, session, url_for)
-from flask_babel import format_datetime
+from flask_babel import format_datetime  # type: ignore
 from werkzeug.routing import UUIDConverter
 
 from ...core.models import GroupingKey, Model, UserKey

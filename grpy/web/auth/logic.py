@@ -45,7 +45,7 @@ def check_pw(app, url: Optional[str], ident: str, password: str) -> bool:
         app.log_error(
             "Unable to get authentication from '%s' for '%s'", url, ident)
         status_code = 600
-    return 200 <= status_code <= 299  # type: ignore
+    return 200 <= status_code <= 299
 
 
 def authenticate(ident: str, password: str) -> Optional[User]:

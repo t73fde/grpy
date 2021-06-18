@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -19,12 +19,12 @@
 
 """Web forms for groupings."""
 
-from flask_wtf import FlaskForm
-from wtforms.fields import (HiddenField, IntegerField, SelectField,
-                            StringField, SubmitField)
-from wtforms.validators import (DataRequired, InputRequired, Length,
-                                NumberRange, Optional, ValidationError)
-from wtforms.widgets import TextArea
+from flask_wtf import FlaskForm  # type: ignore
+from wtforms.fields import (  # type: ignore
+    HiddenField, IntegerField, SelectField, StringField, SubmitField)
+from wtforms.validators import (  # type: ignore
+    DataRequired, InputRequired, Length, NumberRange, Optional, ValidationError)
+from wtforms.widgets import TextArea  # type: ignore
 
 from ..core.forms import DateTimeField
 

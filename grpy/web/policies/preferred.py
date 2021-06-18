@@ -19,8 +19,8 @@
 
 """Web part of policy for group forming by specifying preferred members."""
 
-from wtforms.fields import FieldList, StringField
-from wtforms.validators import Length
+from wtforms.fields import FieldList, StringField  # type: ignore
+from wtforms.validators import Length  # type: ignore
 
 from ...core.models import UserPreferences
 from ...policies.preferred import PreferredPreferences

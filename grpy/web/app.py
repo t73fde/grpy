@@ -24,10 +24,10 @@ import os
 from typing import Any, Dict, Optional, cast
 
 import pytz
-import pytz.exceptions
-import pytz.tzinfo
+import pytz.exceptions  # type: ignore
+import pytz.tzinfo  # type: ignore
 from flask import Flask, g, make_response, render_template, session
-from flask_babel import Babel
+from flask_babel import Babel  # type: ignore
 
 from ..core.models import Permissions, User, UserKey
 from ..repo import create_repository

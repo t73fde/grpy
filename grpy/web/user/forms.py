@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -19,9 +19,9 @@
 
 """Web forms for grpy user management."""
 
-from flask_wtf import FlaskForm
-from wtforms.fields import BooleanField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length
+from flask_wtf import FlaskForm  # type: ignore
+from wtforms.fields import BooleanField, StringField, SubmitField  # type: ignore
+from wtforms.validators import DataRequired, Length  # type: ignore
 
 
 class UserPermissionsForm(FlaskForm):

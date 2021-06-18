@@ -39,7 +39,7 @@ def exec_subprocess_no_report(args: Sequence[str], verbose: int):
     if verbose:
         click.echo("Executing '{}' ...".format(" ".join(args)), nl=False)
     process = subprocess.run(  # nosec
-        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     if verbose:
         click.echo(" done.")
     return process
@@ -276,7 +276,7 @@ def check(ctx, verbose: int) -> None:
     """Perform a check: lint and coverage."""
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(coverage, verbose=verbose)
-    ctx.invoke(outdated, verbose=verbose)
+    # ctx.invoke(outdated, verbose=verbose)
 
 
 @main.command()
@@ -287,7 +287,7 @@ def full_check(ctx, verbose: int) -> None:
     ctx.invoke(lint, verbose=verbose)
     ctx.invoke(types, verbose=verbose)
     ctx.invoke(full_coverage, verbose=verbose)
-    ctx.invoke(outdated, verbose=verbose)
+    # ctx.invoke(outdated, verbose=verbose)
 
 
 @main.command()

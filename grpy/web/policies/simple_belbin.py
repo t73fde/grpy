@@ -21,7 +21,7 @@
 
 from typing import cast
 
-from wtforms.fields import FieldList, RadioField
+from wtforms.fields import FieldList, RadioField  # type: ignore
 
 from ...core.models import UserPreferences
 from ...policies.simple_belbin import (AGREE, DEFAULT_SIMPLE_BELBIN_ANSWER,

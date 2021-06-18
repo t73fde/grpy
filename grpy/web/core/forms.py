@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -21,10 +21,10 @@
 
 from typing import Any, List, Optional
 
-from flask_wtf import FlaskForm
-from wtforms.fields import DateTimeField as WTFDateTimeField
+from flask_wtf import FlaskForm  # type: ignore
+from wtforms.fields import DateTimeField as WTFDateTimeField  # type: ignore
 from wtforms.fields import SubmitField
-from wtforms.widgets.html5 import DateTimeLocalInput
+from wtforms.widgets.html5 import DateTimeLocalInput  # type: ignore
 
 from ...core.models import UserPreferences
 from .utils import local2utc, utc2local

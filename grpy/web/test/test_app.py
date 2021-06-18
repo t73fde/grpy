@@ -23,7 +23,7 @@ import logging
 import os
 
 import pytest
-import pytz.tzinfo
+import pytz.tzinfo  # type: ignore
 from flask import Flask, g, url_for
 from werkzeug.test import Client
 

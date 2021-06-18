@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -22,7 +22,7 @@
 import datetime
 
 import pytz
-from wtforms.form import Form
+from wtforms.form import Form  # type: ignore
 
 from ...app import GrpyApp
 from ...test.common import FormData

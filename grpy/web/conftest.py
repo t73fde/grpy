@@ -53,12 +53,12 @@ def _create_app(repository_url) -> GrpyApp:
     return grpy_app
 
 
-def _get_request_param() -> Sequence[str]:
+def _get_request_param() -> Sequence[Any]:
     """Return a list of parameters for app(request)."""
     if os.environ.get('SMOKE', ''):
-        return ["ram:"]
+        return [pytest.param("ram:")]
     return [
-        "ram:",
+        pytest.param("ram:"),
         pytest.param("sqlite:", marks=pytest.mark.safe),
         pytest.param("sqlite:///", marks=pytest.mark.safe),
     ]

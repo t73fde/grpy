@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2018,2019 Detlef Stern
+#    Copyright (c) 2018-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -19,9 +19,10 @@
 
 """Web forms for grpy."""
 
-from flask_wtf import FlaskForm
-from wtforms.fields import HiddenField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length
+from flask_wtf import FlaskForm  # type: ignore
+from wtforms.fields import (  # type: ignore
+    HiddenField, PasswordField, StringField, SubmitField)
+from wtforms.validators import DataRequired, Length  # type: ignore
 
 
 class LoginForm(FlaskForm):  # pylint: disable=too-few-public-methods

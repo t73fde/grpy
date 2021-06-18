@@ -23,7 +23,7 @@ import dataclasses
 import io
 from typing import Sequence, cast
 
-import pyqrcode
+import pyqrcode  # type: ignore
 from flask import (abort, current_app, g, redirect, render_template, request,
                    url_for)
 
