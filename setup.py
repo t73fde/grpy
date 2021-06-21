@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -42,7 +42,7 @@ def execute_command(args: List[str]) -> List[str]:
     process = subprocess.run(args, stdout=subprocess.PIPE)  # nosec
     if process.returncode:
         return []
-    return [line for line in process.stdout.decode('utf-8').splitlines()]
+    return process.stdout.decode('utf-8').splitlines()
 
 
 def create_requirements_txt() -> None:
@@ -56,7 +56,7 @@ def create_requirements_txt() -> None:
     pipenv_lines = execute_command(["pipenv", "lock", "-r"])
     if not pipenv_lines:
         return
-    lines = [line for line in pipenv_lines[1:] if line]
+    lines = [line for line in pipenv_lines[1:] if line and line[0] != "-"]
     with open_local(REQUIREMENTS_TXT, "w") as req_file:
         req_file.write("### DO NOT EDIT! This file was generated.\n")
         req_file.write("\n".join(lines))

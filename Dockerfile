@@ -1,5 +1,5 @@
 ##
-#    Copyright (c) 2019 Detlef Stern
+#    Copyright (c) 2019-2021 Detlef Stern
 #
 #    This file is part of grpy - user grouping.
 #
@@ -17,13 +17,14 @@
 #    along with grpy. If not, see <http://www.gnu.org/licenses/>.
 ##
 
-FROM hshnwinps/pydev as builder
+FROM python:3.8-buster as builder
 WORKDIR /home
 COPY . /home
-RUN python setup.py --quiet sdist \
+RUN pip install -U pipenv \
+ && python setup.py --quiet sdist \
  && mv dist/* dist/grpy.tar.gz
 
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 COPY --from=builder /home/dist/grpy.tar.gz /home/VERSION.txt /
 RUN set -ex \
  && apk update \
